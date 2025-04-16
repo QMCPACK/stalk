@@ -39,9 +39,13 @@ In addition, install any software that are going to be interfaced with ``stalk``
 Installation
 ------------
 
-**Note!** *PyPI installation is on coming up, once the ongoing code revision is done.*
+A stable release of ``stalk`` can be readily installed from PyPI with
 
-To install ``stalk``, clone the git repository and point PYTHONPATH to the repository root:
+::
+    pip3 install stalk_qmc
+
+A development version of ``stalk`` can be installed by cloning the git repository and
+pointing PYTHONPATH to the repository root:
 
 ::
 

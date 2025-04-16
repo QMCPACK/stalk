@@ -3,7 +3,7 @@ requires = ["hatchling >= 1.26"]
 build-backend = "hatchling.build"
 
 [project]
-name = "stalk"
+name = "stalk-qmc"
 dynamic = ["version"]
 dependencies = [
   "numpy>=2.0.1",
@@ -11,6 +11,10 @@ dependencies = [
   "matplotlib>=3.9.2",
   "dill>=0.3.9",
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["stalk"]
+
 [tool.hatch.version]
 path = "stalk/__init__.py"
 requires-python = ">= 3.9"

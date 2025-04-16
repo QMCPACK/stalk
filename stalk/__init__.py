@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Surrogate Hessian accelerated parallel line-search."""
+"""Surrogate Theory Accelerated Line-search Kit"""
 
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
