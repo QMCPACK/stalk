@@ -6,14 +6,12 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from .FilesPes import FilesPes
-from .FilesLoader import FilesLoader
 from .GeometryLoader import GeometryLoader
 from .GeometryWriter import GeometryWriter
 from .PesLoader import PesLoader
 from .XyzGeometry import XyzGeometry
 
 __all__ = [
-    'FilesLoader',
     'FilesPes',
     'GeometryLoader',
     'GeometryWriter',

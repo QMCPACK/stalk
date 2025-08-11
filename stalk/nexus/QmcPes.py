@@ -10,6 +10,7 @@ from pathlib import Path
 
 from nexus import QmcpackAnalyzer
 
+from stalk.nexus.NexusStructure import NexusStructure
 from stalk.params.PesResult import PesResult
 from stalk.io.PesLoader import PesLoader
 from stalk.util.util import PL
@@ -24,13 +25,13 @@ class QmcPes(PesLoader):
 
     def _load(
         self,
-        path,
+        structure: NexusStructure,
         qmc_idx=1,
         suffix='dmc/dmc.in.xml',
         term='LocalEnergy',
         **kwargs  # e.g. equilibration=None
     ):
-        input_file = Path(PL.format(path, suffix))
+        input_file = Path(PL.format(structure.file_path, suffix))
         # Testing existence here, because Nexus will shut down everything upon failure
         if input_file.exists():
             ai = QmcpackAnalyzer(str(input_file), **kwargs)

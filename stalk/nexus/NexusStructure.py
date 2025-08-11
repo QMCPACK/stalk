@@ -13,7 +13,6 @@ from stalk.params.ParameterStructure import ParameterStructure
 class NexusStructure(ParameterStructure):
     _jobs: list[Simulation] = None
     _sigma = None
-    job_path = None
 
     @property
     def jobs(self):

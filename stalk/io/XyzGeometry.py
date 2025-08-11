@@ -6,6 +6,7 @@ __license__ = "BSD-3-Clause"
 
 from numpy import loadtxt, savetxt, array
 
+from stalk.params.ParameterSet import ParameterSet
 from stalk.params.ParameterStructure import ParameterStructure
 from stalk.io.GeometryWriter import GeometryWriter
 from stalk.io.GeometryLoader import GeometryLoader
@@ -22,7 +23,7 @@ class XyzGeometry(GeometryLoader, GeometryWriter):
         self.args = args
     # end def
 
-    def _load(self, path, suffix='relax.xyz', c_pos=1.0):
+    def _load(self, path, suffix='structure.xyz', c_pos=1.0):
         el, x, y, z = loadtxt(
             PL.format(path, suffix),
             dtype=str,
@@ -34,14 +35,25 @@ class XyzGeometry(GeometryLoader, GeometryWriter):
     # end def
 
     def __write__(self, structure, path, suffix='structure.xyz', c_pos=1.0):
-        # TODO: branch for ParameterSet
-        assert isinstance(structure, ParameterStructure)
         output = []
-        header = str(len(structure.elem)) + '\n'
+        if isinstance(structure, ParameterStructure):
+            pos = structure.pos
+            elem = structure.elem
+        elif isinstance(structure, ParameterSet):
+            pos = structure.params
+            elem = 'p'
+        else:
+            raise TypeError(f'Cannot write to XYZ file: {structure}')
+        # end if
 
+        header = str(len(elem)) + '\n'
         fmt = '{:< 10f}'
-        for el, pos in zip(structure.elem, structure.pos * c_pos):
-            output.append([el, fmt.format(pos[0]), fmt.format(pos[1]), fmt.format(pos[2])])
+        for el, pr in zip(elem, pos * c_pos):
+            row = [el]
+            for p in pr:
+                row.append(fmt.format(p))
+            # end for
+            output.append(row)
         # end for
         savetxt(
             PL.format(path, suffix),

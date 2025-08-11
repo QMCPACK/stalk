@@ -46,7 +46,7 @@ def test_XyzGeometry_load():
 
 
 def test_XyzGeometry_write(tmp_path):
-    # default args: (suffix: relax.xyz)
+    # default args: (suffix: structure.xyz)
     writer = XyzGeometry()
     s = ParameterStructure(
         pos=pos_H2O,

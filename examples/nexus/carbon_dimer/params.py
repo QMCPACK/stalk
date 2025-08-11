@@ -4,10 +4,10 @@ from numpy import array
 
 from nexus import generate_pyscf, generate_qmcpack, job, obj
 from nexus import generate_physical_system, generate_convert4qmc
+from stalk.io.util import load_energy
 from structure import Structure
 
 from stalk.params.util import distance
-from stalk.io.FilesLoader import FilesLoader
 from stalk.io.XyzGeometry import XyzGeometry
 from stalk.nexus.NexusGeometry import NexusGeometry
 from stalk.nexus.NexusPes import NexusPes
@@ -184,7 +184,7 @@ relax_pyscf = NexusGeometry(
 pes_pyscf = NexusPes(
     scf_pes_job,
     # pyscf_pes.py is configured to output SCF energy in energy.dat
-    loader=FilesLoader({'suffix': 'energy.dat'})
+    load_func=load_energy
 )
 pes_dmc = NexusPes(
     dmc_pes_job,

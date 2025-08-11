@@ -59,7 +59,7 @@ class TestAnalyzer(SimulationAnalyzer):
         if isinstance(arg0, Simulation):
             self.path = arg0.path
         elif isinstance(arg0, NexusStructure):
-            self.path = arg0.job_path
+            self.path = arg0.file_path
         else:
             self.path = arg0
         # end if

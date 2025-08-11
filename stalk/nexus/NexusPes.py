@@ -137,25 +137,25 @@ class NexusPes(PesFunction):
         skip_gen=False,
         **kwargs
     ):
+        file_path = f'{directorize(path)}{structure.label}/'
+        eval_args = self.args.copy()
+        structure.file_path = file_path
+        structure.sigma = sigma
         # Do not redo jobs
         if structure.generated:
             return
         # end if
-        job_path = f'{directorize(path)}{structure.label}/'
-        eval_args = self.args.copy()
         # Override with kwargs
         eval_args.update(**kwargs)
         if not skip_gen:
             jobs = self.func(
                 structure.get_nexus_structure(),
-                job_path,
+                file_path,
                 sigma=sigma,
                 **eval_args
             )
             structure.jobs = jobs
         # end if
-        structure.job_path = job_path
-        structure.sigma = sigma
     # end def
 
     def _load_structure(
