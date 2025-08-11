@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from matplotlib import pyplot as plt
+
 from stalk import LineSearchIteration
 
 from params import forward_natural, pes_xyz
@@ -33,4 +35,6 @@ if __name__ == "__main__":
     print(f'C-Cl bond length: {params_natural[0]}')
     print(f'C-H bond length: {params_natural[1]}')
     print(f'C-H bond angle: {params_natural[2]}')
+    srg_ls.plot()
+    plt.show()
 # end if

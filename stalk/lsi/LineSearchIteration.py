@@ -5,16 +5,14 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from numpy import array, mean
+from numpy import array, isscalar, mean
+from matplotlib import pyplot as plt
 
 from stalk.params.ParameterSet import ParameterSet
 from stalk.params.PesFunction import PesFunction
 from stalk.pls.TargetParallelLineSearch import TargetParallelLineSearch
 from stalk.util import directorize
 from stalk.pls import ParallelLineSearch
-from stalk.lsi.util import plot_energy_convergence
-from stalk.lsi.util import plot_bundled_convergence
-from stalk.lsi.util import plot_parameter_convergence
 from stalk.util.util import FF, FFS, FI, FIS, FU
 
 
@@ -260,17 +258,126 @@ class LineSearchIteration():
         self.pls_list.append(pls_next)
     # end
 
+    # Keeping a limited version for backward compatibility
     def plot_convergence(
         self,
+        P_list=None,
+        targets=None,
+        colors=None,
+        markers=None,
+        **kwargs
+    ):
+        structure = self.structure_init.copy(params=targets)
+        self.plot(target=structure, **kwargs)
+    # end def
+
+    def plot(
+        self,
+        target: ParameterSet = None,
         bundle=True,
         **kwargs
     ):
+        P = len(self.structure_init)
         if bundle:
-            plot_bundled_convergence(self.pls_list, **kwargs)
+            # Always create ax if bundle=True
+            f, axs = plt.subplots(P + 1, 1, sharex=True)
+            axs[-1].set_xlabel('Iteration')
         else:
-            plot_energy_convergence(self.pls_list, **kwargs)
-            plot_parameter_convergence(
-                self.pls_list, **kwargs)
+            fs = []
+            axs = []
+            for pi in range(P + 1):
+                f, ax = plt.subplots()
+                ax.set_xlabel('Iteration')
+                if pi == P:
+                    ax.set_title('Energy convergence')
+                else:
+                    # TODO: use parameter name
+                    ax.set_title(f'Parameter p{pi} convergence')
+                # end if
+                fs.append(f)
+                axs.append(ax)
+            # end for
+        # end if
+
+        for pi, ax in enumerate(axs[:-1]):
+            self._plot_param(pi, ax, target=target, **kwargs)
+        # end for
+        self._plot_energy(axs[-1], target=target, **kwargs)
+        f.align_labels()
+        f.tight_layout()
+    # end def
+
+    def _plot_param(
+        self,
+        pi: int,
+        ax: plt.Axes,
+        target: ParameterSet = None,
+        **kwargs  # plot kwargs
+    ):
+        if target is None:
+            ax.set_ylabel(f'p{pi}')
+            self._plot_target_line(ax, value=self.structure_final.params[pi], error=0.0)
+            target_value = 0.0
+        else:
+            ax.set_ylabel(f'p{pi} - p*')
+            self._plot_target_line(ax, value=0.0, error=0.0)
+            target_value = target.params[pi]
+        # end if
+        grid = [0]
+        values = [self.pls(0).structure.params[pi] - target_value]
+        errors = [self.pls(0).structure.params_err[pi]]
+        for i, pls in enumerate(self.pls_list):
+            if pls.evaluated:
+                grid.append(i + 1)
+                values.append(pls.structure_next.params[pi] - target_value)
+                errors.append(pls.structure_next.params_err[pi])
+            # end if
+        # end for
+        h, c, f = ax.errorbar(
+            grid,
+            values,
+            errors,
+            **kwargs  # plot kwargs
+        )
+    # end def
+
+    def _plot_energy(
+        self,
+        ax: plt.Axes,
+        target: ParameterSet = None,
+        **kwargs  # plot kwargs
+    ):
+        if target is None or not isscalar(target.value):
+            ax.set_ylabel('Energy value')
+            self._plot_target_line(ax, value=self.structure_final.value, error=0.0)
+            target_value = 0.0
+        else:
+            ax.set_ylabel('Energy difference')
+            self._plot_target_line(ax, value=0.0, error=0.0)
+            target_value = target.value
+        # end if
+        grid = [0]
+        values = [self.pls(0).structure.value - target_value]
+        errors = [self.pls(0).structure.error]
+        for i, pls in enumerate(self.pls_list[0:]):
+            if pls.structure.value is not None:
+                grid.append(i)
+                values.append(pls.structure.value - target_value)
+                errors.append(pls.structure.error)
+            # end if
+        # end for
+        ax.errorbar(
+            grid,
+            values,
+            errors,
+            **kwargs  # plot kwargs
+        )
+    # end def
+
+    def _plot_target_line(self, ax: plt.Axes, value, error):
+        grid = [-0.5, len(self) - 0.5]
+        # TODO: errorbar
+        ax.plot(grid, 2 * [value], 'k-')
     # end def
 
     def __len__(self):
@@ -292,18 +399,18 @@ class LineSearchIteration():
 
             # Data rows
             for p, pls in enumerate(self.pls_list):
-                string += self._params_row(p, pls.structure, fmt)
+                string += self._print_params_row(p, pls.structure, fmt)
             # end for
         # end if
         # Mean params
         if len(self) > 1:
             string += f"\nMean[{self.transient + 1}:]:"
-            string += self._params_row(len(self), self.structure_final, fmt)
+            string += self._print_params_row(len(self), self.structure_final, fmt)
         # end if
         return string
     # end def
 
-    def _params_row(self, p, structure: ParameterSet, fmt: str):
+    def _print_params_row(self, p, structure: ParameterSet, fmt: str):
         data = [structure.value, structure.error]
         data[0] = data[0] if not data[0] is None else 0.0
         data[1] = data[1] if not data[1] is None else 0.0

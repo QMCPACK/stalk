@@ -149,6 +149,15 @@ class ParameterSet(LineSearchPoint):
         return True
     # end def
 
+    def __sub__(self, other):
+        if isinstance(other, ParameterSet) and len(other) == len(self):
+            result = self.copy()
+            result.shift_params(-other.params)
+        else:
+            raise ValueError(f'Cannot subtract {repr(other)} from {repr(self)}')
+        # end if
+    # end def
+
     def __str__(self):
         string = self.__class__.__name__
         if self.label is not None:

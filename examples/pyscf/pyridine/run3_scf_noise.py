@@ -29,6 +29,6 @@ srg_ls.pls().evaluate_eqm(add_sigma=True)
 if __name__ == '__main__':
     # Print the line-search performance
     print(srg_ls)
-    srg_ls.plot_convergence(targets=surrogate.params)
+    srg_ls.plot(target=surrogate)
     plt.show()
 # end if
