@@ -22,7 +22,7 @@ surrogate = TargetParallelLineSearch(
     interactive=interactive
 )
 
-epsilon_p = [0.02]
+epsilon_p = [0.01]
 surrogate.optimize(
     epsilon_p=epsilon_p,
     fit_kind='pf3',

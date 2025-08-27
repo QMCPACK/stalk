@@ -34,4 +34,6 @@ srg_ls.pls().evaluate_eqm(add_sigma=True, interactive=interactive)
 # Print the line-search performance
 if interactive:
     print(srg_ls)
+    srg_ls.plot(target=surrogate.structure)
+    plt.show()
 # end if

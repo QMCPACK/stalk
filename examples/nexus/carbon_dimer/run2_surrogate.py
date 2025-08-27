@@ -20,6 +20,7 @@ surrogate = TargetLineSearch(
     path='surrogate',
     interactive=interactive,
 )
+surrogate.bracket_target_bias()
 surrogate.reset_interpolation(interpolate_kind='cubic')
 
 # Set target parameter error tolerances (epsilon): 0.01 Angstrom accuracy

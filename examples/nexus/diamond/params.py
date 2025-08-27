@@ -121,6 +121,9 @@ def dmc_pes_job(
     sigma=None,
     samples=10,
     var_eff=None,
+    tile_opt=1,
+    dep_jobs=[],
+    rcut=3.0,
     **kwargs
 ):
     # Estimate the relative number of samples needed
@@ -128,6 +131,31 @@ def dmc_pes_job(
         dmcsteps = var_eff.get_samples(sigma)
     else:
         dmcsteps = samples
+    # end if
+
+    # The original structure represents the primitive cell
+    primcell = generate_physical_system(
+        structure=structure,
+        C=4
+    )
+    # Create spherical tiling to mitigate finite-size effects
+    tiled = structure.tile_opt(tile_opt)
+    # In this example, we only consider twistnumber=0
+    tiled.add_symmetrized_kmesh(kgrid=(1, 1, 1), kshift=(0, 0, 0))
+    supercell = generate_physical_system(
+        structure=tiled,
+        C=4,
+    )
+
+    # Check if reusing Jastrows
+    reuse_jastrow = len(dep_jobs) > 0 and tiled.rwigner(1) > rcut
+    if reuse_jastrow:
+        opt_cycles = 4
+        minwalkers = 0.5
+    else:
+        opt_cycles = 10
+        minwalkers = 0.2
+        rcut = None
     # end if
 
     # Common SCF args
@@ -143,19 +171,9 @@ def dmc_pes_job(
         smearing='gaussian',
         degauss=0.0001,
         electron_maxstep=200,
-        use_folded=True,
-    )
-    # For QMCPACK, use plane-waves for better performance
-    system = generate_physical_system(
-        structure=structure,
-        C=4,
-        # tiling=(2, 2, 2),  # Increase tiling for better accuracy and higher cost
-        tiling=(1, 1, 1),
-        kgrid=(1, 1, 1),
-        kshift=(0, 0, 0),
     )
     scf = generate_pwscf(
-        system=system,
+        system=primcell,
         job=job(**pwscfjob),
         path=path + 'scf',
         identifier='scf',
@@ -166,13 +184,14 @@ def dmc_pes_job(
         **scf_qmc_args
     )
     nscf = generate_pwscf(
-        system=system,
+        system=supercell,
         job=job(**pwscfjob),
         path=path + 'nscf',
         identifier='nscf',
         calculation='nscf',
         wf_collect=True,
         nosym=True,
+        nogamma=True,
         dependencies=[(scf, 'charge_density')],
         **scf_qmc_args
     )
@@ -184,29 +203,34 @@ def dmc_pes_job(
         dependencies=[(nscf, 'orbitals')],
     )
     opt = generate_qmcpack(
-        system=system,
+        system=supercell,
         path=path + 'opt',
         job=job(**optjob),
         dependencies=[(p2q, 'orbitals')],
-        cycles=6,
+        cycles=opt_cycles,
         identifier='opt',
         qmc='opt',
         input_type='basic',
         pseudos=qmcpseudos,
         J2=True,
         J1_size=6,
+        J1_rcut=rcut,
         J2_size=8,
+        J2_rcut=rcut,
         minmethod='oneshift',
         blocks=200,
         substeps=2,
-        samples=10000,
+        samples=20000,
         meshfactor=0.8,
-        minwalkers=0.1,
+        minwalkers=minwalkers,
         # Using the first twist
         twistnum=0,
     )
+    if reuse_jastrow:
+        opt.depends(dep_jobs[3], 'jastrow')
+    # end if
     dmc = generate_qmcpack(
-        system=system,
+        system=supercell,
         path=path + 'dmc',
         job=job(**dmcjob),
         dependencies=[(p2q, 'orbitals'), (opt, 'jastrow')],

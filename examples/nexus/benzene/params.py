@@ -241,7 +241,7 @@ def dmc_pes_job(
         minwalkers=minwalkers,
     )
     if reuse_jastrow:
-        opt.depends(dep_jobs[2])
+        opt.depends(dep_jobs[2], 'jastrow')
     # end if
     dmc = generate_qmcpack(
         system=system,
