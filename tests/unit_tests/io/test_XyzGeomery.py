@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from numpy import loadtxt, array
 from pytest import raises
 from stalk.io.XyzGeometry import XyzGeometry
@@ -6,15 +8,19 @@ from stalk.params.ParameterStructure import ParameterStructure
 from stalk.util.util import match_to_tol
 from ..assets.h2o import pos_H2O, elem_H2O
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
 
-def test_XyzGeometry_load():
+
+def test_XyzGeometry(tmp_path):
 
     # default args: (suffix: relax.xyz)
     loader = XyzGeometry()
 
     # Test failing to load a file (default suffix: relax.xyz)
     with raises(FileNotFoundError):
-        loader = XyzGeometry().load('tests/unit_tests/assets/pwscf_relax')
+        loader.load('tests/unit_tests/assets/pwscf_relax')
     # end with
 
     # Test loading a reference file
@@ -42,10 +48,8 @@ def test_XyzGeometry_load():
     # end for
     assert res.get_axes() is None
     assert res_dbl.get_axes() is None
-# end def
 
-
-def test_XyzGeometry_write(tmp_path):
+    # Test writer
     # default args: (suffix: structure.xyz)
     writer = XyzGeometry()
     s = ParameterStructure(
