@@ -45,6 +45,11 @@ class PesResult:
         self.error = error
     # end def
 
+    def rescale(self, scale):
+        self.value /= scale
+        self.error /= scale
+    # end def
+
     def add_sigma(self, sigma):
         '''Add artificial white noise to the result for error resampling purposes.'''
         if isinstance(sigma, float) and sigma >= 0.0:

@@ -164,14 +164,15 @@ class NexusPes(PesFunction):
         add_sigma=False,
         warn_limit=2.0,
     ):
-        result = self.loader.load(structure)
+        if add_sigma:
+            result = self.loader.load(structure, sigma=structure.sigma)
+        else:
+            result = self.loader.load(structure)
+        # end if
         self._warn_energy(structure, result, warn_limit=warn_limit)
         # Treat failure
         if isnan(result.value) and self.disable_failed:
             structure.enabled = False
-        # end if
-        if add_sigma:
-            result.add_sigma(structure.sigma)
         # end if
         structure.value = result.value
         structure.error = result.error

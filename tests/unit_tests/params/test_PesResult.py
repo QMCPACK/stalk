@@ -42,6 +42,13 @@ def test_PesResult():
     # Only test that value has been changed but not by how much
     assert res1.value != val
 
+    # Test rescale
+    res2 = PesResult(val, err)
+    scale = 1.234
+    res2.rescale(scale)
+    assert res2.value == val / scale
+    assert res2.error == err / scale
+
     with raises(ValueError):
         res1.add_sigma([])
     # end with

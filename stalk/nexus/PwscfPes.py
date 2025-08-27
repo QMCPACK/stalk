@@ -10,6 +10,7 @@ from pathlib import Path
 
 from nexus import PwscfAnalyzer
 
+from stalk.params.ParameterSet import ParameterSet
 from stalk.params.PesResult import PesResult
 from stalk.util.util import PL
 from stalk.io.PesLoader import PesLoader
@@ -22,11 +23,11 @@ class PwscfPes(PesLoader):
         self.args = args
     # end def
 
-    def _load(self, path, suffix='scf.in', **kwargs):
-        input_file = Path(PL.format(path, suffix))
+    def _load(self, structure: ParameterSet, suffix='scf.in', **kwargs):
+        input_file = Path(PL.format(structure.file_path, suffix))
         # Testing existence here, because Nexus will shut down everything upon failure
         if input_file.exists():
-            ai = PwscfAnalyzer(PL.format(path, suffix), **kwargs)
+            ai = PwscfAnalyzer(str(input_file), **kwargs)
             ai.analyze()
         else:
             warnings.warn(f"PwscfPes loader could not find {str(input_file)}. Returning None.")

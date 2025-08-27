@@ -2,6 +2,7 @@
 
 from pytest import raises
 
+from stalk.params.ParameterSet import ParameterSet
 from stalk.params.PesResult import PesResult
 from stalk.io.PesLoader import PesLoader
 
@@ -23,12 +24,12 @@ def test_PesLoader(tmp_path):
     # end with
 
     # Test return by with a custom loader function
-    def test_loader(path, arg=0):
-        return PesResult(float(len(path)) + arg)
+    def test_loader(structure: ParameterSet, add=0):
+        return PesResult(float(len(structure.file_path)) + add)
     # end def
 
     # Manually replace load method for testing
-    args = {'arg': 2}
+    args = {'add': 2}
     pl = PesLoader(test_loader, args)
 
     path = "12345"
@@ -38,7 +39,7 @@ def test_PesLoader(tmp_path):
     assert res.error == 0.0
 
     # Test overriding arg
-    res2 = pl.load(path, arg=3)
+    res2 = pl.load(path, add=3)
     assert isinstance(res2, PesResult)
     assert res2.value == 8.0
     assert res2.error == 0.0
