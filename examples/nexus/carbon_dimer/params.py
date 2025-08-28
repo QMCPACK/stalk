@@ -95,6 +95,7 @@ def dmc_pes_job(
     sigma=None,
     samples=10,
     var_eff=None,
+    dep_jobs=[],
     **kwargs
 ):
     # Estimate the relative number of samples needed
@@ -102,6 +103,16 @@ def dmc_pes_job(
         dmcsteps = var_eff.get_samples(sigma)
     else:
         dmcsteps = samples
+    # end if
+
+    # Check if reusing Jastrows
+    reuse_jastrow = len(dep_jobs) > 0
+    if reuse_jastrow:
+        opt_cycles = 4
+        minwalkers = 0.5
+    else:
+        opt_cycles = 10
+        minwalkers = 0.2
     # end if
 
     # Center the structure for QMCPACK
@@ -120,7 +131,7 @@ def dmc_pes_job(
             spin=4,
             verbose=4,
             ecp='ccecp',
-            basis='augccpvtz',  # Use larger basis to promote QMC performance
+            basis='ccecp-ccpvqz',  # Use larger basis to promote QMC performance
             symmetry=False,
         ),
         save_qmc=True,
@@ -136,7 +147,7 @@ def dmc_pes_job(
         path=path + 'opt',
         job=job(**optjob),
         dependencies=[(c4q, 'orbitals')],
-        cycles=8,
+        cycles=opt_cycles,
         identifier='opt',
         qmc='opt',
         input_type='basic',
@@ -150,8 +161,11 @@ def dmc_pes_job(
         blocks=200,
         substeps=2,
         samples=100000,
-        minwalkers=0.1,
+        minwalkers=minwalkers,
     )
+    if reuse_jastrow:
+        opt.depends(dep_jobs[2], 'jastrow')
+    # end if
     dmc = generate_qmcpack(
         system=system,
         path=path + 'dmc',
@@ -163,8 +177,8 @@ def dmc_pes_job(
         input_type='basic',
         pseudos=qmcpseudos,
         jastrows=[],
-        walkers_per_rank=128,
-        blocks=200,
+        walkers_per_rank=256,
+        blocks=100,
         timestep=0.01,
         ntimesteps=1,
     )
