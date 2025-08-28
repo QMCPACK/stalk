@@ -87,7 +87,11 @@ class NexusPes(PesFunction):
         if sigmas is None:
             sigmas = len(structures) * [0.0]
         # end if
-        jobs = dep_jobs
+        if dep_jobs is not None:
+            jobs = dep_jobs
+        else:
+            jobs = []
+        # end if
         eqm_generated = False
         for structure, sigma in zip(structures, sigmas):
             skip_gen = False

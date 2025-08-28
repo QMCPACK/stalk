@@ -63,7 +63,7 @@ def test_TargetLineSearch_init():
     assert len(tls.offsets) == 0
     assert len(tls.values) == 0
     assert len(tls.errors) == 0
-    assert tls.get_shifted_params() is None
+    assert tls.shifted_params is None
     # TargetLineSearch properties
     assert tls.sigma_opt is None
     assert tls.W_opt is None

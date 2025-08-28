@@ -36,6 +36,7 @@ class LineSearch(LineSearchBase):
         R=None,
         pes=None,
         path='',
+        dep_jobs=None,
         interactive=False,
         **ls_args
         # values=None, errors=None, fraction=0.025, sgn=1
@@ -57,7 +58,12 @@ class LineSearch(LineSearchBase):
             self.set_grid(M=M, W=W, R=R, offsets=offsets)
             # Try to evaluate the pes and set the results
             if isinstance(pes, PesFunction):
-                self.evaluate(pes=pes, interactive=interactive, path=path)
+                self.evaluate(
+                    pes=pes,
+                    interactive=interactive,
+                    path=path,
+                    dep_jobs=dep_jobs
+                )
             # end if
         except (ValueError):
             # If the grid or pes input values are missing, the grid will be set later
@@ -269,7 +275,7 @@ class LineSearch(LineSearchBase):
         self,
         pes: PesFunction = None,
         add_sigma=False,
-        **kwargs,  # path='', interactive=False
+        **kwargs,  # path='', interactive=False, dep_jobs=None
     ):
         '''Evaluate the PES on the line-search grid using an evaluation function.'''
         pes.evaluate_all(
@@ -281,7 +287,8 @@ class LineSearch(LineSearchBase):
         self._search_and_store()
     # end def
 
-    def get_shifted_params(self):
+    @property
+    def shifted_params(self):
         if len(self) > 0:
             return array([structure.params for structure in self.grid if isinstance(structure, ParameterSet)])
         else:
