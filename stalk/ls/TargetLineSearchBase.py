@@ -5,7 +5,7 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from numpy import array, isscalar, nan, where
+from numpy import array, isscalar, nan
 from scipy.interpolate import CubicSpline, PchipInterpolator
 
 from stalk.ls.LineSearchBase import LineSearchBase
@@ -103,16 +103,16 @@ class TargetLineSearchBase(LineSearchBase):
             raise AssertionError("Must provide values before interpolation")
         # end if
         if interpolate_kind == 'pchip':
-            self._target_settings._interp = PchipInterpolator(
+            self.target_settings.interp = PchipInterpolator(
                 self.valid_offsets,
                 self.valid_values,
-                extrapolate=True
+                extrapolate=False
             )
         elif interpolate_kind == 'cubic':
-            self._target_settings._interp = CubicSpline(
+            self.target_settings.interp = CubicSpline(
                 self.valid_offsets,
                 self.valid_values,
-                extrapolate=True
+                extrapolate=False
             )
         else:
             raise ValueError("Could not recognize interpolate kind" + str(interpolate_kind))
@@ -130,7 +130,8 @@ class TargetLineSearchBase(LineSearchBase):
     def _evaluate_target_point(self, offset):
         if not self.valid_target:
             return nan
-        elif offset < self.target_interp.x.min() or offset > self.target_interp.x.max():
+        elif not self.target_interp.extrapolate and (
+                offset < self.target_interp.x.min() or offset > self.target_interp.x.max()):
             return nan
         else:
             return self.target_interp(offset)
@@ -186,16 +187,12 @@ class TargetLineSearchBase(LineSearchBase):
         if settings.interp is None:
             return nan, nan
         # end if
-        x_min = settings.interp.x.min()
-        x_max = settings.interp.x.max()
         # Begin from target
         offsets0 = grid.offsets.copy()
         x0 = 0.0
         # Repeat search 'bias_order' times to simulate how bias is self-induced
         for i in range(settings.bias_order):
-            offsets = offsets0 + x0
-            offsets[where(offsets < x_min)] = x_min
-            offsets[where(offsets > x_max)] = x_max
+            offsets = self.target_settings.get_safe_offsets(offsets0 + x0)
             grid = LineSearchGrid(offsets)
             grid.values = self.evaluate_target(grid.offsets)
             res = settings.fit_func.find_minimum(

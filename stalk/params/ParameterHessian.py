@@ -237,7 +237,7 @@ class ParameterHessian():
         self.structure.value = eqm_value
         for structure in structure_list[0:]:
             if structure.value < eqm_value:
-                warnings.warn(f'Energy for {structure.label} is lower than E_eqm={eqm_value}!')
+                warnings.warn(f'Offset energy lower than eqm: E({structure.label})={structure.value} < E(eqm)={eqm_value}!')
             # end if
         # end for
     # end def

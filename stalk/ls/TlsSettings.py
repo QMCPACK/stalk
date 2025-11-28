@@ -5,7 +5,8 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from numpy import isscalar, ndarray, random
+import warnings
+from numpy import isscalar, ndarray, random, where
 from scipy.interpolate import CubicHermiteSpline, PchipInterpolator
 from stalk.ls.FittingResult import FittingResult
 from stalk.ls.LsSettings import LsSettings
@@ -100,6 +101,11 @@ class TlsSettings(LsSettings):
         return self._interp
     # end def
 
+    @interp.setter
+    def interp(self, interp):
+        self._interp = interp
+    # end def
+
     @property
     def target(self):
         return self._target
@@ -183,6 +189,34 @@ class TlsSettings(LsSettings):
         settings._interp = self.interp
         settings._target = self.target
         return settings
+    # end def
+
+    def get_safe_offsets(self, offsets):
+        if self.interp is None or len(offsets) == 0:
+            warnings.warn('Requested offsets but no interpolation is present!')
+            return offsets
+        # end if
+        x_min = self.interp.x.min()
+        x_max = self.interp.x.max()
+        for i_offset in where(offsets < x_min)[0]:
+            offset = offsets[i_offset]
+            if self.interp.extrapolate:
+                warnings.warn(f'Extrapolating for offset={offset} < R_min={x_min}')
+            else:
+                warnings.warn(f'Reset offset={offset} to R_min={x_min}')
+                offsets[i_offset] = x_min
+            # end if
+        # end for
+        for i_offset in where(offsets > x_max)[0]:
+            offset = offsets[i_offset]
+            if self.interp.extrapolate:
+                warnings.warn(f'Extrapolating for offset={offset} < R_max={x_max}')
+            else:
+                warnings.warn(f'Reset offset={offset} to R_max={x_max}')
+                offsets[i_offset] = x_max
+            # end if
+        # end for
+        return offsets
     # end def
 
     # Return true if the settings of self and other are consistent

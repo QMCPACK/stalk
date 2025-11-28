@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 
-from pytest import raises
+from pytest import raises, warns
+from numpy import linspace
+import warnings
+from scipy.interpolate import CubicSpline, PchipInterpolator
 
 from stalk.ls import PolynomialFit
 from stalk.ls.FittingFunction import FittingFunction
 from stalk.ls.TlsSettings import TlsSettings
+from stalk.util.util import match_to_tol
 
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
@@ -44,6 +48,11 @@ def test_TlsSettings():
     # end with
     with raises(ValueError):
         TlsSettings(fit_kind='pf2', Gs=[0.1, 0.2, 0.3])
+    # end with
+    with warns(UserWarning):
+        offsets = [0.0]
+        ls.get_safe_offsets(offsets)
+        assert offsets is offsets
     # end with
 
     # Dummy fitting function handle
@@ -99,7 +108,7 @@ def test_TlsSettings():
     assert ls2.N == N
 
     # Test copy and __eq__
-    # Plain copy shoud always be equal
+    # Plain copy should always be equal
     assert ls1 == ls1.copy()
     # Override with same values should also be equal
     assert ls1 == ls1.copy(
@@ -128,6 +137,68 @@ def test_TlsSettings():
     # Cannot override target
     assert ls1 == ls1.copy(target_x0=1.0)
 
-    # TODO: interpolation (kind) tests
+    # interpolation tests
+    offsets = linspace(-2, 2, 5)
+    values = 0.2 * offsets**2
+    interp_spl_ext = CubicSpline(
+        offsets,
+        values,
+        extrapolate=True
+    )
+    interp_spl_noext = CubicSpline(
+        offsets,
+        values,
+        extrapolate=False
+    )
+    interp_pch_ext = PchipInterpolator(
+        offsets,
+        values,
+        extrapolate=True
+    )
+    ls3 = TlsSettings(
+        fit_func=func,
+        sgn=sgn,
+        fraction=fraction,
+        bias_mix=bias_mix,
+        bias_order=bias_order,
+        target_x0=x0,
+        target_y0=y0,
+    )
+    ls3.interp = interp_spl_ext
+
+    assert ls3.interp_kind == 'cubic'
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        offsets_out = ls3.get_safe_offsets(offsets.copy())
+        assert match_to_tol(offsets_out, offsets)
+    # end with
+    with warns(UserWarning, match='Extrapolating'):
+        dp = 0.02
+        offsets_out = ls3.get_safe_offsets(offsets + dp)
+        assert match_to_tol(offsets_out, offsets + dp)
+    # end with
+    with warns(UserWarning, match='Extrapolating'):
+        dp = -0.02
+        offsets_out = ls3.get_safe_offsets(offsets + dp)
+        assert match_to_tol(offsets_out, offsets + dp)
+    # end with
+    ls3.interp = interp_spl_noext
+    with warns(UserWarning, match='Reset offset='):
+        dp = 0.02
+        offsets_out = ls3.get_safe_offsets(offsets + dp)
+        assert match_to_tol(offsets_out[:-1], offsets[:-1] + dp)
+        assert match_to_tol(offsets_out[-1], offsets[-1])
+    # end with
+    with warns(UserWarning, match='Reset offset'):
+        dp = -0.02
+        offsets_out = ls3.get_safe_offsets(offsets + dp)
+        assert match_to_tol(offsets_out[1:], offsets[1:] + dp)
+        assert match_to_tol(offsets_out[0], offsets[0])
+    # end with
+
+    ls3.interp = interp_pch_ext
+    assert ls3.interp_kind == 'pchip'
+    ls3.interp = None
+    assert ls3.interp_kind is None
 
 # end def

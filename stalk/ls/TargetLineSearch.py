@@ -250,7 +250,8 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
         self,
         **grid_args  # M, R, W, offsets
     ):
-        return self.figure_out_offsets(**grid_args) + self.target_settings.target.x0
+        adjusted_offsets = self.figure_out_offsets(**grid_args) + self.target_settings.target.x0
+        return self.target_settings.get_safe_offsets(adjusted_offsets)
     # end def
 
     def optimize(
