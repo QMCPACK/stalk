@@ -21,16 +21,13 @@ class ParameterHessian():
     _U = None
     _enabled = None
     _disable_limit = None
-    require_consistent = True
 
     def __init__(
         self,
         hessian=None,
         structure=None,
-        require_consistent=True,
         disable_limit=0.0,
     ):
-        self.require_consistent = require_consistent
         self.structure = structure
         self.disable_limit = disable_limit
         # Hessian must be set after structure
@@ -143,6 +140,15 @@ class ParameterHessian():
     @property
     def enabled_lambdas(self) -> ndarray:
         return self.lambdas[where(self.enabled)]
+    # end def
+
+    @property
+    def require_consistent(self) -> bool:
+        if isinstance(self.structure, ParameterStructure):
+            return self.structure.require_consistent
+        else:
+            return True
+        # end if
     # end def
 
     def reset(self):

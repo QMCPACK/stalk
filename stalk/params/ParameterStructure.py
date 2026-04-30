@@ -24,6 +24,7 @@ class ParameterStructure(ParameterSet):
     elem = None  # list of elements
     units = None  # position units
     tol = None  # consistency tolerance
+    require_consistent = None  # is consistency required?
 
     def __init__(
         self,
@@ -43,12 +44,14 @@ class ParameterStructure(ParameterSet):
         dim=3,
         translate=True,  # attempt to translate pos
         tol=1e-7,
+        require_consistent=True,
         **kwargs,  # kinds, labels, units
     ):
         self.dim = dim
         self.label = label
         self.tol = tol
         self.units = units
+        self.require_consistent = require_consistent
         self.set_forward_func(forward, forward_args)
         self.set_backward_func(backward, backward_args)
         if params is not None:
@@ -202,6 +205,9 @@ class ParameterStructure(ParameterSet):
         """Check consistency of present forward-backward mapping.
         If params or pos/axes are supplied, check at the corresponding points. If not, check at the present point.
         """
+        if not self.require_consistent:
+            return True
+        # end if
         if self.forward_func is None or self.backward_func is None:
             return False
         # end if
@@ -351,7 +357,9 @@ class ParameterStructure(ParameterSet):
 
     def __str__(self):
         string = ParameterSet.__str__(self)
-        if self.consistent:
+        if self.require_consistent:
+            string += '\n  consistent: n/a'
+        elif self.consistent:
             string += '\n  consistent: yes'
         else:
             string += '\n  consistent: no'
