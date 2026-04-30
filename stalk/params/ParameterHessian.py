@@ -312,7 +312,7 @@ class ParameterHessian():
             string += '\n    Lambda     Direction'
             for Lambda, direction, enabled in zip(self.lambdas, self.directions, self.enabled):
                 string += '\n    {:<8f}   '.format(Lambda)
-                string += len(direction) * ('{:<+1.6f} ').format(*tuple(direction))
+                string += (len(direction) * '{:<+1.6f} ').format(*tuple(direction))
                 if not enabled:
                     string += ' <- disabled'
                 # end if

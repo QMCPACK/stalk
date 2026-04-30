@@ -200,6 +200,12 @@ class ParameterSet(LineSearchPoint):
                 string += '\n    ' + str(param)
             # end for
         # end if
+        if self.value is not None:
+            string += f'\n  value: {self.value}'
+            if self.error > 0:
+                string += f' +/- {self.error}'
+            # end if
+        # end if
         return string
     # end def
 

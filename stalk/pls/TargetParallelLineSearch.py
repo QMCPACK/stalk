@@ -486,9 +486,9 @@ class TargetParallelLineSearch(ParallelLineSearch):
         self.error_d, self.error_p = errors
 
         print('  Optimization complete:')
-        self._print_optimization('d', self.epsilon_d, self.error_d)
+        self._print_optimization('d', self.D_list, self.epsilon_d, self.error_d)
         if self.epsilon_p is not None:
-            self._print_optimization('p', self.epsilon_p, self.error_p)
+            self._print_optimization('p', range(len(self.epsilon_p)), self.epsilon_p, self.error_p)
         # end if
 
         if isinstance(write, str):
@@ -496,15 +496,15 @@ class TargetParallelLineSearch(ParallelLineSearch):
         # end if
     # end def
 
-    def _print_optimization(self, label, epsilon, error):
+    def _print_optimization(self, label, i_list, epsilon, error):
         # Vertical print
         if epsilon is None:
             return
         # end if
         print(('    ' + FIS + FFS + FFS + FPS).format(label, 'target', 'error', 'rel. '))
-        for d, eps, err in zip(range(len(epsilon)), epsilon, error):
+        for i, eps, err in zip(i_list, epsilon, error):
             rel_err = err / eps
-            print(('    ' + FI + FF + FF + FP).format(d, eps, err, rel_err * 100))
+            print(('    ' + FI + FF + FF + FP).format(i, eps, err, rel_err * 100))
         # end for
     # end def
 
