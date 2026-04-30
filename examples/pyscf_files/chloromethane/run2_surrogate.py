@@ -2,14 +2,14 @@
 
 from matplotlib import pyplot as plt
 
-from stalk import TargetParallelLineSearch
+from stalk import Surrogate
 
 from params import pes_xyz
 from run1_hessian import hessian
 
 
 surrogate_file = 'surrogate.p'
-surrogate = TargetParallelLineSearch(
+surrogate = Surrogate(
     path='surrogate/',
     fit_kind='pf3',
     load=surrogate_file,

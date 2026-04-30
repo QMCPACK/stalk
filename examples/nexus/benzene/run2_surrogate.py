@@ -2,7 +2,7 @@
 
 from matplotlib import pyplot as plt
 
-from stalk import TargetParallelLineSearch
+from stalk import Surrogate
 
 from params import pes_pyscf
 from run1_hessian import hessian
@@ -10,7 +10,7 @@ from run1_hessian import hessian
 interactive = __name__ == "__main__"
 
 surrogate_file = 'surrogate.p'
-surrogate = TargetParallelLineSearch(
+surrogate = Surrogate(
     path='surrogate/',
     fit_kind='pf3',
     load=surrogate_file,

@@ -3,7 +3,7 @@
 from os import makedirs
 import numpy as np
 
-from stalk import TargetParallelLineSearch
+from stalk import Surrogate
 
 from params import pes_dict
 from run1_hessian import hessians
@@ -19,7 +19,7 @@ epsilon_p = np.array([0.01, 0.01])
 for xc, pes in pes_dict.items():
     surrogate_file = f'{xc}.p'
     # Characterize PES
-    surrogate = TargetParallelLineSearch(
+    surrogate = Surrogate(
         path=surrogate_dir,
         fit_kind='pf3',
         load=surrogate_file,

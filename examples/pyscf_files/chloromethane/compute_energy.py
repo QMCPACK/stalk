@@ -4,10 +4,11 @@ import argparse
 from pathlib import Path
 import numpy as np
 
+from stalk import XyzGeometry
+from stalk import PesResult
+
 from params import kernel_pyscf
 from run0_relax import structure_relax
-from stalk.io.XyzGeometry import XyzGeometry
-from stalk.params.PesResult import PesResult
 
 parser = argparse.ArgumentParser(description='Compute energies from XYZ structures')
 parser.add_argument('filename', nargs='+', help='Structure files')
