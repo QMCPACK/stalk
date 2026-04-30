@@ -8,7 +8,8 @@ from params import pes
 from run0_relax import structure_relax
 
 
-hessian = ParameterHessian(structure=structure_relax)
+# Disable line-search directions whose condition number is lower than this:
+hessian = ParameterHessian(structure=structure_relax, disable_limit=0.05)
 hessian_file = 'hessian.dat'
 try:
     hessian_array = loadtxt(hessian_file)
