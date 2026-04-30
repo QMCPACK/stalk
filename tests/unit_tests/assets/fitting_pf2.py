@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from numpy import argmin, linspace, polyder, polyfit, polyval, roots, where
 
-from stalk.ls.LineSearchGrid import LineSearchGrid
-from stalk.ls.FittingResult import FittingResult
-from stalk.ls.MorseResult import MorseResult
+from stalk.ls.linesearch_grid import LineSearchGrid
+from stalk.ls.fitting_result import FittingResult
+from stalk.ls.morse_result import MorseResult
 from stalk.util.util import morse
 
 

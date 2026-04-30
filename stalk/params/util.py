@@ -7,7 +7,7 @@ __license__ = "BSD-3-Clause"
 from numpy import linalg, pi, arccos, array, dot, sin, cos, linspace
 from scipy.optimize import minimize
 
-from stalk.params.ParameterSet import ParameterSet
+from stalk.params.parameter_set import ParameterSet
 
 
 def distance(r0, r1):

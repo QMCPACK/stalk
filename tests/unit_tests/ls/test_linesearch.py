@@ -4,8 +4,8 @@ from pytest import raises
 from numpy import linspace
 
 from stalk import LineSearch
-from stalk.params.LineSearchPoint import LineSearchPoint
-from stalk.params.ParameterStructure import ParameterStructure
+from stalk.params.linesearch_point import LineSearchPoint
+from stalk.params.parameter_structure import ParameterStructure
 from stalk.util import match_to_tol
 from ..assets.h2o import get_structure_H2O, get_hessian_H2O
 

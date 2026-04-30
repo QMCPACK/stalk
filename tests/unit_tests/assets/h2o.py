@@ -4,12 +4,12 @@
 from numpy import array, sin, cos, pi
 from numpy.random import randn
 
-from stalk.io.PesLoader import PesLoader
+from stalk.io.pes_loader import PesLoader
 from stalk import ParameterHessian
 from stalk import ParameterStructure
-from stalk.nexus.NexusStructure import NexusStructure
+from stalk.nexus.nexus_structure import NexusStructure
 from stalk.params import PesFunction
-from stalk.params.PesResult import PesResult
+from stalk.params.pes_result import PesResult
 from .helper import harmonic_a, morse, mean_distances, bond_angle
 
 __author__ = "Juha Tiihonen"
@@ -113,8 +113,8 @@ class H2oLoader(PesLoader):
 
 
 def get_surrogate_H2O():
-    from stalk import TargetParallelLineSearch
-    srg = TargetParallelLineSearch(
+    from stalk import Surrogate
+    srg = Surrogate(
         structure=get_structure_H2O(),
         hessian=get_hessian_H2O(),
         mode='pes',

@@ -35,7 +35,8 @@ from stalk.lsi import LineSearchIteration
 from stalk.lsi import PathwayImage
 from stalk.lsi import TransitionPathway
 # nexus module
-try:
+from stalk.nexus import nexus_enabled
+if nexus_enabled:
     from stalk.nexus import NexusGeometry
     from stalk.nexus import NexusPes
     from stalk.nexus import NexusStructure
@@ -43,12 +44,7 @@ try:
     from stalk.nexus import PwscfPes
     from stalk.nexus import QmcPes
     from stalk.nexus import XsfGeometry
-    nexus_enabled = True
-except ModuleNotFoundError:
-    # Nexus not found
-    nexus_enabled = False
-    pass
-# end try
+# end if
 # params module
 from stalk.params import EffectiveVariance
 from stalk.params import EffectiveVarianceMap
@@ -71,14 +67,14 @@ from stalk.params import periodic_bond_angle
 from stalk.params import rotate_2d
 # pls module
 from stalk.pls import ParallelLineSearch
-from stalk.pls import TargetParallelLineSearch
+from stalk.pls import Surrogate
 # util module
 from stalk.util import FunctionCaller
 from stalk.util import ArgsContainer
 from stalk.util import morse
 
 # Make practical alias
-Surrogate = TargetParallelLineSearch
+TargetParallelLineSearch = Surrogate
 
 __all__ = [
     # io module

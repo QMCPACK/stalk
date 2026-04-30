@@ -5,11 +5,11 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from .FilesPes import FilesPes
-from .GeometryLoader import GeometryLoader
-from .GeometryWriter import GeometryWriter
-from .PesLoader import PesLoader
-from .XyzGeometry import XyzGeometry
+from .files_pes import FilesPes
+from .geometry_loader import GeometryLoader
+from .geometry_writer import GeometryWriter
+from .pes_loader import PesLoader
+from .xyz_geometry import XyzGeometry
 from .util import load_energy
 from .util import write_xyz_sigma
 

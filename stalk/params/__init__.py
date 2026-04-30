@@ -5,16 +5,16 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from .EffectiveVariance import EffectiveVariance
-from .EffectiveVarianceMap import EffectiveVarianceMap
-from .GeometryResult import GeometryResult
-from .LineSearchPoint import LineSearchPoint
-from .Parameter import Parameter
-from .ParameterHessian import ParameterHessian
-from .ParameterSet import ParameterSet
-from .ParameterStructure import ParameterStructure
-from .PesFunction import PesFunction
-from .PesResult import PesResult
+from .effective_variance import EffectiveVariance
+from .effective_variance_map import EffectiveVarianceMap
+from .geometry_result import GeometryResult
+from .linesearch_point import LineSearchPoint
+from .parameter import Parameter
+from .parameter_hessian import ParameterHessian
+from .parameter_set import ParameterSet
+from .parameter_structure import ParameterStructure
+from .pes_function import PesFunction
+from .pes_result import PesResult
 from .util import angle
 from .util import bond_angle
 from .util import distance

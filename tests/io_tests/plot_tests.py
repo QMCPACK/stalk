@@ -4,12 +4,13 @@
 
 from matplotlib import pyplot as plt
 from numpy import linspace
-from stalk.ls.LineSearch import LineSearch
-from stalk.ls.LineSearchBase import LineSearchBase
-from stalk.ls.LineSearchGrid import LineSearchGrid
-from stalk.params.ParameterHessian import ParameterHessian
-from stalk.params.ParameterSet import ParameterSet
-from stalk.params.PesFunction import PesFunction
+
+from stalk import LineSearch
+from stalk import LineSearchBase
+from stalk import LineSearchGrid
+from stalk import ParameterHessian
+from stalk import ParameterSet
+from stalk import PesFunction
 
 
 def pes_2d(structure: ParameterSet, x0=[0.0, 0.0], **kwargs):

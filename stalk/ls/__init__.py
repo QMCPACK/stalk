@@ -6,21 +6,21 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 # from .ErrorSurface import ErrorSurface
-from .FittingFunction import FittingFunction
-from .FittingResult import FittingResult
-from .LineSearch import LineSearch
-from .LineSearchBase import LineSearchBase
-from .LineSearchGrid import LineSearchGrid
-from .LsSettings import LsSettings
-from .MorseFit import MorseFit
-from .MorseResult import MorseResult
-from .PolynomialFit import PolynomialFit
-from .PolynomialResult import PolynomialResult
-from .SplineFit import SplineFit
-from .SplineResult import SplineResult
-from .TargetLineSearch import TargetLineSearch
-from .TargetLineSearchBase import TargetLineSearchBase
-from .TlsSettings import TlsSettings
+from .fitting_function import FittingFunction
+from .fitting_result import FittingResult
+from .linesearch import LineSearch
+from .linesearch_base import LineSearchBase
+from .linesearch_grid import LineSearchGrid
+from .ls_settings import LsSettings
+from .morse_fit import MorseFit
+from .morse_result import MorseResult
+from .polynomial_fit import PolynomialFit
+from .polynomial_result import PolynomialResult
+from .spline_fit import SplineFit
+from .spline_result import SplineResult
+from .target_linesearch import TargetLineSearch
+from .target_linesearch_base import TargetLineSearchBase
+from .tls_settings import TlsSettings
 
 __all__ = [
     'FittingFunction',

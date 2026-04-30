@@ -5,10 +5,10 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from stalk.pls.ParallelLineSearch import ParallelLineSearch
-from stalk.pls.TargetParallelLineSearch import TargetParallelLineSearch
+from stalk.pls.parallel_linesearch import ParallelLineSearch
+from stalk.pls.surrogate import Surrogate
 
 __all__ = [
     'ParallelLineSearch',
-    'TargetParallelLineSearch',
+    'Surrogate',
 ]

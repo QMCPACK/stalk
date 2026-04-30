@@ -9,11 +9,11 @@ import warnings
 from matplotlib import pyplot as plt
 from numpy import array, polyval, sign, isscalar
 
-from stalk.ls.FittingResult import FittingResult
-from stalk.params.ParameterHessian import ParameterHessian
-from stalk.params.PesFunction import PesFunction
-from stalk.params.ParameterSet import ParameterSet
-from stalk.ls.LineSearchBase import LineSearchBase
+from stalk.ls.fitting_result import FittingResult
+from stalk.params.parameter_hessian import ParameterHessian
+from stalk.params.pes_function import PesFunction
+from stalk.params.parameter_set import ParameterSet
+from stalk.ls.linesearch_base import LineSearchBase
 from stalk.util.util import FF, SL
 
 

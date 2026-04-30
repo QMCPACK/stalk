@@ -6,12 +6,12 @@ from numpy import nan
 from pathlib import Path
 from nexus import obj, job, settings, generate_physical_system, input_template
 from nexus.simulation import GenericSimulation, SimulationAnalyzer, Simulation
-from stalk.io.GeometryLoader import GeometryLoader
-from stalk.io.PesLoader import PesLoader
-from stalk.io.XyzGeometry import XyzGeometry
-from stalk.nexus.NexusStructure import NexusStructure
-from stalk.params.GeometryResult import GeometryResult
-from stalk.params.PesResult import PesResult
+from stalk.io.geometry_loader import GeometryLoader
+from stalk.io.pes_loader import PesLoader
+from stalk.io.xyz_geometry import XyzGeometry
+from stalk.nexus.nexus_structure import NexusStructure
+from stalk.params.geometry_result import GeometryResult
+from stalk.params.pes_result import PesResult
 
 # Add nexus tester to path
 app_path = os.path.dirname(__file__) + "/../../nxs_tester.py"

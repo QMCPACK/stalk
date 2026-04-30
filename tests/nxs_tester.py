@@ -4,7 +4,7 @@ import sys
 import numpy as np
 
 from stalk.io import XyzGeometry
-from stalk.params.ParameterStructure import ParameterStructure
+from stalk import ParameterStructure
 
 from unit_tests.assets.test_jobs import efilename, xyzfilename, axesfilename
 from unit_tests.assets.h2o import pes_H2O, pos_H2O, elem_H2O

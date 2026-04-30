@@ -24,8 +24,8 @@ if __name__ == '__main__':
     disable_nexus()
     from stalk import nexus
     assert not nexus.nexus_enabled
-    # Trying to import specific Nexus classes raises ModuleNotFoundError
-    with raises(ModuleNotFoundError):
+    # Trying to import specific Nexus classes raises ImportError
+    with raises(ImportError):
         from stalk.nexus import NexusPes
         NexusPes()
     # end with

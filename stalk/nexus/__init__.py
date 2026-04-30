@@ -6,13 +6,13 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 try:
-    from .NexusGeometry import NexusGeometry
-    from .NexusStructure import NexusStructure
-    from .NexusPes import NexusPes
-    from .PwscfGeometry import PwscfGeometry
-    from .PwscfPes import PwscfPes
-    from .QmcPes import QmcPes
-    from .XsfGeometry import XsfGeometry
+    from .nexus_geometry import NexusGeometry
+    from .nexus_structure import NexusStructure
+    from .nexus_pes import NexusPes
+    from .pwscf_geometry import PwscfGeometry
+    from .pwscf_pes import PwscfPes
+    from .qmc_pes import QmcPes
+    from .xsf_geometry import XsfGeometry
     nexus_enabled = True
 except ModuleNotFoundError:
     nexus_enabled = False
@@ -27,4 +27,5 @@ __all__ = [
     'PwscfPes',
     'QmcPes',
     'XsfGeometry',
+    'nexus_enabled',
 ]

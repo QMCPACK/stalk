@@ -15,8 +15,8 @@ from .util import morse
 from .util import Bohr
 from .util import Hartree
 from .util import Ry
-from .ArgsContainer import ArgsContainer
-from .FunctionCaller import FunctionCaller
+from .args_container import ArgsContainer
+from .function_caller import FunctionCaller
 
 __all__ = [
     'bipolyfit',
