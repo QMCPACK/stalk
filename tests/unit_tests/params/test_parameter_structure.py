@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
 from pytest import raises
+from numpy import array
+
 from stalk.params.util import distance
 from stalk.util import match_to_tol
 from stalk.params import ParameterStructure
+from stalk.util.function_caller import FunctionCaller
 
 from ..assets.h2 import backward_H2_alt, forward_H2_alt, pos_H2, forward_H2, backward_H2, elem_H2
 from ..assets.gese import params_GeSe, forward_GeSe, backward_GeSe, elem_GeSe, pos_GeSe, axes_GeSe
@@ -18,13 +21,11 @@ def test_ParameterStructure_open():
 
     # Test empty/default initialization
     s_empty = ParameterStructure()
-    assert s_empty.forward_func is None
-    assert s_empty.forward_args == {}
-    assert s_empty.backward_func is None
-    assert s_empty.backward_args == {}
+    assert s_empty.forward is None
+    assert s_empty.backward is None
     assert s_empty.pos is None
     assert s_empty.axes is None
-    assert s_empty.elem is None
+    assert s_empty.elem == []
     assert s_empty.dim == 3
     assert s_empty.params is None
     assert s_empty.params_err is None
@@ -57,10 +58,10 @@ def test_ParameterStructure_open():
         tol=tol,
         units=units
     )
-    assert s_H2.forward_func == forward_H2
-    assert s_H2.forward_args == fwd_args
-    assert s_H2.backward_func == backward_H2
-    assert s_H2.backward_args == bck_args
+    assert s_H2.forward.func == forward_H2
+    assert s_H2.forward.args == fwd_args
+    assert s_H2.backward.func == backward_H2
+    assert s_H2.backward.args == bck_args
     assert match_to_tol(s_H2.pos, pos_H2, tol)
     assert s_H2.axes is None
     for el, el_ref in zip(s_H2.elem, elem_H2):
@@ -77,49 +78,27 @@ def test_ParameterStructure_open():
     assert not s_H2.periodic
     assert s_H2.tol == tol
 
-    # test setting position
-    with raises(AssertionError):
-        # Dimensions must be right
-        s_H2.set_position(pos_H2[:, :-1])
-    # end with
-    # translate=False
-    s_H2.set_position(pos_H2 + 2, translate=False)
-    assert match_to_tol(s_H2.params, [1.4], tol)
-    assert match_to_tol(s_H2.pos, pos_H2 + 2, tol)
-    # translate=True
-    s_H2.set_position(pos_H2 + 2, translate=True)
-    assert match_to_tol(s_H2.params, [1.4], tol)
-    assert match_to_tol(s_H2.pos, pos_H2, tol)
-
     # setting axes causes TypeError
     with raises(TypeError):
-        s_H2.copy().set_axes([1.0, 2.0, 3.0])
+        s_H2.copy().axes([1.0, 2.0, 3.0])
     # end with
 
     # test shifting of position and pos difference
     shift_scalar = 0.2
     shift_array = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
-    shift_array_bad = [0.1, 0.2]
-    # If pos is not set
-    with raises(AssertionError):
-        s_H2_shift = s_H2.copy()
-        s_H2_shift.pos = None
-        s_H2_shift.shift_pos(shift_scalar)
-    # end with
     s_H2_shift = s_H2.copy()
-    s_H2_shift.shift_pos(shift_scalar, translate=False)
+    s_H2_shift.require_consistent = False
+    s_H2_shift.pos += shift_scalar
     assert match_to_tol(-s_H2_shift.pos_difference(pos_H2), 6 * [shift_scalar], tol)
     # maintain parameter consistency
     assert match_to_tol(s_H2_shift.params, [1.4], tol)
     s_H2_shift = s_H2.copy()
-    s_H2_shift.shift_pos(shift_array, translate=False)
+    s_H2_shift.require_consistent = False
+    s_H2_shift.pos += array(shift_array).reshape(-1, 3)
     assert match_to_tol(-s_H2_shift.pos_difference(pos_H2), shift_array, tol)
     # maintain parameter consistency
     new_param = [distance(s_H2_shift.pos[0], s_H2_shift.pos[1])]
     assert match_to_tol(s_H2_shift.params, new_param, tol)
-    with raises(AssertionError):
-        s_H2_shift.shift_pos(shift_array_bad)
-    # end with
 
     # test shifting of parameters
     pshift = 2.0
@@ -133,6 +112,7 @@ def test_ParameterStructure_open():
 
     # test shifting in dpos mode
     s_H2_dpos = s_H2.copy()
+    s_H2_dpos.require_consistent = False
     dpos = 1.23
     pshift = 2.0
     s_H2_dpos.pos += 1.23
@@ -145,13 +125,13 @@ def test_ParameterStructure_open():
 
     # test setting of alternative forward func (params are divided by factor)
     factor = 3
-    s_H2.set_forward_func(forward_H2_alt, {'factor': factor})
+    s_H2.forward = FunctionCaller(forward_H2_alt, {'factor': factor})
     assert match_to_tol(s_H2.params, [1.4 / factor], tol)
     assert match_to_tol(s_H2.params_err, [0.0], tol)
     # Not consistent...
     assert not s_H2.consistent
     # ...until matching mapping is provided
-    s_H2.set_backward_func(backward_H2_alt, {'factor': factor})
+    s_H2.backward = FunctionCaller(backward_H2_alt, {'factor': factor})
     assert match_to_tol(s_H2.pos, pos_H2, tol)
     assert s_H2.consistent
 
@@ -180,10 +160,10 @@ def test_ParameterStructure_periodic():
         tol=tol,
         units=units
     )
-    assert s_GeSe.forward_func == forward_GeSe
-    assert s_GeSe.forward_args == fwd_args
-    assert s_GeSe.backward_func == backward_GeSe
-    assert s_GeSe.backward_args == bck_args
+    assert s_GeSe.forward.func == forward_GeSe
+    assert s_GeSe.forward.args == fwd_args
+    assert s_GeSe.backward.func == backward_GeSe
+    assert s_GeSe.backward.args == bck_args
     assert match_to_tol(s_GeSe.pos, pos_GeSe, tol)
     assert match_to_tol(s_GeSe.axes, axes_GeSe, tol)
     for el, el_ref in zip(s_GeSe.elem, elem_GeSe):

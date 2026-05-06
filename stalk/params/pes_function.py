@@ -132,7 +132,7 @@ class PesFunction(FunctionCaller):
         # end def
         p0 = structure.params
         res = minimize(relax_aux, p0, **kwargs)
-        structure.set_params(res.x)
+        structure.params = res.x
     # end def
 
 # end class

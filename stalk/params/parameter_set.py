@@ -5,7 +5,7 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from numpy import array, isscalar, random
+from numpy import array, isscalar, random, ndarray
 from copy import deepcopy
 
 from stalk.params.linesearch_point import LineSearchPoint
@@ -18,9 +18,48 @@ class ParameterSet(LineSearchPoint):
     label = ''  # label for identification
     file_path = None  # field to be used in file I/O mode
 
+    def __init__(
+        self,
+        params=None,  # List of scalars or Parameter objects
+        params_err=None,
+        value=None,
+        error=0.0,
+        label=None,
+    ):
+        self.label = label
+        self.params_list = params
+        self.params_err = params_err
+        if value is not None:
+            self.value = value
+            self.error = error
+        # end if
+    # end def
+
     @property
     def params_list(self):
         return [p for p in self._param_list if isinstance(p, Parameter)]
+    # end def
+
+    @params_list.setter
+    def params_list(self, params_list=[]):
+        if params_list is None:
+            params_list = []
+        # end if
+        p_list = []
+        for p, param in enumerate(params_list):
+            if isinstance(param, Parameter):
+                parameter = param
+            elif isscalar(param):
+                label = f'p{p}'
+                parameter = Parameter(param, 0.0, unit=None, label=label)
+            else:
+                raise ValueError('Parameter is unsupported type: ' + str(param))
+            # end if
+            p_list.append(parameter)
+        # end for
+        self._param_list = p_list
+        # Reset value upon params init
+        self.reset_value()
     # end def
 
     @property
@@ -30,10 +69,39 @@ class ParameterSet(LineSearchPoint):
         # end if
     # end def
 
+    @params.setter
+    def params(self, params: ndarray | list[Parameter] | list):
+        if len(self) == 0:
+            # Try to initialize parameters with default values
+            self.params_list = params
+        elif len(params) != len(self):
+            raise ValueError(f'Inconsistent size of new params {len(params)} vs {len(self)}')
+        else:
+            for p, param in zip(params, self.params_list):
+                param.value = p
+                # Reset parameter error upon parameter change
+                param.error = 0.0
+            # end if
+            self.reset_value()
+        # end if
+    # end def
+
     @property
     def params_err(self):
         if len(self) > 0:
             return array([p.error for p in self.params_list])
+        # end if
+    # end def
+
+    @params_err.setter
+    def params_err(self, params_err: ndarray | list):
+        if params_err is None:
+            params_err = len(self) * [0.0]
+        elif len(params_err) != len(self):
+            raise ValueError(f'Inconsistent size of new params {len(params_err)} vs {len(self)}')
+        # end if
+        for p, param in zip(params_err, self.params_list):
+            param.error = p
         # end if
     # end def
 
@@ -53,86 +121,11 @@ class ParameterSet(LineSearchPoint):
         # end if
     # end def
 
-    def __init__(
-        self,
-        params=None,  # List of scalars or Parameter objects
-        params_err=None,
-        units=None,
-        value=None,
-        error=0.0,
-        label=None,
-        labels=None
-    ):
-        self.label = label
-        if params is not None:
-            self.init_params(
-                params,
-                errors=params_err,
-                units=units,
-                labels=labels
-            )
-        # end if
-        if value is not None:
-            self.value = value
-            self.error = error
-        # end if
-    # end def
-
-    def init_params(self, params, errors=None, units=None, labels=None):
-        if errors is None:
-            errors = len(params) * [errors]
-        else:
-            assert len(errors) == len(params)
-        # end if
-        if units is None or isinstance(units, str):
-            units = len(params) * [units]
-        else:
-            assert len(units) == len(params)
-        # end if
-        if labels is None:
-            labels = len(params) * [labels]
-        else:
-            assert len(labels) == len(labels)
-        # end if
-        p_list = []
-        for p, (param, error, unit, label) in enumerate(zip(params, errors, units, labels)):
-            if isinstance(param, Parameter):
-                parameter = param
-            elif isscalar(param):
-                lab = label if label is not None else 'p{}'.format(p)
-                parameter = Parameter(param, error, unit=unit, label=lab)
-            else:
-                raise ValueError('Parameter is unsupported type: ' + str(param))
-            # end if
-            p_list.append(parameter)
-        # end for
-        self._param_list = p_list
-    # end def
-
-    def set_params(self, params, params_err=None):
-        # If params have not been initiated yet, do it now without extra info
-        if len(self) > 0:
-            assert len(params) == len(self)
-        else:
-            self.init_params(params, params_err)
-        # end if
-        if params_err is None:
-            params_err = len(params) * [0.0]
-        # end if
-        for sparam, param, error in zip(self.params_list, params, params_err):
-            assert isinstance(sparam, Parameter)
-            sparam.value = param
-            sparam.error = error
-        # end for
-        self.reset_value()
-    # end def
-
     def shift_params(self, shifts):
         if len(shifts) != len(self):
             raise ValueError('Shifts has wrong dimensions!')
         # end if
         for param, shift in zip(self.params_list, shifts):
-            assert isinstance(param, Parameter)
             param.shift(shift)
         # end for
         self.reset_value()
@@ -150,7 +143,10 @@ class ParameterSet(LineSearchPoint):
             paramset.offset = offset
         # end if
         if params is not None:
-            paramset.set_params(params, params_err)
+            paramset.params = params
+        # end if
+        if params_err is not None:
+            paramset.params_err = params_err
         # end if
         if label is not None:
             paramset.label = label
@@ -189,7 +185,7 @@ class ParameterSet(LineSearchPoint):
 
     def __str__(self):
         string = self.__class__.__name__
-        if self.label is not None:
+        if self.label is not None or self.label != '':
             string += ' ({})'.format(self.label)
         # end if
         if self.params is None:

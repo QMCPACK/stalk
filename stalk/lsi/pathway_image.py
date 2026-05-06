@@ -217,10 +217,8 @@ def extend_structure_errors(
     ps = array(ps).T
     params_err = [get_fraction_error(p, fraction=fraction)[1] for p in ps]
     structure = structure0.copy(label=structure_sub.label)
-    structure.set_params(
-        structure0.params + structure_sub.params @ subspace,
-        params_err=params_err
-    )
+    structure.params = structure0.params + structure_sub.params @ subspace
+    structure.params_err = params_err
     structure.value = structure_sub.value
     structure.error = structure_sub.error
     return structure

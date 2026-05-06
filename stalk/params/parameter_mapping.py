@@ -120,7 +120,7 @@ class ParameterMapping():
 
     def check_pos_consistency(
         self,
-        pos,
+        pos: ndarray,
         axes=None,
         tol=1e-6,
     ):
@@ -132,7 +132,13 @@ class ParameterMapping():
         params = self.map_forward(pos=pos, axes=axes)
         # Then back
         pos_new, axes_new = self.map_backward(params)
-        consistent = match_to_tol(pos_new, pos, tol=tol)
+        consistent = len(pos_new) == len(pos)
+        for p, (po, pn) in enumerate(zip(pos, pos_new)):
+            if any(abs(po - pn) > tol):
+                consistent = False
+                print(f'  Consistency warning, pos[{p}]: {po} - {pn} > {tol}')
+            # end if
+        # end for
         # Check axes only if both are present
         if axes_new is not None and axes is not None:
             consistent &= match_to_tol(axes_new, axes, tol=tol)
@@ -156,7 +162,13 @@ class ParameterMapping():
         else:
             params_new = self.map_forward(pos, axes=axes)
         # end if
-        consistent = match_to_tol(params, params_new, tol)
+        consistent = len(params) == len(params_new)
+        for p, (po, pn) in enumerate(zip(params, params_new)):
+            if abs(po - pn) > tol:
+                consistent = False
+                print(f'  Consistency warning, p[{p}]: {po} - {pn} > {tol}')
+            # end if
+        # end for
         return consistent
     # end def
 

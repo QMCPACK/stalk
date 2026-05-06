@@ -147,8 +147,8 @@ def test_NexusPes(tmp_path):
         # using var_eff_map requires forward mapping to use parameters
         samples_ref = evm.get_samples(s_evm0, error=sigma)
     # end with
-    s_evm.set_forward_func(forward_H2O)
-    s_evm0.set_forward_func(forward_H2O)
+    s_evm.forward = forward_H2O
+    s_evm0.forward = forward_H2O
     samples_ref = evm.get_samples(s_evm0, error=sigma)
     pes.evaluate(
         s_evm0,

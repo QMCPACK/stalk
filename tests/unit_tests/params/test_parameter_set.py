@@ -28,19 +28,15 @@ def test_ParameterSet():
     # nominal test, meaningful values
     params = [1, 2]
     params_err = [3, 4]
-    units = ['a', 'b']
-    labels = ['c', 'd']
     value = 6.
     error = 7.
     label = 'e'
     s = ParameterSet(
         params,
         params_err,
-        units=units,
         value=value,
         error=error,
         label=label,
-        labels=labels
     )
     assert len(s) == 2
     assert s.value == value
@@ -103,15 +99,15 @@ def test_ParameterSet():
     assert match_to_tol(s.distance2(ss), sum(np.array(shifts)**2))
     assert match_to_tol(s.distance(ss), sum(np.array(shifts)**2)**0.5)
 
-    # Test setting of parameters (w/o error)
+    # Test setting of parameters
     new_params = [10., 11.]
-    s.set_params(new_params, None)
+    s.params = new_params
     assert match_to_tol(s.params, new_params)
     assert match_to_tol(s.params_err, [0.0, 0.0])
     assert s.value is None
-    # Test setting of parameters (w/ error)
+    # Test setting of parameter errors
     new_params_err = [12., 13.]
-    s.set_params(new_params, new_params_err)
+    s.params_err = new_params_err
     assert match_to_tol(s.params, new_params)
     assert match_to_tol(s.params_err, new_params_err)
     assert s.value is None
