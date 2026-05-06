@@ -14,26 +14,26 @@ pos_H2 = array('''
 elem_H2 = 'H H'.split()
 
 
-def forward_H2(pos, **kwargs):
+def forward_H2(pos, fwd = None):
     r = distance(pos[0], pos[1])
     return [r]
 # end def
 
 
-def backward_H2(params, **kwargs):
+def backward_H2(params, bck = None):
     H1 = params[0] * array([0.0, 0.0, 0.5])
     H2 = params[0] * array([0.0, 0.0, -0.5])
     return array([H1, H2])
 # end def
 
 
-def forward_H2_alt(pos, factor=2.0, **kwargs):
+def forward_H2_alt(pos, factor=2.0):
     r = distance(pos[0], pos[1]) / factor
     return [r]
 # end def
 
 
-def backward_H2_alt(params, factor=2.0, **kwargs):
+def backward_H2_alt(params, factor=2.0):
     H1 = params[0] * array([0.0, 0.0, 0.5 * factor])
     H2 = params[0] * array([0.0, 0.0, -0.5 * factor])
     return array([H1, H2])

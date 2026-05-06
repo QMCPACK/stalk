@@ -11,6 +11,7 @@ from .geometry_result import GeometryResult
 from .linesearch_point import LineSearchPoint
 from .parameter import Parameter
 from .parameter_hessian import ParameterHessian
+from .parameter_mapping import ParameterMapping
 from .parameter_set import ParameterSet
 from .parameter_structure import ParameterStructure
 from .pes_function import PesFunction
@@ -32,6 +33,7 @@ __all__ = [
     'LineSearchPoint',
     'Parameter',
     'ParameterHessian',
+    'ParameterMapping',
     'ParameterSet',
     'ParameterStructure',
     'PesFunction',

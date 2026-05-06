@@ -52,6 +52,7 @@ from stalk.params import GeometryResult
 from stalk.params import LineSearchPoint
 from stalk.params import Parameter
 from stalk.params import ParameterHessian
+from stalk.params import ParameterMapping
 from stalk.params import ParameterSet
 from stalk.params import ParameterStructure
 from stalk.params import PesFunction
@@ -120,6 +121,7 @@ __all__ = [
     'LineSearchPoint',
     'Parameter',
     'ParameterHessian',
+    'ParameterMapping',
     'ParameterSet',
     'ParameterStructure',
     'PesFunction',
