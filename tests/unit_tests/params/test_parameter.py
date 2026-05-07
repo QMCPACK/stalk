@@ -2,12 +2,12 @@
 
 import io
 import sys
-from numpy import inf
+from numpy import inf, pi
 from pytest import raises
 
 from stalk.params import Parameter
 from stalk.params import BondLength
-from stalk.params.parameter import ParameterLimitException
+from stalk.params.parameter import BondAngle, ParameterLimitException, PhaseAngle
 from stalk.util.util import match_to_tol
 
 __author__ = "Juha Tiihonen"
@@ -24,7 +24,7 @@ def test_Parameter():
     # end with
 
     # Cannot construct with non-scalar
-    with raises(ValueError):
+    with raises(TypeError):
         Parameter([])
     # end with
 
@@ -36,7 +36,7 @@ def test_Parameter():
     assert p.label == 'p'
     assert p.limits[0] == -inf
     assert p.limits[1] == inf
-    
+
     with raises(TypeError):
         p.limits = 2.0
     # end with
@@ -59,7 +59,7 @@ def test_Parameter():
     p.shift(shift)
     assert p.value == value + shift
     assert p.error == 0.0
-    
+
     # Trying to shift further violates limits
     with raises(ParameterLimitException):
         p.shift(limits[1])
@@ -115,5 +115,83 @@ def test_BondLength():
     assert p.label == label
     assert p.unit == unit
     assert p.limits == limits
+
+# end def
+
+
+# Test BondAngle class
+def test_BondAngle():
+
+    # Cannot construct without a value
+    with raises(TypeError):
+        BondAngle()
+    # end with
+
+    # Cannot construct with non-scalar
+    with raises(ValueError):
+        BondAngle([])
+    # end with
+
+    # test defaults
+    triplets = ([0.0, 1.0], [1.0, 0.0], [0.0, -1.0])
+    p = BondAngle(triplets)
+    assert match_to_tol(p.value, 90.0)
+    assert p.error == 0.0
+    assert p.unit == 'ang'
+    assert p.label == 'a'
+    assert p.limits[0] == 0.0
+    assert p.limits[1] == 180.0
+
+    # test multiple angles
+    triplets = [([0.0, 1.0], [1.0, 0.0], [0.0, -1.0]), ([0.0, 1.0], [-1.0, 0.0], [0.0, -1.0])]
+    limits = (1.0, 2.0)
+    label = 'label'
+    unit = 'rad'
+    p = BondAngle(triplets, label=label, unit=unit, limits=limits)
+    assert match_to_tol(p.value, pi / 2)
+    assert p.error == 0.0
+    assert p.label == label
+    assert p.unit == unit
+    assert p.limits == limits
+
+# end def
+
+
+# Test PhaseAngle class
+def test_PhaseAngle():
+
+    # Cannot construct without a value
+    with raises(TypeError):
+        PhaseAngle()
+    # end with
+
+    # Cannot construct with non-scalar
+    with raises(TypeError):
+        PhaseAngle([])
+    # end with
+
+    # test defaults
+    value = 1.0
+    p = PhaseAngle(value)
+    assert p.value == value
+    assert p.error == 0.0
+    assert p.unit == 'rad'
+    assert p.label == 't'
+    assert p.limits[0] == -pi
+    assert p.limits[1] == pi
+
+    # test alternative units
+    label = 'label'
+    unit = 'ang'
+    value = 512.0
+    p = PhaseAngle(value, label=label, unit=unit)
+    assert p.value == value % 360.0
+    assert p.error == 0.0
+    assert p.label == label
+    assert p.unit == unit
+    assert p.limits == (-180.0, 180.0)
+    # test negative angles
+    p.value = 200.0
+    assert p.value == -160.0
 
 # end def

@@ -11,6 +11,8 @@ from .geometry_result import GeometryResult
 from .linesearch_point import LineSearchPoint
 from .parameter import Parameter
 from .parameter import BondLength
+from .parameter import BondAngle
+from .parameter import PhaseAngle
 from .parameter_hessian import ParameterHessian
 from .parameter_mapping import ParameterMapping
 from .parameter_set import ParameterSet
@@ -22,6 +24,7 @@ from .util import angle
 from .util import bond_angle
 from .util import distance
 from .util import mean_distances
+from .util import mean_bond_angles
 from .util import mean_param
 from .util import periodic_distance
 from .util import periodic_bond_angle
@@ -34,6 +37,8 @@ __all__ = [
     'LineSearchPoint',
     'Parameter',
     'BondLength',
+    'BondAngle',
+    'PhaseAngle',
     'ParameterHessian',
     'ParameterMapping',
     'ParameterSet',
@@ -45,6 +50,7 @@ __all__ = [
     'distance',
     'interpolate_params',
     'mean_distances',
+    'mean_bond_angles',
     'mean_param',
     'periodic_distance',
     'periodic_bond_angle',

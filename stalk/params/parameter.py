@@ -5,9 +5,9 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from numpy import isscalar, inf, ndarray
+from numpy import isscalar, inf, ndarray, pi
 
-from stalk.params.util import mean_distances
+from stalk.params.util import mean_bond_angles, mean_distances
 from stalk.util.util import FF, FLL, FU
 
 
@@ -49,7 +49,7 @@ class Parameter():
             # end if
             self._value = value
         else:
-            raise ValueError("Value must be scalar!")
+            raise TypeError("Value must be scalar!")
         # end if
     # end def
 
@@ -71,7 +71,7 @@ class Parameter():
     def limits(self):
         return self._limits
     # end def
-    
+
     @limits.setter
     def limits(self, limits):
         if limits is None:
@@ -102,8 +102,8 @@ class Parameter():
 
 
 class BondLength(Parameter):
-    
-    def __init__(        
+
+    def __init__(
         self,
         pos: tuple[ndarray, ndarray] | list[tuple[ndarray, ndarray]],
         label='d',
@@ -129,14 +129,85 @@ class BondLength(Parameter):
             limits=limits,
         )
     # end def
-    
+
+# end def
+
+
+class BondAngle(Parameter):
+
+    def __init__(
+        self,
+        pos: tuple[ndarray, ndarray, ndarray] | list[tuple[ndarray, ndarray, ndarray]],
+        label='a',
+        unit='ang',
+        error=0.0,
+        limits=(0.0, 180.0),
+        tol=1e-6,
+        axes=None,
+    ):
+        if isinstance(pos, tuple):
+            # Provide just one pair
+            a = mean_bond_angles([pos], tol=tol, axes=axes, units=unit)
+        else:
+            # Provide list of pairs
+            a = mean_bond_angles(pos, tol=tol, axes=axes, units=unit)
+        # end if
+        Parameter.__init__(
+            self,
+            value=a,
+            error=error,
+            label=label,
+            unit=unit,
+            limits=limits,
+        )
+    # end def
+
+# end def
+
+
+class PhaseAngle(Parameter):
+
+    def __init__(
+        self,
+        value,
+        label='t',
+        unit='rad',
+        error=0.0,
+    ):
+        if unit == 'rad':
+            limits = (-pi, pi)
+        else:
+            limits = (-180.0, 180.0)
+        # end if
+        Parameter.__init__(
+            self,
+            value=value,
+            error=error,
+            label=label,
+            unit=unit,
+            limits=limits,
+        )
+    # end def
+
+    @Parameter.value.setter
+    def value(self, value):
+        if isscalar(value):
+            # Reset between limits (works in both units as long as limits are proper)
+            dlim = self.limits[1] - self.limits[0]
+            value = (value + self.limits[1]) % dlim + self.limits[0]
+            self._value = value
+        else:
+            raise TypeError("Value must be scalar!")
+        # end if
+    # end def
+
 # end def
 
 
 class ParameterLimitException(Exception):
-    
+
     def __init__(self, msg):
         super().__init__(self, msg)
     # end def
-    
+
 # end class

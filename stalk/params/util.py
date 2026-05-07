@@ -47,6 +47,9 @@ def periodic_distance(r0, r1, axes):
 
 def bond_angle(r0, rc, r1, units='ang'):
     '''Return dihedral angle between 3 bodies'''
+    r0 = array(r0)
+    rc = array(rc)
+    r1 = array(r1)
     v0 = r0 - rc
     v1 = r1 - rc
     ang = angle(v0, v1, units=units)
@@ -83,6 +86,26 @@ def mean_distances(pairs, tol=1e-6, axes=None):
         # end if
     # end for
     return mean_param(rs, tol=tol)
+# end def
+
+
+def mean_bond_angles(triplets, tol=1e-6, axes=None, units='ang'):
+    '''Return average bond angle over (presumably) identical position triplets'''
+    angles = []
+    for triplet in triplets:
+        if axes is not None:
+            angles.append(periodic_bond_angle(
+                triplet[0],
+                triplet[1],
+                triplet[2],
+                axes=axes,
+                units=units
+            ))
+        else:
+            angles.append(bond_angle(triplet[0], triplet[1], triplet[2], units=units))
+        # end if
+    # end for
+    return mean_param(angles, tol=tol)
 # end def
 
 

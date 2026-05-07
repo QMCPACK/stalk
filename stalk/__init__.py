@@ -51,6 +51,9 @@ from stalk.params import EffectiveVarianceMap
 from stalk.params import GeometryResult
 from stalk.params import LineSearchPoint
 from stalk.params import Parameter
+from stalk.params import BondLength
+from stalk.params import BondAngle
+from stalk.params import PhaseAngle
 from stalk.params import ParameterHessian
 from stalk.params import ParameterMapping
 from stalk.params import ParameterSet
@@ -62,6 +65,7 @@ from stalk.params import bond_angle
 from stalk.params import distance
 from stalk.params import interpolate_params
 from stalk.params import mean_distances
+from stalk.params import mean_bond_angles
 from stalk.params import mean_param
 from stalk.params import periodic_distance
 from stalk.params import periodic_bond_angle
@@ -120,6 +124,9 @@ __all__ = [
     'GeometryResult',
     'LineSearchPoint',
     'Parameter',
+    'BondLength',
+    'BondAngle',
+    'PhaseAngle',
     'ParameterHessian',
     'ParameterMapping',
     'ParameterSet',
@@ -131,6 +138,7 @@ __all__ = [
     'distance',
     'interpolate_params',
     'mean_distances',
+    'mean_bond_angles',
     'mean_param',
     'periodic_distance',
     'periodic_bond_angle',
