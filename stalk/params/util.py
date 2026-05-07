@@ -4,12 +4,16 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from numpy import linalg, pi, arccos, array, dot, sin, cos
+import warnings
+
+from numpy import linalg, pi, arccos, array, dot, sin, cos, ndarray
 from scipy.optimize import minimize
 
 
-def distance(r0, r1):
+def distance(r0: ndarray, r1: ndarray) -> float:
     '''Return Euclidean distance between two positions'''
+    r0 = array(r0)
+    r1 = array(r1)
     r = linalg.norm(r0 - r1)
     return r
 # end def
@@ -83,10 +87,14 @@ def mean_distances(pairs, tol=1e-6, axes=None):
 
 
 def mean_param(params, tol=1e-6):
+    if len(params) == 0:
+        raise ValueError(f'Must provide at least one parameter, provided: {params}')
+    # end if
     avg = array([params]).mean()
-    if not all(params - avg < tol):
-        print("Warning! Some of symmetric parameters stand out:")
-        print(params)
+    for p, value in enumerate(params):
+        if abs(value - avg) > tol:
+            warnings.warn(f'Presumably symmetric parameter |p{p} - avg| = {value} > tol, avg={avg}, tol={tol}')
+        # end if
     # end if
     return avg
 # end def

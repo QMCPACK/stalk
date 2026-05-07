@@ -10,6 +10,7 @@ from .effective_variance_map import EffectiveVarianceMap
 from .geometry_result import GeometryResult
 from .linesearch_point import LineSearchPoint
 from .parameter import Parameter
+from .parameter import BondLength
 from .parameter_hessian import ParameterHessian
 from .parameter_mapping import ParameterMapping
 from .parameter_set import ParameterSet
@@ -32,6 +33,7 @@ __all__ = [
     'GeometryResult',
     'LineSearchPoint',
     'Parameter',
+    'BondLength',
     'ParameterHessian',
     'ParameterMapping',
     'ParameterSet',
