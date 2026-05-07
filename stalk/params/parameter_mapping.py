@@ -7,6 +7,7 @@ __license__ = "BSD-3-Clause"
 
 from numpy import array, ndarray
 
+from stalk.params.parameter import Parameter
 from stalk.util.function_caller import FunctionCaller
 from stalk.util.util import match_to_tol
 
@@ -89,7 +90,16 @@ class ParameterMapping():
             # If axes not supported, try without
             params = self.forward.func(pos=pos, **args)
         # end try
-        return array(params, dtype=float).flatten()
+        param_vals = []
+        for p in params:
+            # Forward function can return a list of either Parameters or scalars
+            if isinstance(p, Parameter):
+                param_vals.append(p.value)
+            else:
+                param_vals.append(float(p))
+            # end if
+        # end for
+        return array(param_vals, dtype=float).flatten()
     # end def
 
     # Perform backward mapping if present and return pos, axes; else, return None, None

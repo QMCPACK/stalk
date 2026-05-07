@@ -50,6 +50,7 @@ class GeometryLoader(ArgsContainer):
         path,
         relax_func: callable,
         structure: ParameterSet,
+        label='relax',
         **kwargs  # relax kwargs
     ) -> ParameterSet:
         try:
@@ -63,7 +64,7 @@ class GeometryLoader(ArgsContainer):
             # Then, try to load again
             res = self.load(path)
         # end try
-        return structure.copy(pos=res.pos, axes=res.axes)
+        return structure.copy(pos=res.pos, axes=res.axes, label=label)
     # end def
 
     # The actual loading function must be overridden and return a GeometryResult object

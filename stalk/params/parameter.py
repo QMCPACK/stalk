@@ -7,27 +7,32 @@ __license__ = "BSD-3-Clause"
 
 from numpy import isscalar, inf, ndarray, pi
 
-from stalk.params.util import mean_bond_angles, mean_distances
+from stalk.params.util import mean_bond_angles, mean_distances, mean_param
 from stalk.util.util import FF, FLL, FU
 
 
 class Parameter():
-    _value: float
+    _value: float = None
     _error: float = 0.0
-    _limits: tuple[float, float]
+    _limits: tuple[float, float] = None
     label: str = ''
     unit: str = ''
 
     def __init__(
         self,
-        value,
+        value: float | list[float],
         error=0.0,
         label='p',
         unit='',
         limits=(-inf, inf),
+        tol=1e-6,
     ):
         self.limits = limits
-        self.value = value
+        if isscalar(value):
+            self.value = value
+        else:
+            self.value = mean_param(value, tol=tol)
+        # end if
         self.error = error
         self.label = label
         self.unit = unit
@@ -69,7 +74,12 @@ class Parameter():
 
     @property
     def limits(self):
-        return self._limits
+        # Some bacward compatibility
+        if self._limits is None:
+            return (-1e6, 1e6)
+        else:
+            return self._limits
+        # end if
     # end def
 
     @limits.setter
@@ -105,7 +115,7 @@ class BondLength(Parameter):
 
     def __init__(
         self,
-        pos: tuple[ndarray, ndarray] | list[tuple[ndarray, ndarray]],
+        arg: float | tuple[ndarray, ndarray] | list[tuple[ndarray, ndarray]],
         label='d',
         unit='A',
         error=0.0,
@@ -113,12 +123,14 @@ class BondLength(Parameter):
         tol=1e-6,
         axes=None,
     ):
-        if isinstance(pos, tuple):
+        if isscalar(arg):
+            d = arg
+        elif isinstance(arg, tuple):
             # Provide just one pair
-            d = mean_distances([pos], tol=tol, axes=axes)
+            d = mean_distances([arg], tol=tol, axes=axes)
         else:
             # Provide list of pairs
-            d = mean_distances(pos, tol=tol, axes=axes)
+            d = mean_distances(arg, tol=tol, axes=axes)
         # end if
         Parameter.__init__(
             self,
@@ -137,7 +149,7 @@ class BondAngle(Parameter):
 
     def __init__(
         self,
-        pos: tuple[ndarray, ndarray, ndarray] | list[tuple[ndarray, ndarray, ndarray]],
+        arg: float | tuple[ndarray, ndarray, ndarray] | list[tuple[ndarray, ndarray, ndarray]],
         label='a',
         unit='ang',
         error=0.0,
@@ -145,12 +157,14 @@ class BondAngle(Parameter):
         tol=1e-6,
         axes=None,
     ):
-        if isinstance(pos, tuple):
+        if isscalar(arg):
+            a = arg
+        elif isinstance(arg, tuple):
             # Provide just one pair
-            a = mean_bond_angles([pos], tol=tol, axes=axes, units=unit)
+            a = mean_bond_angles([arg], tol=tol, axes=axes, units=unit)
         else:
             # Provide list of pairs
-            a = mean_bond_angles(pos, tol=tol, axes=axes, units=unit)
+            a = mean_bond_angles(arg, tol=tol, axes=axes, units=unit)
         # end if
         Parameter.__init__(
             self,

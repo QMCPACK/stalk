@@ -23,8 +23,8 @@ def test_Parameter():
         Parameter()
     # end with
 
-    # Cannot construct with non-scalar
-    with raises(TypeError):
+    # Cannot construct with empty non-scalar
+    with raises(ValueError):
         Parameter([])
     # end with
 
@@ -166,7 +166,7 @@ def test_PhaseAngle():
     # end with
 
     # Cannot construct with non-scalar
-    with raises(TypeError):
+    with raises(ValueError):
         PhaseAngle([])
     # end with
 
