@@ -4,10 +4,8 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from numpy import linalg, pi, arccos, array, dot, sin, cos, linspace
+from numpy import linalg, pi, arccos, array, dot, sin, cos
 from scipy.optimize import minimize
-
-from stalk.params.parameter_set import ParameterSet
 
 
 def distance(r0, r1):
@@ -114,17 +112,4 @@ def rotate_2d(arr_2d, ang, units='ang'):
         [sin(ang), cos(ang)]
     ])
     return R @ arr_2d
-# end def
-
-
-def interpolate_params(structure_a: ParameterSet, structure_b: ParameterSet, num_int):
-    scales = linspace(0.0, 1.0, num_int + 2)
-    dparams = structure_b.params - structure_a.params
-    traj = []
-    for scale in scales:
-        new_params = structure_a.params + scale * dparams
-        structure = structure_a.copy(params=new_params)
-        traj.append(structure)
-    # end for
-    return traj
 # end def

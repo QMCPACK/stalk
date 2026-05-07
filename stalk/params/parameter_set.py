@@ -5,7 +5,7 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from numpy import array, isscalar, random, ndarray
+from numpy import array, isscalar, random, ndarray, linspace
 from copy import deepcopy
 
 from stalk.params.linesearch_point import LineSearchPoint
@@ -210,3 +210,16 @@ class ParameterSet(LineSearchPoint):
     # end def
 
 # end class
+
+
+def interpolate_params(structure_a: ParameterSet, structure_b: ParameterSet, num_int):
+    scales = linspace(0.0, 1.0, num_int + 2)
+    dparams = structure_b.params - structure_a.params
+    traj = []
+    for scale in scales:
+        new_params = structure_a.params + scale * dparams
+        structure = structure_a.copy(params=new_params)
+        traj.append(structure)
+    # end for
+    return traj
+# end def

@@ -13,13 +13,13 @@ from .parameter import Parameter
 from .parameter_hessian import ParameterHessian
 from .parameter_mapping import ParameterMapping
 from .parameter_set import ParameterSet
+from .parameter_set import interpolate_params
 from .parameter_structure import ParameterStructure
 from .pes_function import PesFunction
 from .pes_result import PesResult
 from .util import angle
 from .util import bond_angle
 from .util import distance
-from .util import interpolate_params
 from .util import mean_distances
 from .util import mean_param
 from .util import periodic_distance
