@@ -1,23 +1,26 @@
 #!/usr/bin/env python3
 
-from numpy import array
-
 from stalk import ParameterStructure
-from stalk.io import XyzGeometry
+from stalk import XyzGeometry
+from stalk import BondLength
 from stalk.util import Bohr
 
 from params import forward, backward, relax_pyscf
 
 
 # Let us initiate a ParameterStructure object that implements the parametric mappings
-params_init = array([2.651, 2.055])
+units = 'B'
+params_init = [
+    BondLength(2.651, label='r_CC', unit=units),
+    BondLength(2.055, label='r_CH', unit=units),
+]
 elem = 6 * ['C'] + 6 * ['H']
 structure_init = ParameterStructure(
     forward=forward,
     backward=backward,
     params=params_init,
     elem=elem,
-    units='B'
+    units=units,
 )
 
 xyz = XyzGeometry(suffix='relax.xyz', scale=Bohr)

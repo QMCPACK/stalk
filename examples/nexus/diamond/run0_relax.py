@@ -3,6 +3,7 @@
 from numpy import array
 
 from stalk.nexus import NexusStructure
+from stalk import Parameter
 
 from params import forward, backward, relax_pwscf
 
@@ -14,7 +15,7 @@ elem = 2 * ['C']
 structure_init = NexusStructure(
     forward=forward,
     backward=backward,
-    params=params_init,
+    params=[Parameter(1.7, label='a')],
     elem=elem,
     units='A'
 )

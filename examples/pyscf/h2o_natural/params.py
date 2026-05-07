@@ -7,10 +7,10 @@ from pyscf import gto
 from pyscf.geomopt.geometric_solver import optimize
 from pyscf.gto.mole import tofile
 
-from stalk import bond_angle
-from stalk import mean_distances
 from stalk import ParameterStructure
 from stalk import PesFunction
+from stalk import BondLength
+from stalk import BondAngle
 
 
 # Natural forward mapping using bond lengths and angles
@@ -22,11 +22,11 @@ def forward(pos: ndarray):
     H1 = pos[2]
 
     # for redundancy, calculate mean bond lengths
-    r = mean_distances([
+    r = BondLength([
         (O0, H0),
         (O0, H1)
     ])
-    a = bond_angle(H0, O0, H1, units='rad')
+    a = BondAngle((H0, O0, H1), unit='rad')
     params = [r, a]
     return params
 # end def

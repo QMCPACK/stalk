@@ -8,13 +8,13 @@ from nexus import Structure
 
 from stalk.util import Bohr
 from stalk import PesLoader
-from stalk import mean_distances
 from stalk import XyzGeometry
 from stalk import NexusGeometry
 from stalk import NexusPes
 from stalk import QmcPes
 from stalk import PesFunction
 from stalk import EffectiveVariance
+from stalk import BondLength
 
 # This requires the following job arguments to be defined in local nxs.py
 # Copy examples/nexus/nxs_template.py to ./nxs.py and edit accordingly
@@ -44,24 +44,24 @@ def forward(pos: ndarray):
 
     # for redundancy, calculate mean bond lengths
     # 0) from neighboring C-atoms
-    r_CC = mean_distances([
+    r_CC = BondLength([
         (C0, C1),
         (C1, C2),
         (C2, C3),
         (C3, C4),
         (C4, C5),
         (C5, C0)
-    ], tol=1e-4)
+    ], label='r_CC', unit='B', tol=1e-4)
     # 1) from corresponding H-atoms
-    r_CH = mean_distances([
+    r_CH = BondLength([
         (C0, H0),
         (C1, H1),
         (C2, H2),
         (C3, H3),
         (C4, H4),
         (C5, H5)
-    ], tol=1e-4)
-    params = array([r_CC, r_CH])
+    ], label='r_CH', unit='B', tol=1e-4)
+    params = [r_CC, r_CH]
     return params
 # end def
 

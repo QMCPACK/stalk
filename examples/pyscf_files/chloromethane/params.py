@@ -5,10 +5,9 @@ from pyscf import dft, gto
 
 from stalk import FilesPes
 from stalk import ParameterStructure
-from stalk import bond_angle
-from stalk import distance
-from stalk import mean_distances
-from stalk import mean_param
+from stalk import BondLength
+from stalk import BondAngle
+from stalk import Parameter
 
 
 # Natural forward mapping using bond lengths and angles
@@ -21,17 +20,17 @@ def forward_natural(pos: ndarray):
     H1 = pos[3]
     H2 = pos[4]
 
-    r_CCl = distance(C, Cl)
-    r_CH = mean_distances([
+    r_CCl = BondLength((C, Cl), label='r_CCl')
+    r_CH = BondLength([
         (C, H0),
         (C, H1),
         (C, H2),
-    ])
-    a = mean_param([
-        bond_angle(H0, C, H1, units='rad'),
-        bond_angle(H1, C, H2, units='rad'),
-        bond_angle(H2, C, H0, units='rad'),
-    ], tol=1e-4)
+    ], label='r_CH', tol=1e-4)
+    a = BondAngle([
+        (H0, C, H1),
+        (H1, C, H2),
+        (H2, C, H0),
+    ], unit='rad', tol=1e-4)
     params = [r_CCl, r_CH, a]
     return params
 # end def
@@ -47,17 +46,17 @@ def forward(pos: ndarray):
     H1 = pos[3]
     H2 = pos[4]
 
-    r_CCl = distance(C, Cl)
-    z_CH = mean_param([
+    r_CCl = BondLength((C, Cl), label='r_CCl')
+    z_CH = Parameter([
         (H0 - C)[2],
         (H1 - C)[2],
         (H2 - C)[2],
-    ], tol=1e-4)
-    xy_CH = mean_param([
+    ], label='z_CH', tol=1e-4)
+    xy_CH = Parameter([
         ((C[0] - H0[0])**2 + (C[1] - H0[1])**2)**0.5,
         ((C[0] - H1[0])**2 + (C[1] - H1[1])**2)**0.5,
         ((C[0] - H2[0])**2 + (C[1] - H2[1])**2)**0.5,
-    ], tol=1e-3)
+    ], label='xy_CH', tol=1e-3)
     params = [r_CCl, z_CH, xy_CH]
     return params
 # end def

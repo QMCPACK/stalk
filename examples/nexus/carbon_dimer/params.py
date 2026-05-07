@@ -6,10 +6,10 @@ from nexus import generate_pyscf, generate_qmcpack, job, obj
 from nexus import generate_physical_system, generate_convert4qmc
 from nexus import Structure
 
-from stalk import distance
 from stalk import XyzGeometry
 from stalk import EffectiveVariance
 from stalk import PesLoader
+from stalk import BondLength
 from stalk.nexus import NexusGeometry
 from stalk.nexus import NexusPes
 from stalk.nexus import QmcPes
@@ -27,7 +27,7 @@ def forward(pos):
     pos = pos.reshape(-1, 3)  # make sure of the shape
     C0 = pos[0]
     C1 = pos[1]
-    d = distance(C0, C1)
+    d = BondLength((C0, C1))
     params = array([d])
     return params
 # end def

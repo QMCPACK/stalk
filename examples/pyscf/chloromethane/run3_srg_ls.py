@@ -31,10 +31,11 @@ if __name__ == "__main__":
     print('Original energy and params:')
     print(surrogate.ls(0).target_settings.target.y0, surrogate.structure.params)
     # Remap to natural parameters
-    params_natural = surrogate.structure.remap_forward(forward_natural)
-    print(f'C-Cl bond length: {params_natural[0]}')
-    print(f'C-H bond length: {params_natural[1]}')
-    print(f'C-H bond angle: {params_natural[2]}')
+    p_natural_init = srg_ls.structure_init.remap_forward(forward_natural)
+    p_natural_final = srg_ls.structure_final.remap_forward(forward_natural)
+    print(f'{p_natural_init[0]} -> {p_natural_final[0]}')
+    print(f'{p_natural_init[1]} -> {p_natural_final[1]}')
+    print(f'{p_natural_init[2]} -> {p_natural_final[2]}')
     srg_ls.plot(target=surrogate.structure)
     plt.show()
 # end if

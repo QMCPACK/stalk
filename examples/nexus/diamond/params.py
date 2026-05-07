@@ -6,6 +6,7 @@ from nexus import generate_qmcpack, job, obj
 from nexus import generate_physical_system, generate_pw2qmcpack, generate_pwscf
 from nexus import Structure
 
+from stalk import Parameter
 from stalk.util import Bohr
 from stalk.nexus import PwscfGeometry
 from stalk.nexus import PwscfPes
@@ -26,22 +27,20 @@ qmcpseudos = ['C.ccECP.xml']
 
 # Forward mapping: produce parameter values from an array of atomic positions
 def forward(pos: ndarray, axes: ndarray):
-    from stalk.params.util import mean_param
-    from numpy import array
     # Redundancy helps in finding silly mistakes in the parameter mappings
-    a = mean_param([
+    a = Parameter([
         axes[0, 0],
         axes[0, 1],
         axes[1, 1],
         axes[1, 2],
         axes[2, 0],
         axes[2, 2],
-    ])
-    return array([a])
+    ], label='a')
+    return [a]
 # end def
 
 
-def backward(params):
+def backward(params: ndarray):
     a = params[0]
     axes = [
         [a, a, 0],

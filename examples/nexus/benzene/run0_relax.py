@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
 
-from numpy import array
-
 from stalk.nexus import NexusStructure
+from stalk import BondLength
 
 from params import forward, backward, relax_pyscf
 
 interactive = __name__ == "__main__"
 
 # Let us initiate a NexusStructure object that implements the parametric mappings
-params_init = array([2.651, 2.055])
+units = 'B'
+params_init = [
+    BondLength(2.651, label='r_CC', unit=units),
+    BondLength(2.055, label='r_CH', unit=units),
+]
 elem = 6 * ['C'] + 6 * ['H']
 structure_init = NexusStructure(
     forward=forward,
     backward=backward,
     params=params_init,
     elem=elem,
-    units='B'
+    units=units,
 )
 
 structure_relax = structure_init.copy()

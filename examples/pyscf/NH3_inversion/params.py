@@ -12,12 +12,12 @@ from ase.calculators.calculator import Calculator, all_changes
 from ase import Atoms
 from ase.constraints import FixAtoms
 
-from stalk import mean_distances
-from stalk import mean_param
 from stalk import angle
 from stalk import rotate_2d
 from stalk import ParameterStructure
 from stalk import PesFunction
+from stalk import BondLength
+from stalk import Parameter
 
 
 # Forward mapping: produce parameter values from an array of atomic positions
@@ -30,21 +30,21 @@ def forward(pos: ndarray):
     H2 = pos[3]
 
     # for redundancy, calculate mean bond lengths
-    r = mean_distances([
+    r = BondLength([
         (N0, H0),
         (N0, H1),
         (N0, H2),
-    ], tol=1e-4)
+    ], label='r_NH', tol=1e-4)
     # Calculate angle between x axis and H -> should be around 90 degrees
     x = [1.0, 0.0, 0.0]
     d0 = H0 - N0
     d1 = H1 - N0
     d2 = H2 - N0
-    a = mean_param([
+    a = Parameter([
         angle(d0, x, units='rad'),
         angle(d1, x, units='rad'),
         angle(d2, x, units='rad'),
-    ], tol=1e-4)
+    ], label='a_Hx', tol=1e-4)
     params = [r, a]
     return params
 # end def

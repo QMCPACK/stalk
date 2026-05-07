@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 
 from os import makedirs
-from numpy import array, pi
+from numpy import pi
 
 from stalk import ParameterStructure
 from stalk import XyzGeometry
+from stalk import BondLength
+from stalk import BondAngle
 
 from params import forward, backward, relax_pyscf, pes_dict
 
 
 # Let us initiate a ParameterStructure object that implements the parametric mappings
-params_init = array([0.97, 104.0 / 180 * pi])
+params_init = [
+    BondLength(0.97, label='r_OH'),
+    BondAngle(104.0 / 180 * pi, unit='rad', label='a_HOH')
+]
 elem = ['O'] + 2 * ['H']
 structure = ParameterStructure(
     forward=forward,

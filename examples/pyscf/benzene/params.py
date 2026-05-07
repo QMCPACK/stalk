@@ -7,9 +7,9 @@ from pyscf import gto
 from pyscf.geomopt.geometric_solver import optimize
 from pyscf.gto.mole import tofile
 
-from stalk import mean_distances
 from stalk import ParameterStructure
 from stalk import PesFunction
+from stalk import BondLength
 
 
 # Forward mapping: produce parameter values from an array of atomic positions
@@ -31,24 +31,24 @@ def forward(pos: ndarray):
 
     # for redundancy, calculate mean bond lengths
     # 0) from neighboring C-atoms
-    r_CC = mean_distances([
+    r_CC = BondLength([
         (C0, C1),
         (C1, C2),
         (C2, C3),
         (C3, C4),
         (C4, C5),
         (C5, C0)
-    ], tol=1e-4)
+    ], label='r_CC', unit='B', tol=1e-4)
     # 1) from corresponding H-atoms
-    r_CH = mean_distances([
+    r_CH = BondLength([
         (C0, H0),
         (C1, H1),
         (C2, H2),
         (C3, H3),
         (C4, H4),
         (C5, H5)
-    ], tol=1e-4)
-    params = array([r_CC, r_CH])
+    ], label='r_CH', unit='B', tol=1e-4)
+    params = [r_CC, r_CH]
     return params
 # end def
 

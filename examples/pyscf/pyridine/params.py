@@ -7,9 +7,9 @@ from pyscf import gto
 from pyscf.geomopt.geometric_solver import optimize
 from pyscf.gto.mole import tofile
 
-from stalk import mean_param
 from stalk import ParameterStructure
 from stalk import PesFunction
+from stalk import Parameter
 
 
 # Forward mapping: produce parameter values from an array of atomic positions
@@ -28,41 +28,41 @@ def forward(pos: ndarray):
     H3 = pos[9]
     H4 = pos[10]
 
-    x_C04 = mean_param([
+    x_C04 = Parameter([
         (C0 - N0)[0],
         -(C4 - N0)[0]
     ], tol=1e-3)
-    y_C04 = mean_param([
+    y_C04 = Parameter([
         (C0 - N0)[1],
         (C4 - N0)[1]
     ], tol=1e-3)
-    x_C13 = mean_param([
+    x_C13 = Parameter([
         (C1 - N0)[0],
         -(C3 - N0)[0]
     ], tol=1e-3)
-    y_C13 = mean_param([
+    y_C13 = Parameter([
         (C1 - N0)[1],
         (C3 - N0)[1]
     ], tol=1e-3)
     y_C2 = (C2 - N0)[1]
-    x_H04 = mean_param([
+    x_H04 = Parameter([
         (H0 - N0)[0],
         -(H4 - N0)[0]
     ], tol=1e-3)
-    y_H04 = mean_param([
+    y_H04 = Parameter([
         (H0 - N0)[1],
         (H4 - N0)[1]
     ], tol=1e-3)
-    x_H13 = mean_param([
+    x_H13 = Parameter([
         (H1 - N0)[0],
         -(H3 - N0)[0]
     ], tol=1e-3)
-    y_H13 = mean_param([
+    y_H13 = Parameter([
         (H1 - N0)[1],
         (H3 - N0)[1]
     ], tol=1e-3)
-    y_H2 = (H2 - N0)[1]
-    params = array([
+    y_H2 = Parameter((H2 - N0)[1])
+    params = [
         x_C04,
         y_C04,
         x_C13,
@@ -73,7 +73,7 @@ def forward(pos: ndarray):
         x_H13,
         y_H13,
         y_H2
-    ])
+    ]
     return params
 # end def
 
