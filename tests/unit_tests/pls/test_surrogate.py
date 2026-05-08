@@ -58,8 +58,8 @@ def test_TargetParallelLineSearch():
     assert match_to_tol(srg.M, [M, M])
     assert all(srg.error_d > 0.0)
     assert all(srg.error_p > 0.0)
-    assert srg.epsilon_d is None
-    assert srg.epsilon_p is None
+    assert all(srg.epsilon_d == srg.error_d)
+    assert all(srg.epsilon_p == srg.error_p)
     assert srg.temperature is None
     statcost_ref = M * sum(array(noises)**-2)
     assert match_to_tol(srg.statistical_cost, statcost_ref)
@@ -94,7 +94,7 @@ def test_TargetParallelLineSearch():
     assert all(srg.error_d < epsilon_d)
     assert all(srg.error_d > 0.0)
     assert all(srg.error_p > 0.0)
-    assert srg.epsilon_p is None
+    assert all(srg.epsilon_p == srg.error_p)
     assert srg.temperature is None
     statcost_ref = 7 * sum(array(noises_ref1)**-2)
     assert match_to_tol(srg.statistical_cost, statcost_ref)

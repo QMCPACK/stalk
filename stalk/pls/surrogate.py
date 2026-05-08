@@ -9,7 +9,7 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 import warnings
-from numpy import argmin, array, isscalar, mean, linspace
+from numpy import argmin, array, isscalar, mean, linspace, nan
 
 from stalk.ls.linesearch_grid import LineSearchGrid
 from stalk.ls.ls_settings import LsSettings
@@ -23,9 +23,12 @@ class Surrogate(ParallelLineSearch):
     ls_type = TargetLineSearch
     _ls_list: list[TargetLineSearch] = []
     _temperature = None
-    epsilon_p = None
-    error_p = None
-    error_d = None
+    # User-defined parameter tolerances
+    _epsilon_p = None
+    # Parameter errors from correlated sampling
+    _error_p = None
+    # Search direction errors from correlated sampling
+    _error_d = None
 
     # Return a list of enabled line-searches
     @property
@@ -37,9 +40,65 @@ class Surrogate(ParallelLineSearch):
     def epsilon_d(self):
         epsilon_d = [tls.epsilon for tls in self.ls_list]
         if all(eps is None for eps in epsilon_d):
-            return None
+            return self.error_d
         else:
             return epsilon_d
+        # end if
+    # end def
+
+    @property
+    def error_d(self):
+        if self._error_d is not None:
+            return self._error_d
+        else:
+            return array(len(self) * [nan])
+        # end if
+    # end def
+
+    @error_d.setter
+    def error_d(self, error_d):
+        if error_d is None or len(error_d) == len(self):
+            self._error_d = error_d
+        else:
+            raise TypeError(f'error_d must be None or len(self) sized array, provided {error_d}')
+        # end if
+    # end def
+
+    @property
+    def epsilon_p(self):
+        if self._epsilon_p is not None:
+            return self._epsilon_p
+        elif self._error_p is not None:
+            return self._error_p
+        else:
+            return array(len(self) * [nan])
+        # end if
+    # end def
+
+    @epsilon_p.setter
+    def epsilon_p(self, epsilon_p):
+        if epsilon_p is None or len(epsilon_p) == len(self):
+            self._epsilon_p = epsilon_p
+        else:
+            raise TypeError(f'epsilon_p must be None or len(self) sized array, provided {epsilon_p}')
+        # end if
+    # end def
+
+    @property
+    def error_p(self):
+        if self._error_p is not None:
+            return self._error_p
+        else:
+            return array(len(self) * [nan])
+        # end if
+    # end def
+
+    @error_p.setter
+    def error_p(self, error_p):
+        if error_p is None or len(error_p) == len(self):
+            self._error_p = error_p
+        else:
+            raise TypeError(f'error_p must be None or len(self) sized array, provided {error_p}')
         # end if
     # end def
 
