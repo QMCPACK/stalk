@@ -528,6 +528,7 @@ class Surrogate(ParallelLineSearch):
             # Copy optimized windows, noises
             windows=self.W_opt,
             noises=self.sigma_opt,
+            M=[tls.M for tls in self.ls_list],
             **kwargs
             # pes=None, pes_func=None, pes_args={}
         )

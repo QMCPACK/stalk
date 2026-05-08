@@ -76,9 +76,10 @@ def test_linesearchiteration(tmp_path):
     # end with
     windows = [0.1, 0.2]
     noises = [0.03, 0.04]
+    M = 9
     srg.optimize_windows_noises(
         fit_kind='pf4',
-        M=7,
+        M=M,
         windows=windows,
         noises=noises
     )
@@ -89,7 +90,7 @@ def test_linesearchiteration(tmp_path):
     assert match_to_tol(lsi_srg.pls().hessian.hessian, srg.hessian.hessian)
     assert match_to_tol(lsi_srg.pls().windows, windows)
     assert match_to_tol(lsi_srg.pls().noises, noises)
-    assert len(lsi_srg.pls().ls(0)) == 7
-    assert len(lsi_srg.pls().ls(1)) == 7
+    assert len(lsi_srg.pls().ls(0)) == M
+    assert len(lsi_srg.pls().ls(1)) == M
 
 # end def

@@ -265,9 +265,13 @@ class ParallelLineSearch():
         self,
         windows,
         noises,
+        M=7,
         **ls_args,
-        # M=7, fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
+        # fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
     ):
+        if isinstance(M, int):
+            M = len(self.hessian) * [M]
+        # end if
         ls_list = []
         for d, window, noise in zip(self.D_list, windows, noises):
             # Only add if enabled by the Hessian
@@ -278,6 +282,7 @@ class ParallelLineSearch():
                     d=d,
                     sigma=noise,
                     W=window,
+                    M=M[d],
                     **ls_args
                 )
                 ls_list.append(ls)
@@ -445,13 +450,18 @@ class ParallelLineSearch():
         hessian=None,
         windows=None,
         noises=None,
-        pes=None
+        pes=None,
+        M=None,
     ):
         structure = structure if structure is not None else self.structure
         hessian = hessian if hessian is not None else self.hessian
         windows = windows if windows is not None else self.windows
         noises = noises if noises is not None else self.noises
         pes = pes if pes is not None else self.pes
+        pls_args = {}
+        if M is not None:
+            pls_args['M'] = M
+        # end if
         copy_pls = ParallelLineSearch(
             path=path,
             structure=structure,
@@ -459,7 +469,8 @@ class ParallelLineSearch():
             windows=windows,
             noises=noises,
             no_eval=True,
-            pes=pes
+            pes=pes,
+            **pls_args,
         )
         for ls, ls_new in zip(self.ls_list, copy_pls.ls_list):
             ls_new._settings = ls._settings
