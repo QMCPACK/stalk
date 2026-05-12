@@ -3,8 +3,6 @@
 import warnings
 from numpy import nan
 
-from numpy import isscalar
-
 from stalk.params.geometry_result import GeometryResult
 from stalk.params.parameter_set import ParameterSet
 from stalk.util.args_container import ArgsContainer
@@ -17,16 +15,13 @@ __license__ = "BSD-3-Clause"
 
 class GeometryLoader(ArgsContainer):
 
-    def load(self, path, c_pos=None, only_warn=False, **kwargs) -> GeometryResult:
+    def load(self, path, **kwargs) -> GeometryResult:
         '''The Geometry loader must accept a "path" to input file and return GeometryResult.
         '''
         # Hot update of args
         args = self.get_updated(kwargs)
-        # Keep for backward compatibility
-        if isscalar(c_pos):
-            args['scale'] = c_pos**-1
-        # end if
-        scale = args.pop('scale', 1.0)
+        only_warn = args.pop('only_warn', False)
+        scale = args.pop('scale', args.pop('c_pos', 1.0)**-1)
 
         try:
             filename = check_result_file(path, args)

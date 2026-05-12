@@ -19,12 +19,12 @@ class PesLoader(ArgsContainer):
         self,
         path: str,
         sigma=0.0,
-        only_warn=True,  # Only warn instead of raising exception
         **kwargs
     ) -> PesResult:
         # Hot update of args
         args = self.get_updated(kwargs)
         scale = args.pop('scale', 1.0)
+        only_warn = args.pop('only_warn', False)
 
         try:
             filename = check_result_file(path, args)
