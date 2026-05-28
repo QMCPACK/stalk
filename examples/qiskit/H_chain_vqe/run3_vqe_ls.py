@@ -35,13 +35,13 @@ for n in range(ntot):
         pes=vqe_pes_noisy,
     )
     lsis.append(lsi)
-    # Propagate the parallel line-search (compute values, analyze, then move on) 4 times
-    #   add_sigma=True means that white noise is added based on target errorbars
+    # Propagate the parallel line-search (compute values, analyze, then move on) 5 times
     for i in range(5):
         lsi.propagate(i)
         # Plot each line-search
         if interactive:
             lsi.pls(-2).plot()
+            plt.title(f'Line-search {i} for structure {n}')
             plt.show()
         # end if
     # end for

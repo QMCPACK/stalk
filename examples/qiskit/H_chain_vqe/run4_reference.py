@@ -4,13 +4,27 @@ from os import makedirs
 from pathlib import Path
 from matplotlib import pyplot as plt
 import numpy as np
+from qiskit_algorithms import VQE
 from qiskit_algorithms.optimizers import CG, COBYLA, POWELL
+from qiskit.primitives import StatevectorEstimator
 
-from params import kernel_vqe
+from params import kernel_vqe, pes_exact
 from run0_relax import s_init, directory
 from run3_vqe_ls import lsis, structures
 
 
+# Compare selected optimizers with STALK, using either the same initial point or
+# random initial points
+same_init = False
+optimizers = []
+# COBYLA
+optimizers.append(('COBYLA', COBYLA(maxiter=400), [], [], []))
+# CG
+optimizers.append(('CG', CG(maxiter=20), [], [], []))
+# POWELL
+optimizers.append(('POWELL', POWELL(maxiter=20), [], [], []))
+
+# Record the history of parameters and energies for each optimizer
 params_history = []
 energy_history = []
 
@@ -22,24 +36,12 @@ def callback(eval_count, params, value, estimator_result):
 # end def
 
 
-# Exact solver energy for reference
-ansatz, operator, estimator, exact_solver, problem = kernel_vqe(s_init, exact=True)
-exact_result = exact_solver.solve(problem)
-exact_energy = exact_result.groundenergy
-
-# Resample alternative optimizers so many times
-optimizers = []
-# using the same starting point as STALK?
-same_init = False
-# COBYLA
-optimizers.append(('COBYLA', COBYLA(maxiter=400), [], [], []))
-# CG
-optimizers.append(('CG', CG(maxiter=20), [], [], []))
-# POWELL
-optimizers.append(('POWELL', POWELL(maxiter=20), [], [], []))
+# Get the exact energy for reference
+exact_energy, sigma = pes_exact(s_init)
 
 # Loop through all optimizers
 for label, optimizer, edata, pdata, podata in optimizers:
+    # The number of runs is derived from that of STALK line-searches in run3_vqe_ls.py
     for n, structure in enumerate(structures):
         makedirs(f'{directory}/{label}/', exist_ok=True)
         if same_init:
@@ -61,7 +63,7 @@ for label, optimizer, edata, pdata, podata in optimizers:
         else:
             params_history.clear()
             energy_history.clear()
-            ansatz, operator, estimator, vqe_solver, problem = kernel_vqe(
+            ansatz, mapper, q_hamiltonian = kernel_vqe(
                 s_init,
                 callback=callback,
                 optimizer=optimizer,
@@ -69,11 +71,12 @@ for label, optimizer, edata, pdata, podata in optimizers:
                 initial_point=initial_point,
             )
             print(f'Starting {label}, round {n}:')
-            vqe_result = vqe_solver.solve(problem)
+            vqe = VQE(StatevectorEstimator(), ansatz, optimizer, callback=callback, initial_point=initial_point)
+            vqe_result = vqe.compute_minimum_eigenvalue(q_hamiltonian)
             print(f'Finished {label}, round {n}')
             energies = np.array(energy_history)
             params_raw = np.array(params_history)
-            params_opt = vqe_result.raw_result.optimal_point
+            params_opt = vqe_result.optimal_point
             np.savetxt(efile, energies)
             np.savetxt(pfile, params_raw)
             np.savetxt(pofile, params_opt)
