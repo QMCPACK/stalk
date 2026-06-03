@@ -14,7 +14,7 @@ try:
     from .qmc_pes import QmcPes
     from .xsf_geometry import XsfGeometry
     nexus_enabled = True
-except ModuleNotFoundError:
+except (ModuleNotFoundError, NameError):
     nexus_enabled = False
     pass
 # end try
