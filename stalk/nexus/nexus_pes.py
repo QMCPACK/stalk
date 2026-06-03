@@ -5,19 +5,16 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-import warnings
-from numpy import isnan, isscalar
+from numpy import isscalar
 from pickle import load
 
 from nexus import run_project, bundle
 
 from stalk.io.pes_loader import PesLoader
 from stalk.nexus.nexus_structure import NexusStructure
-from stalk.params.pes_function import PesFunction
-from stalk.params.pes_result import PesResult
-from stalk.params.effective_variance import EffectiveVariance
+from stalk.params.pes_function import NotEvaluatedException, PesFunction
 from stalk.params.effective_variance_map import EffectiveVarianceMap
-from stalk.util.util import FF, FP, directorize
+from stalk.util.util import directorize
 
 
 class NexusPes(PesFunction):
@@ -34,111 +31,75 @@ class NexusPes(PesFunction):
         bundle_jobs=False,
         **kwargs,
     ):
+        # Init the function caller
         super().__init__(func, args=args, **kwargs)
         self.disable_failed = disable_failed
         self.bundle_jobs = bundle_jobs
         self.loader = loader
     # end def
 
-    # Override evaluation function to support job submission and analysis
-    def evaluate(
+    # Override generation function to support Nexus job generation
+    def _generate_structure(
         self,
         structure: NexusStructure,
-        sigma=0.0,
-        add_sigma=False,
         path='',
-        dep_jobs=[],
+        sigma=0.0,
+        samples=None,
+        var_eff_map: EffectiveVarianceMap = None,
         interactive=False,
-        warn_limit=2.0,
-        var_eff_map=None,
+        dep_jobs=[],
+        # Track repeated Nexus identifiers to avoid redundant job generation
+        gen_paths: set = set(),
         **kwargs
-    ):
-        # TODO: try to load first, to assess whether to regenerate or not
-        self._evaluate_structure(
-            structure,
-            path=path,
-            sigma=sigma,
-            dep_jobs=dep_jobs,
-            var_eff_map=var_eff_map,
-            **kwargs
-        )
-        if interactive:
-            self._prompt([structure])
+    ) -> None:
+        # Do not redo jobs
+        if structure.generated:
+            return
         # end if
-        jobs = dep_jobs + structure.jobs
-        run_project(jobs)
-        self._load_structure(
-            structure,
-            add_sigma=add_sigma,
-            warn_limit=warn_limit,
-            var_eff_map=var_eff_map,
-        )
+        # Write the file path to the structure
+        structure.path = f'{directorize(path)}{structure.label}/'
+        # Hot update of eval_args
+        eval_args = self.args.copy()
+        eval_args.update(**kwargs)
+        # Associate the sigma with the structure
+        structure.sigma = sigma
+        # Set the number of samples
+        self._set_samples(structure, var_eff_map=var_eff_map, samples=samples)
+        # Create the jobs and store them in the structure
+        if structure.path in gen_paths:
+            structure.jobs = []
+        else:
+            structure.jobs = self.func(structure, dep_jobs=dep_jobs, **eval_args)
+            gen_paths.add(structure.path)
+        # end if
     # end def
 
-    # Override evaluation function to support parallel job submission and analysis
-    def evaluate_all(
+    def _generate_structure_all(
         self,
         structures: list[NexusStructure],
+        path,
         sigmas=None,
-        add_sigma=False,
-        path='',
+        var_eff_map=None,
         interactive=False,
         dep_jobs=[],
-        warn_limit=2.0,
-        var_eff_map=None,
         **kwargs
-    ):
+    ) -> None:
         if sigmas is None:
-            sigmas = len(structures) * [0.0]
+            sigmas = [0.0] * len(structures)
         # end if
-        if dep_jobs is not None:
-            jobs = dep_jobs
-        else:
-            jobs = []
-        # end if
-        eqm_generated = False
+        # Generate the jobs only in unique paths
+        gen_paths = set()
         for structure, sigma in zip(structures, sigmas):
-            skip_gen = False
-            if structure.label == 'eqm':
-                if eqm_generated:
-                    skip_gen = True
-                else:
-                    eqm_generated = True
-                    skip_gen = False
-                # end if
-            # end if
-            if not structure.analyzed:
-                self._evaluate_structure(
-                    structure,
-                    path=path,
-                    sigma=sigma,
-                    dep_jobs=dep_jobs,
-                    skip_gen=skip_gen,
-                    var_eff_map=var_eff_map,
-                    **kwargs,
-                )
-                if structure.jobs is not None:
-                    jobs += structure.jobs
-                # end if
-            # end if
-        # end for
-        # TODO: try to load first, to assess whether to regenerate or not
-        if interactive:
-            self._prompt(structures)
-        # end if
-        if self.bundle_jobs:
-            run_project(bundle(jobs))
-        else:
-            run_project(jobs)
-        # end if
-
-        # Then, load
-        for structure in structures:
-            self._load_structure(
+            self._generate_structure(
                 structure,
-                add_sigma=add_sigma,
-                warn_limit=warn_limit,
+                path=path,
+                sigma=sigma,
                 var_eff_map=var_eff_map,
+                interactive=interactive,
+                dep_jobs=dep_jobs,
+                # track repeated Nexus identifiers
+                gen_paths=gen_paths,
+                **kwargs
             )
         # end for
     # end def
@@ -146,56 +107,71 @@ class NexusPes(PesFunction):
     def _evaluate_structure(
         self,
         structure: NexusStructure,
-        path='',
-        sigma=0.0,
-        skip_gen=False,
-        var_eff_map=None,
-        **kwargs
-    ):
-        file_path = f'{directorize(path)}{structure.label}/'
-        eval_args = self.args.copy()
-        structure.file_path = file_path
-        structure.sigma = sigma
-        # Do not redo jobs
-        if structure.generated:
-            return
+        interactive: bool = False,
+        dep_jobs=[],
+    ) -> None:
+        if interactive:
+            self._prompt([structure])
         # end if
-        # Set samples hook
-        self._set_samples(structure, sigma=sigma, var_eff_map=var_eff_map)
-        # Override with kwargs
-        eval_args = self.get_updated(kwargs)
-        if not skip_gen:
-            jobs = self.func(
-                structure.get_nexus_structure(),
-                file_path,
-                sigma=sigma,
-                **eval_args
-            )
-            structure.jobs = jobs
+        # TODO: Try to load result from disk first
+        # Run Nexus jobs
+        jobs = dep_jobs + structure.jobs
+        if self.bundle_jobs:
+            run_project(bundle(jobs))
+        else:
+            run_project(jobs)
         # end if
     # end def
 
-    def _load_structure(
+    def _evaluate_structure_all(
+        self,
+        structures: list[NexusStructure],
+        interactive: bool = False,
+        dep_jobs=[],
+    ) -> None:
+        if interactive:
+            self._prompt(structures)
+        # end if
+        jobs = dep_jobs
+        for structure in structures:
+            jobs += structure.jobs
+        # end for
+        if self.bundle_jobs:
+            run_project(bundle(jobs))
+        else:
+            run_project(jobs)
+        # end if
+    # end def
+
+    def _finalize_structure(
         self,
         structure: NexusStructure,
-        add_sigma=False,
+        add_sigma: bool = False,
+        var_eff_map: EffectiveVarianceMap = None,
         warn_limit=2.0,
-        var_eff_map=None,
+        interactive: bool = False,
     ):
-        if add_sigma:
-            result = self.loader.load(structure.file_path, sigma=structure.sigma)
-        else:
-            result = self.loader.load(structure.file_path)
-        # end if
-        self._warn_energy(structure, result, warn_limit=warn_limit)
-        # Treat failure
-        if isnan(result.value) and self.disable_failed:
-            structure.enabled = False
-        # end if
-        structure.value = result.value
-        structure.error = result.error
-        # Update var_eff_map hook
-        self._update_var_eff_map(structure, var_eff_map)
+        # Then, try to load the result
+        try:
+            result = self.loader.load(structure.path)
+            if add_sigma:
+                result.add_sigma(structure.sigma)
+            # end if
+            structure.value = result.value
+            structure.error = result.error
+            # TODO: write to disk
+            # TODO: interactively discard bad data?
+            self._warn_energy(structure, warn_limit=warn_limit)
+            # Nothing to do here but update the var_eff_map if needed
+            self._update_var_eff_map(structure, var_eff_map=var_eff_map)
+        except NotEvaluatedException as e:
+            if self.disable_failed:
+                structure.enabled = False
+                print(f'Failed to load result for {structure.label} from {structure.path}. Disabling structure.')
+            else:
+                raise NotEvaluatedException(f'Failed to load result for {structure.label} from {structure.path}.') from e
+            # end if
+        # end try
     # end def
 
     def _prompt(self, structures: list[NexusStructure]):
@@ -234,49 +210,6 @@ class NexusPes(PesFunction):
             # end if
         # end if
     # end def
-
-    def _warn_energy(self, structure: NexusStructure, result: PesResult, warn_limit=2.0):
-        if (structure.sigma is not None and structure.sigma > 0.0 and result.error / structure.sigma > warn_limit):
-            msg = f'The error/sigma for {structure.label} is '
-            msg += f'{FF.format(result.error)}/{FF.format(structure.sigma)}'
-            msg += f'{FP.format(result.error / structure.sigma * 100)}'
-            warnings.warn(msg)
-        # end if
-    # end def
-
-    def get_var_eff(
-        self,
-        structure: NexusStructure,
-        path='path',
-        samples=10,
-        interactive=False,
-    ):
-        self.evaluate(
-            structure,
-            path=path,
-            sigma=None,
-            samples=samples,
-            interactive=interactive,
-        )
-        var_eff = EffectiveVariance(samples, structure.error)
-        return var_eff
-    # end def
-
-    def get_var_eff_map(
-        self,
-        structure: NexusStructure,
-        path='path',
-        samples=10,
-        interactive=False,
-    ):
-        var_eff = self.get_var_eff(
-            structure,
-            path=path,
-            samples=samples,
-            interactive=interactive
-        )
-        var_eff_map = EffectiveVarianceMap(structure, var_eff=var_eff)
-        return var_eff_map
 
     def relax(
         self,

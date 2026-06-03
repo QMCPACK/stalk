@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from numpy import isnan
-from pytest import warns
+from pytest import raises
 
 from stalk.nexus.pwscf_pes import PwscfPes
+from stalk.params.pes_function import NotEvaluatedException
 from stalk.util.util import match_to_tol
 
 
@@ -11,26 +11,24 @@ def test_PwscfPes(tmp_path):
 
     # Test with empty args / defaults
     pes = PwscfPes()
-    assert len(pes.args) == 1
+    assert pes.suffix == 'scf.in'
+    assert pes.scale == 1.0
 
     # default suffix: scf.in
     E_ref = -22.74988263  # See tests/unit_tests/assets/pwscf_pes/scf.out
+    pes.args = {}  # ensure that other tests are not interfering with the args
     res = pes.load('tests/unit_tests/assets/pwscf_pes')
     assert match_to_tol(res.value, E_ref)
     assert match_to_tol(res.error, 0.0)
 
     # failing output file
-    with warns(UserWarning):
-        res2 = pes.load('tests/unit_tests/assets/pwscf_pes', suffix='scf_failed.out')
-        assert isnan(res2.value)
-        assert match_to_tol(res2.error, 0.0)
+    with raises(NotEvaluatedException):
+        pes.load('tests/unit_tests/assets/pwscf_pes/scf_failed.out')
     # end with
 
     # Test skipping of missing test
-    with warns(UserWarning):
-        res_missing = pes.load('missing')
-        assert isnan(res_missing.value)
-        assert match_to_tol(res_missing.error, 0.0)
+    with raises(NotEvaluatedException):
+        pes.load('missing')
     # end with
 
 # end def

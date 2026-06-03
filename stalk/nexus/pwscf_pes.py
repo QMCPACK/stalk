@@ -4,40 +4,47 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-import warnings
-from numpy import nan
-
 from nexus import PwscfAnalyzer
 
+from stalk.params.pes_function import NotEvaluatedException
 from stalk.params.pes_result import PesResult
 from stalk.io.pes_loader import PesLoader
 
 
 class PwscfPes(PesLoader):
+    _suffix = 'scf.in'
 
     def __init__(
         self,
         args: dict = {},  # Keep 'args' for backward compatibility
-        suffix='scf.in',
-        **kwargs
+        scale=1.0,
+        **kwargs,
     ):
-        my_args = {'suffix': suffix}
-        my_args.update(**args, **kwargs)
-        super().__init__(**my_args)
+        args.update(**kwargs)
+        # suffix = None means we'll use class-level default
+        suffix = args.pop('suffix', None)
+        PesLoader.__init__(self, suffix=suffix, scale=scale, **args)
     # end def
 
-    def _load(self, filename: str, **kwargs) -> PesResult:
-        ai = PwscfAnalyzer(filename, **kwargs)
-        ai.analyze()
+    def _load(self, path: str, **kwargs) -> PesResult:
+        p = self.get_filename(path)
+        if p.exists():
+            ai = PwscfAnalyzer(str(p), **kwargs)
+            ai.analyze()
+        else:
+            raise NotEvaluatedException(f"PwscfPes could not find {p}. Raising exception.")
+        # end if
+
         if not hasattr(ai, "E") or ai.E == 0.0:
             # Analysis has failed
-            warnings.warn(f"PwscfPes loader could not find energy in {filename}. Returning None.")
-            E = nan
+            raise NotEvaluatedException(f"PwscfPes loader could not find energy in {p}. Raising exception.")
         else:
             E = ai.E
         # end if
         Err = 0.0
-        return PesResult(E, Err)
+        result = PesResult(E, Err)
+        result.rescale(self.scale)
+        return result
     # end def
 
 # end class

@@ -5,34 +5,19 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 
-from pathlib import Path
-
-from stalk.util import directorize
+from stalk.io.txt_data import TxtData
 from stalk.util.args_container import ArgsContainer
 
 
-class GeometryWriter(ArgsContainer):
+class GeometryWriter(ArgsContainer, TxtData):
 
-    def write(self, structure, path='', **kwargs):
-        '''The Geometry writer must accept a "structure" and a "path" to output file
-        '''
-        # Hot update of args
-        args = self.get_updated(kwargs)
-
-        # If suffix is present, write to 'path/suffix', else write to 'path'
-        suffix = args.pop('suffix', None)
-        if suffix is None:
-            filename = path
-        else:
-            filename = f'{directorize(path)}{suffix}'
-        # end if
-        if Path(filename).is_dir():
-            raise IsADirectoryError(f"The target file {filename} is a directory!")
-        # end if
-        self._write(structure, filename, **args)
+    def write(self, structure, path: str):
+        path = self.get_filename(path)
+        # Writing hook
+        self._write(structure, path, **self.args)
     # end def
 
-    # The actual writing function must be overridden
+    # The actual writing function must be overridden in a derived class
     def _write(self, structure, filename, **kwargs):
         raise NotImplementedError("Implement _write(structure, filename) function in inherited class.")
     # end def

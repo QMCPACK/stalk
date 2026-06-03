@@ -1,54 +1,57 @@
 #!/usr/bin/env python3
 
-import warnings
-from numpy import nan
-
-from stalk.io.util import load_energy
+from stalk.io.txt_data import TxtData
+from stalk.params.pes_function import NotEvaluatedException
 from stalk.params.pes_result import PesResult
 from stalk.util.args_container import ArgsContainer
-from stalk.util.util import check_result_file
 
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 
-class PesLoader(ArgsContainer):
+class PesLoader(ArgsContainer, TxtData):
+    _suffix = 'energy.dat'
 
-    def load(
+    def __init__(
         self,
-        path: str,
-        sigma=0.0,
-        **kwargs
-    ) -> PesResult:
-        # Hot update of args
-        args = self.get_updated(kwargs)
-        scale = args.pop('scale', 1.0)
-        only_warn = args.pop('only_warn', False)
+        args: dict = {},  # Keep 'args' for backward compatibility
+        scale=1.0,
+        **kwargs,
+    ):
+        args.update(**kwargs)
+        # suffix = None means we'll use class-level default
+        suffix = args.pop('suffix', None)
+        TxtData.__init__(self, suffix=suffix, scale=scale)
+        ArgsContainer.__init__(self, **args)
+    # end def
 
-        try:
-            filename = check_result_file(path, args)
-        except FileNotFoundError as e:
-            if only_warn:
-                warnings.warn(e.args[0])
-                return PesResult(nan)
-            else:
-                raise e.add_note('Aborting.')
-            # end if
-        # end try
-        res = self._load(filename, **args)
-        # end if
-        # Rescale to model units
-        res.rescale(scale)
-        # If a non-zero, artificial errorbar is requested, add it to result
-        res.add_sigma(sigma)
-        print(f'Loaded energy from {filename}')
+    def load(self, path: str) -> PesResult:
+        # Loading hook
+        res = self._load(path, **self.args)
+        print(f'Loaded energy from {path}: {res.value} ± {res.error}')
         return res
     # end def
 
-    def _load(self, structure, **kwargs) -> PesResult:
-        res = load_energy(structure)
-        return res
+    # Loading hook that can be overridden in derived classes for custom loading behavior
+    def _load(self, path: str, **kwargs) -> PesResult:
+        try:
+            # PesLoader will not tolerate missing files unless default=nan is in kwargs
+            data = self.load_result(path, **kwargs)
+            if len(data) == 1:
+                result = PesResult(data[0])
+            else:
+                result = PesResult(data[0], data[1])
+            # end if
+        except FileNotFoundError as e:
+            msg = f'PesLoader could not find energy file in {path}. '
+            msg += 'To continue, create one with proper energy data or NaN.'
+            raise NotEvaluatedException(msg) from e
+        except TypeError as e:
+            msg = f'PesLoader failed to load the energy output in {path}.'
+            raise TypeError(msg) from e
+        # end try
+        return result
     # end def
 
 # end class

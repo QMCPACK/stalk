@@ -5,8 +5,6 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from pathlib import Path
-
 from numpy import exp, median, array, isnan
 from numpy import meshgrid, linalg, linspace, dot, eye
 
@@ -189,20 +187,4 @@ def gram_schmidt(vectors):
 def morse(p, r):
     # p0: eqm value, p1: stiffness, p2: well depth, p3: E_inf
     return p[2] * ((1 - exp(-(r - p[0]) / p[1]))**2 - 1) + p[3]
-# end def
-
-
-def check_result_file(path, args: dict):
-    suffix = args.pop('suffix', '')
-    p = Path(path)
-    if isinstance(suffix, str) and len(suffix) > 0:
-        if suffix.startswith('/'):
-            suffix = suffix[1:]
-        # end if
-        p /= suffix
-    # end if
-    if not p.exists():
-        raise FileNotFoundError(f'Could not find {p}.')
-    # end if
-    return str(p)
 # end def

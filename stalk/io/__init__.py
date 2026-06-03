@@ -6,19 +6,18 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from .files_pes import FilesPes
+from .files_pes import write_xyz_sigma
 from .geometry_loader import GeometryLoader
 from .geometry_writer import GeometryWriter
 from .pes_loader import PesLoader
 from .xyz_geometry import XyzGeometry
-from .util import load_energy
-from .util import write_xyz_sigma
+
 
 __all__ = [
     'FilesPes',
+    'write_xyz_sigma',
     'GeometryLoader',
     'GeometryWriter',
     'PesLoader',
     'XyzGeometry',
-    'load_energy',
-    'write_xyz_sigma',
 ]

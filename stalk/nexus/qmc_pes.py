@@ -5,31 +5,33 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 import warnings
-from numpy import nan, array
-from pathlib import Path
+from numpy import array
 
 from nexus import QmcpackAnalyzer
 
+from stalk.params.pes_function import NotEvaluatedException
 from stalk.params.pes_result import PesResult
 from stalk.io.pes_loader import PesLoader
 
 
 class QmcPes(PesLoader):
+    _suffix = 'dmc/dmc.in.xml'
 
     def __init__(
         self,
         args: dict = {},  # Keep 'args' for backward compatibility
-        suffix='dmc/dmc.in.xml',
-        **kwargs
+        scale=1.0,
+        **kwargs,
     ):
-        my_args = {'suffix': suffix}
-        my_args.update(**args, **kwargs)
-        super().__init__(**my_args)
+        args.update(**kwargs)
+        # suffix = None means we'll use class-level default
+        suffix = args.pop('suffix', None)
+        PesLoader.__init__(self, suffix=suffix, scale=scale, **args)
     # end def
 
     def _load(
         self,
-        filename,
+        path: str,
         qmc_idx=1,
         term='LocalEnergy',
         twist_averaging=False,
@@ -37,13 +39,12 @@ class QmcPes(PesLoader):
         **kwargs  # e.g. equilibration=None
     ) -> PesResult:
         # Testing existence here, because Nexus will shut down everything upon failure
-        p = Path(filename)
+        p = self.get_filename(path)
         if p.exists():
             ai = QmcpackAnalyzer(str(p), **kwargs)
             ai.analyze()
         else:
-            warnings.warn(f"QmcPes loader could not find {str(p)}. Returning NaN.")
-            return PesResult(nan)
+            raise NotEvaluatedException(f"QmcPes could not find {p}. Raising exception.")
         # end if
 
         if twist_averaging and self._check_bundled(ai):
@@ -51,11 +52,13 @@ class QmcPes(PesLoader):
         else:
             if not hasattr(ai, "qmc") or len(ai.qmc) < qmc_idx or not hasattr(ai.qmc[qmc_idx], "scalars"):
                 # Analysis has failed
-                warnings.warn(f"QmcPes loader could not find energy in {str(p)}. Returning NaN.")
-                return PesResult(nan)
+                raise NotEvaluatedException(f"QmcPes could not analyze {p}. Raising exception.")
             else:
-                return self._analyze_energy_term(ai.qmc[qmc_idx].scalars, term)
+                result = self._analyze_energy_term(ai.qmc[qmc_idx].scalars, term)
             # end if
+        # end if
+        result.rescale(self.scale)
+        return result
     # end def
 
     def _check_bundled(self, ai: QmcpackAnalyzer):

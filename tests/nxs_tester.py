@@ -20,7 +20,7 @@ if __name__ == '__main__':
         with open(sys.argv[1], 'r') as fhandle:
             # The first line points to structure file
             struct_name = fhandle.readline().replace("\n", "")
-            pos = XyzGeometry({'suffix': struct_name}).load('.').get_pos()
+            pos = XyzGeometry(suffix=struct_name).load('.').get_pos()
             # The second line points to one the hardcoded pes functions
             pes_variable = fhandle.readline().replace("\n", "")
         # end with
@@ -33,13 +33,13 @@ if __name__ == '__main__':
             value, error = pes_H2O(pos)
             np.savetxt(efilename, [value, error])
             structure = ParameterStructure(pos=pos_H2O, elem=elem_H2O)
-            writer = XyzGeometry({'suffix': xyzfilename})
+            writer = XyzGeometry(suffix=xyzfilename)
             writer.write(structure, '.')
         elif pes_variable == 'relax_diamond':
             value, error = pes_diamond(axes_diamond[0, 0])
             np.savetxt(efilename, [value, error])
             structure = ParameterStructure(pos=pos_diamond, elem=elem_diamond)
-            writer = XyzGeometry({'suffix': xyzfilename})
+            writer = XyzGeometry(suffix=xyzfilename)
             writer.write(structure, '.')
             np.savetxt(axesfilename, axes_diamond)
         elif pes_variable == 'evm':

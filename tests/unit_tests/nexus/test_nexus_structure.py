@@ -18,7 +18,6 @@ def test_NexusStructure(tmp_path):
     # empty init (matches ParameterStructure)
     s = NexusStructure()
     assert isinstance(s, ParameterStructure)
-    assert not s.analyzed
     assert not s.generated
     assert not s.finished
     assert s.jobs is None
@@ -46,10 +45,8 @@ def test_NexusStructure(tmp_path):
     assert not s.finished
     job2.finished = True
     assert s.finished
-    # check analyzed and reset value
-    assert not s.analyzed
+    # check reset value
     s.value = 1.0
-    assert s.analyzed
     s.reset_value()
     assert s.jobs is None
     assert s.value is None

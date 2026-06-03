@@ -18,7 +18,6 @@ from stalk.params.parameter_structure import ParameterStructure
 
 class NexusStructure(ParameterStructure):
     _jobs: list[Simulation] = None
-    _sigma = None
 
     @property
     def jobs(self):
@@ -26,48 +25,23 @@ class NexusStructure(ParameterStructure):
     # end def
 
     @jobs.setter
-    def jobs(self, jobs):
-        if jobs is None or len(jobs) == 0:
-            self._jobs = None
-        else:
-            for job in jobs:
-                if not isinstance(job, Simulation):
-                    raise TypeError("Nexus job must be inherited from Simulation class!")
-                # end if
-            # end for
-            self._jobs = jobs
-        # end if
+    def jobs(self, jobs: list[Simulation]):
+        for job in jobs:
+            if not isinstance(job, Simulation):
+                raise TypeError("Nexus job must be inherited from Simulation class!")
+            # end if
+        # end for
+        self._jobs = jobs
     # end def
 
     @property
     def generated(self):
-        return self.jobs is not None
+        return self.jobs is not None and len(self.jobs) > 0
     # end def
 
     @property
     def finished(self):
         return self.generated and all(job.finished for job in self._jobs)
-    # end def
-
-    @property
-    def analyzed(self):
-        return self.finished and self.value is not None
-    # end def
-
-    @property
-    def sigma(self):
-        return self._sigma
-    # end def
-
-    @sigma.setter
-    def sigma(self, sigma):
-        if sigma is None:
-            self._sigma = 1e100
-        elif sigma >= 0:
-            self._sigma = sigma
-        else:
-            raise ValueError(f'Sigma must be >= 0, provided: {sigma}')
-        # end if
     # end def
 
     def get_nexus_structure(
@@ -87,9 +61,6 @@ class NexusStructure(ParameterStructure):
             })
         # end if
         structure = Structure(**kwargs)
-        if self.samples is not None:
-            structure.samples = self.samples
-        # end if
         return structure
     # end def
 

@@ -2,7 +2,6 @@
 
 import os
 import numpy as np
-from numpy import nan
 from pathlib import Path
 from nexus import obj, job, settings, generate_physical_system, input_template
 from nexus.simulation import GenericSimulation, SimulationAnalyzer, Simulation
@@ -11,6 +10,7 @@ from stalk.io.pes_loader import PesLoader
 from stalk.io.xyz_geometry import XyzGeometry
 from stalk.nexus.nexus_structure import NexusStructure
 from stalk.params.geometry_result import GeometryResult
+from stalk.params.pes_function import NotEvaluatedException
 from stalk.params.pes_result import PesResult
 
 # Add nexus tester to path
@@ -59,7 +59,7 @@ class TestAnalyzer(SimulationAnalyzer):
         if isinstance(arg0, Simulation):
             self.path = arg0.path
         elif isinstance(arg0, NexusStructure):
-            self.path = arg0.file_path
+            self.path = arg0.path
         else:
             self.path = arg0
         # end if
@@ -89,7 +89,8 @@ class TestAnalyzer(SimulationAnalyzer):
         xyz_file = path / xyzfilename
         axes_file = path / axesfilename
         if xyz_file.exists():
-            res = XyzGeometry(suffix=xyzfilename).load(str(path))
+            xyz = XyzGeometry()
+            res = xyz.load(xyz_file)
             if axes_file.exists():
                 res.axes = np.loadtxt(axes_file)
             # end if
@@ -106,23 +107,17 @@ def test_dummy(*args, **kwargs):
 
 # Tailor Nexus analyzer for generic testing
 class TestLoader(PesLoader):
+    _suffix = 'test_energy.dat'
 
-    def __init__(
-        self,
-        args: dict = {},  # Keep 'args' for backward compatibility
-        suffix='test_energy.dat',
-        **kwargs
-    ):
-        my_args = {'suffix': suffix}
-        my_args.update(**args, **kwargs)
-        super().__init__(**my_args)
-    # end def
-
-    def _load(self, structure: NexusStructure, produce_fail=False, **kwargs):
-        ai = TestAnalyzer(structure, **kwargs)
+    def _load(self, path: str, produce_fail=False, **kwargs):
+        p = self.get_filename(path)
+        if not p.exists():
+            raise NotEvaluatedException(f'TestLoader could not find energy file in {p}. Raising exception.')
+        # end if
+        ai = TestAnalyzer(path, **kwargs)
         ai.analyze()
         if produce_fail:
-            return PesResult(nan, 0.0)
+            raise NotEvaluatedException('Forced failure for testing.')
         else:
             return PesResult(ai.value, ai.error)
         # end if
@@ -133,17 +128,7 @@ class TestLoader(PesLoader):
 
 # Tailor Nexus analyzer for generic testing
 class TestGeometryLoader(GeometryLoader):
-
-    def __init__(
-        self,
-        args: dict = {},  # Keep 'args' for backward compatibility
-        suffix='relax.xyz',
-        **kwargs
-    ):
-        my_args = {'suffix': suffix}
-        my_args.update(**args, **kwargs)
-        super().__init__(**my_args)
-    # end def
+    _suffix = 'relax.xyz'
 
     def _load(self, filename, produce_fail=False, **kwargs):
         ai = TestAnalyzer(filename, **kwargs)
@@ -166,22 +151,21 @@ def init_nexus():
 
 
 def nxs_generic_pes(
-    structure,
-    path,
+    structure: NexusStructure,
     system_args={},
     pes_variable='dummy',
     sigma=None,
     **kwargs
 ):
     init_nexus()
-    system = generate_physical_system(structure=structure, **system_args)
+    system = generate_physical_system(structure=structure.get_nexus_structure(), **system_args)
     # TODO: this could be done more elegantly using Nexus templates
     input = "nxs_test.struct.xyz\n" + pes_variable + '\n'
     job_input = input_template(input)
     sim = GenericSimulation(
         system=system,
         job=job(**testjob),
-        path=path,
+        path=structure.path,
         input=job_input,
         identifier='nxs_test'
     )

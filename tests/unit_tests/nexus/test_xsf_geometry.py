@@ -26,7 +26,7 @@ def test_XsfGeometry(tmp_path):
     # end with
 
     # Test loading a reference file
-    res = loader.load('tests/unit_tests/assets/pwscf_relax', suffix='relax.xsf')
+    res = XsfGeometry(suffix='relax.xsf').load('tests/unit_tests/assets/pwscf_relax')
 
     # These are hardcoded in 'tests/unit_tests/assets/pwscf_relax/relax.xsf'
     elem_ref = ['V', 'Se', 'Se']
@@ -47,17 +47,17 @@ def test_XsfGeometry(tmp_path):
     assert all(elem_ref == res.elem)
 
     # Test writer
-    writer = XsfGeometry()
+    writer = XsfGeometry(suffix='testfile.xsf')
 
     with raises(TypeError):
         writer.write(ParameterStructure())
     # end with
     # XSF will be written in Angstrom units
     s = NexusStructure(pos=pos_GeSe, axes=axes_GeSe, elem=elem_GeSe, units='A')
-    writer.write(s, tmp_path, suffix='testfile.xsf')
+    writer.write(s, tmp_path)
 
     # Check by loading
-    write_res = writer.load(tmp_path, suffix='testfile.xsf')
+    write_res = writer.load(tmp_path)
     assert isinstance(write_res, GeometryResult)
     assert match_to_tol(write_res.pos, pos_GeSe)
     assert match_to_tol(write_res.axes, axes_GeSe)

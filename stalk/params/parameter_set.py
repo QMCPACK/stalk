@@ -16,7 +16,7 @@ class ParameterSet(LineSearchPoint):
     _param_list: list[Parameter] = []
     _samples = None  # samples for effective variance estimation
     label = ''  # label for identification
-    file_path = None  # field to be used in file I/O mode
+    path = None  # field to be used in file I/O mode
 
     def __init__(
         self,

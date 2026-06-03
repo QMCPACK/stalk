@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from pytest import raises
 from stalk.params.parameter_set import ParameterSet
 from stalk.params.pes_function import PesFunction
 from stalk.util.util import match_to_tol

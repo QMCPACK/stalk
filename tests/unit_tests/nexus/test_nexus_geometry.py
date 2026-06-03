@@ -43,7 +43,7 @@ def test_NexusGeometry(tmp_path):
     assert match_to_tol(s.pos, pos_H2O)
     # Test unsuccessful relaxation job
     s.set_position(pos_H2O_shifted)
-    pes.loader.args['produce_fail'] = True
+    pes.loader.args = {'produce_fail': True}  # make the loader fail}
     with warns(UserWarning):
         pes.relax(s, path=str(tmp_path) + "/relax_fail")
         # The position should be unchanged
@@ -63,14 +63,14 @@ def test_NexusGeometry(tmp_path):
     pes2 = NexusGeometry(
         nxs_generic_pes,
         args={'pes_variable': 'relax_diamond'},
-        loader=TestGeometryLoader(produce_fail=False)
+        loader=TestGeometryLoader()
     )
     pes2.relax(s2, path=str(tmp_path) + "/relax_periodic")
     # The sctructure should have been updated to eqm values
     assert match_to_tol(s2.pos, pos_diamond)
     assert match_to_tol(s2.axes, axes_diamond)
     # Test unsuccessful relaxation, periodic
-    pes2.loader.args['produce_fail'] = True
+    pes2.loader.args = {'produce_fail': True}
     s2.set_position(pos_diamond_shifted, axes_diamond_shifted)
     with warns(UserWarning):
         pes2.relax(s2, path=str(tmp_path) + "/relax_periodic_fail")

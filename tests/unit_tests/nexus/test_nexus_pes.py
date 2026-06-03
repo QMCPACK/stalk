@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 from pytest import raises
-from numpy import isnan
 
+from stalk.params.pes_function import NotEvaluatedException
 from stalk.util.util import match_to_tol
 from stalk.nexus.nexus_pes import NexusPes
 from stalk.nexus.nexus_structure import NexusStructure
@@ -36,13 +36,13 @@ def test_NexusPes(tmp_path):
         args={'pes_variable': 'h2o'},
         loader=TestLoader()
     )
+    pes.loader.args = {}  # ensure that other tests are not interfering with the args
     assert not pes.disable_failed
     assert not pes.bundle_jobs
     pes.evaluate(s, path=str(tmp_path) + '/nosigma', sigma=0.0)
     assert s.generated
     assert len(s.jobs) == 1
     assert s.finished
-    assert s.analyzed
     E_original = pes_H2O(pos_H2O)[0]
     assert match_to_tol(s.value, E_original)
     assert match_to_tol(s.error, 0.0)
@@ -55,9 +55,10 @@ def test_NexusPes(tmp_path):
     assert match_to_tol(s.error, 0.1)
     # 1c: Test unsuccessful loading of jobs
     s.reset_value()
-    pes.loader = TestLoader(args={'produce_fail': True})
-    pes.evaluate(s, path=str(tmp_path) + '/fail', sigma=0.0)
-    assert isnan(s.value)
+    pes.loader.args = {'produce_fail': True}  # make the loader fail
+    with raises(NotEvaluatedException):
+        pes.evaluate(s, path=str(tmp_path) + '/fail', sigma=0.0)
+    # end with
     assert s.enabled
     assert match_to_tol(s.error, 0.0)
     # 1d: Test disabling of failed jobs
@@ -67,6 +68,7 @@ def test_NexusPes(tmp_path):
     assert not s.enabled
 
     # 2: Test evaluate all
+    pes.loader.args = {}  # rest loader args
     sigmas = [0.1, 0.2, 0.3, 0.4]
     s2a = s.copy(pos=pos_H2O * 0.9, label='s2a')
     s2eqm1 = s.copy(pos=pos_H2O, label='eqm')
@@ -80,15 +82,13 @@ def test_NexusPes(tmp_path):
         add_sigma=True
     )
     assert all([s.generated for s in structures[:-1]])
-    assert all([s.analyzed for s in structures[:-1]])
-    assert match_to_tol([s.error for s in structures], sigmas)
-    # TODO: not sure if this behavior is good
     assert not structures[-1].generated
-    assert not structures[-1].analyzed
+    assert match_to_tol([s.error for s in structures], sigmas)
     # 2a: Test dep_jobs
     s2de = s.copy(pos=pos_H2O, label='eqm')
     s2dd = s.copy(pos=pos_H2O * 1.2, label='dep')
-    dep_jobs = nxs_generic_pes(s2dd.get_nexus_structure(), path=str(tmp_path) + '/dep')
+    s2dd.path = str(tmp_path) + '/dep'
+    dep_jobs = nxs_generic_pes(s2dd)
     assert not dep_jobs[0].finished
     pes.evaluate_all(
         [s2de],
@@ -96,9 +96,7 @@ def test_NexusPes(tmp_path):
         path=str(tmp_path) + '/eval_dep'
     )
     assert s2de.generated
-    assert s2de.analyzed
     assert not s2dd.generated
-    assert not s2dd.analyzed
     assert dep_jobs[0].finished
 
     # 3: Test bundle
@@ -120,7 +118,6 @@ def test_NexusPes(tmp_path):
         add_sigma=True
     )
     assert all([s.generated for s in structures_bundle])
-    assert all([s.analyzed for s in structures_bundle])
     assert match_to_tol([s.error for s in structures_bundle], sigmas)
 
     # 4: Test effective variance map
@@ -130,6 +127,7 @@ def test_NexusPes(tmp_path):
         args={'pes_variable': 'evm'},
         loader=TestLoader()
     )
+    pes.loader.args = {}  # ensure that other tests are not interfering with the args
     s_evm = s.copy()
     evm = pes.get_var_eff_map(
         structure=s_evm,
@@ -143,10 +141,6 @@ def test_NexusPes(tmp_path):
 
     s_evm0 = s_evm.copy(label='evm_test0', pos=pos_H2O * 0.9)
     sigma = 0.0001
-    with raises(ValueError):
-        # using var_eff_map requires forward mapping to use parameters
-        samples_ref = evm.get_samples(s_evm0, error=sigma)
-    # end with
     s_evm.forward = forward_H2O
     s_evm0.forward = forward_H2O
     samples_ref = evm.get_samples(s_evm0, error=sigma)

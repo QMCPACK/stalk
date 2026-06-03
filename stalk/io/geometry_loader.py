@@ -1,42 +1,40 @@
 #!/usr/bin/env python3
 
-import warnings
-from numpy import nan
-
+from stalk.io.txt_data import TxtData
 from stalk.params.geometry_result import GeometryResult
 from stalk.params.parameter_set import ParameterSet
 from stalk.util.args_container import ArgsContainer
-from stalk.util.util import check_result_file
 
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 
-class GeometryLoader(ArgsContainer):
+class GeometryLoader(ArgsContainer, TxtData):
+    _suffix = 'structure.dat'
 
-    def load(self, path, **kwargs) -> GeometryResult:
-        '''The Geometry loader must accept a "path" to input file and return GeometryResult.
-        '''
-        # Hot update of args
-        args = self.get_updated(kwargs)
-        only_warn = args.pop('only_warn', False)
-        scale = args.pop('scale', args.pop('c_pos', 1.0)**-1)
+    def __init__(
+        self,
+        args: dict = {},  # Keep 'args' for backward compatibility
+        scale=1.0,
+        c_pos=None,
+        **kwargs,
+    ):
+        # Backward compatibility: if c_pos is given, it overrides scale
+        if c_pos is not None:
+            scale = c_pos**-1
+        # end if
+        args.update(**kwargs)
+        # suffix = None means we'll use class-level default
+        suffix = args.pop('suffix', None)
+        TxtData.__init__(self, suffix=suffix, scale=scale)
+        ArgsContainer.__init__(self, **args)
+    # end def
 
-        try:
-            filename = check_result_file(path, args)
-        except FileNotFoundError as e:
-            if only_warn:
-                warnings.warn(repr(e))
-                return GeometryResult(nan)
-            else:
-                raise e
-            # end if
-        # end try
-        res = self._load(filename, **args)
-        # Rescale to model units
-        res.rescale(scale)
-        print(f'Loaded geometry from {filename}')
+    def load(self, path) -> GeometryResult:
+        # Loading hook
+        res = self._load(path, **self.args)
+        print(f'Loaded geometry from {path}')
         return res
     # end def
 
@@ -51,7 +49,7 @@ class GeometryLoader(ArgsContainer):
         try:
             res = self.load(path)
             if not callable(relax_func):
-                raise TypeError('The relax_func must be callable and return GeometryResult!')
+                raise TypeError('The relax_func must be callable and write the geometry result file to the same path')
             # end if
         except FileNotFoundError:
             # Try to relax
@@ -63,7 +61,7 @@ class GeometryLoader(ArgsContainer):
     # end def
 
     # The actual loading function must be overridden and return a GeometryResult object
-    def _load(self, filename, **kwargs) -> GeometryResult:
+    def _load(self, path: str, **kwargs) -> GeometryResult:
         raise NotImplementedError("Implement _load(filename) function in inherited class.")
     # end def
 

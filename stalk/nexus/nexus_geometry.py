@@ -38,18 +38,14 @@ class NexusGeometry(FunctionCaller):
     ):
         eval_args = self.get_updated(kwargs)
         # Generate relaxation jobs
-        jobs = self.func(
-            structure.get_nexus_structure(),
-            directorize(path),
-            **eval_args
-        )
+        structure.path = f'{directorize(path)}{structure.label}/'
+        jobs = self.func(structure, **eval_args)
         structure.jobs = jobs
-        structure.file_path = directorize(path)
         # Run project
         run_project(jobs)
 
         # Load results and update the structure
-        res = self.loader.load(structure.file_path)
+        res = self.loader.load(structure.path)
         if res.get_pos() is not None:
             structure.set_position(res.get_pos(), res.get_axes())
         else:

@@ -6,97 +6,70 @@ __license__ = "BSD-3-Clause"
 
 
 from os import makedirs
-import sys
 
-from numpy import isnan
 from stalk.io.pes_loader import PesLoader
+from stalk.io.txt_data import TxtData
+from stalk.io.xyz_geometry import XyzGeometry
+from stalk.params.effective_variance_map import EffectiveVarianceMap
 from stalk.params.parameter_set import ParameterSet
-from stalk.params.pes_function import PesFunction
+from stalk.params.pes_function import NotEvaluatedException, PesFunction
 from stalk.util.util import directorize
-from stalk.io.util import write_xyz_sigma
+
+
+def write_xyz_sigma(
+    structure: ParameterSet,
+    suffix='structure.xyz',
+    sigma=None,
+    sigma_suffix='sigma.dat',
+    **kwargs
+):
+    g = XyzGeometry(suffix=suffix)
+    g.write(structure=structure, path=structure.path)
+    if sigma is not None:
+        s = TxtData(suffix=sigma_suffix)
+        s.save_result(structure.path, [sigma])
+    # end if
+# end def
 
 
 class FilesPes(PesFunction):
-    loader = None
+    loader: PesLoader = None
 
     def __init__(
         self,
         func=write_xyz_sigma,
         args={},
-        loader=None,
-        load_args={},
-        suffix='energy.dat'
+        loader: PesLoader = PesLoader(),
+        **kwargs  # extra kwargs for PES evaluation
     ):
-        self.func = func
-        self.args = args
-        if isinstance(loader, PesLoader):
-            self.loader = loader
-        else:
-            self.loader = PesLoader(suffix=suffix, **load_args)
-        # end if
+        # Init the function caller
+        super().__init__(func=func, args=args, **kwargs)
+        self.loader = loader
     # end def
 
-    def evaluate(
-        self,
-        structure: ParameterSet,
-        sigma=0.0,
-        add_sigma=False,
-        **kwargs  # path, interactive, dep_jobs
-    ):
-        result = self._evaluate_structure(structure, sigma=sigma, **kwargs)
-        # Load hook to be used in derived classes
-        finished = self._load_structure(
-            structure,
-            result=result,
-            sigma=sigma,
-            add_sigma=add_sigma
-        )
-        if not finished:
-            sys.exit("The job has been finished yet.")
-        # end if
-    # end def
-
-    def evaluate_all(
-        self,
-        structures: list[ParameterSet],
-        sigmas=None,
-        add_sigma=False,
-        **kwargs  # path, interactive, dep_jobs
-    ):
-        if sigmas is None:
-            sigmas = len(structures) * [0.0]
-        # end if
-        finished = True
-        for structure, sigma in zip(structures, sigmas):
-            result = self._evaluate_structure(structure, sigma=sigma, **kwargs)
-            # Load hook to be used in derived classes
-            finished &= self._load_structure(
-                structure,
-                result=result,
-                sigma=sigma,
-                add_sigma=add_sigma
-            )
-        # end for
-        if not finished:
-            sys.exit("Some jobs have not been finished yet.")
-        # end if
-    # end def
-
-    def _evaluate_structure(
+    def _generate_structure(
         self,
         structure: ParameterSet,
         path='',
         sigma=0.0,
+        samples=None,
+        var_eff_map: EffectiveVarianceMap = None,
         dep_jobs=None,  # catch dep_jobs
         interactive=False,  # catch interactive
         **kwargs
     ):
-        file_path = f'{directorize(path)}{structure.label}/'
+        # Write the file path to the structure
+        structure.path = f'{directorize(path)}{structure.label}/'
+        # Hot update of eval_args
         eval_args = self.args.copy()
-        # Override with kwargs
         eval_args.update(**kwargs)
-        structure.file_path = file_path
-        makedirs(file_path, exist_ok=True)
+        # Associate the sigma with the structure
+        structure.sigma = sigma
+        # Set the number of samples
+        self._set_samples(structure, var_eff_map=var_eff_map, samples=samples)
+        # Write the input files to disk
+        makedirs(structure.path, exist_ok=True)
+        # Call for the evaluation function
         self.func(
             structure,
             sigma=sigma,
@@ -104,26 +77,39 @@ class FilesPes(PesFunction):
         )
     # end def
 
-    def _load_structure(
+    def _evaluate_structure(
         self,
         structure: ParameterSet,
-        add_sigma=False,
-        sigma=0.0,
-        # warn_limit=2.0,
-        **kwargs
-    ):
-        result = self.loader.load(structure.file_path)
-        if isnan(result.value):
-            finished = False
-        else:
-            if add_sigma and hasattr(structure, "sigma"):
-                result.add_sigma(sigma)
+        interactive: bool = False,
+        dep_jobs=[],
+    ) -> None:
+        # Nothing to be done here
+        pass
+    # end def
+
+    def _finalize_structure(
+        self,
+        structure: ParameterSet,
+        add_sigma: bool = False,
+        var_eff_map: EffectiveVarianceMap = None,
+        warn_limit=2.0,
+        interactive: bool = False,
+    ) -> None:
+        # Try to load the result from disk
+        try:
+            result = self.loader.load(structure.path)
+            if add_sigma:
+                result.add_sigma(structure.sigma)
             # end if
             structure.value = result.value
             structure.error = result.error
-            finished = True
-        # end if
-        return finished
-    # ne dedf
+            # TODO: interactively discard bad data?
+            self._warn_energy(structure, warn_limit=warn_limit)
+            # Nothing to do here but update the var_eff_map if needed
+            self._update_var_eff_map(structure, var_eff_map=var_eff_map)
+        except NotEvaluatedException:
+            print(f'Structure {structure.label} has not be evaluated. Supply output file to disk to continue.')
+        # end try
+    # end def
 
 # end class

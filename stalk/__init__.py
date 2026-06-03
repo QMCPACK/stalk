@@ -4,7 +4,7 @@
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
-__version__ = "0.2.2dev1"
+__version__ = "0.2.2dev2"
 
 # io module
 from stalk.io import FilesPes
@@ -12,7 +12,6 @@ from stalk.io import GeometryLoader
 from stalk.io import GeometryWriter
 from stalk.io import PesLoader
 from stalk.io import XyzGeometry
-from stalk.io import load_energy
 from stalk.io import write_xyz_sigma
 # ls module
 from stalk.ls import FittingFunction
@@ -88,7 +87,6 @@ __all__ = [
     'GeometryWriter',
     'PesLoader',
     'XyzGeometry',
-    'load_energy',
     'write_xyz_sigma',
     # ls module
     'FittingFunction',

@@ -6,6 +6,7 @@ from stalk.io.xyz_geometry import XyzGeometry
 from stalk.params import GeometryResult
 from stalk.params.parameter_structure import ParameterStructure
 from stalk.util.util import match_to_tol
+from stalk.util import Bohr
 from ..assets.h2o import pos_H2O, elem_H2O
 
 __author__ = "Juha Tiihonen"
@@ -15,39 +16,48 @@ __license__ = "BSD-3-Clause"
 
 def test_XyzGeometry(tmp_path):
 
-    # default args: (suffix: relax.xyz)
+    # default values
     loader = XyzGeometry()
+    assert loader.suffix == 'structure.xyz'
+    assert loader.scale == 1.0
 
-    # Test failing to load a file (default suffix: relax.xyz)
+    # Test failing to load a file (default suffix: structure.xyz)
     with raises(FileNotFoundError):
         loader.load('tests/unit_tests/assets/pwscf_relax')
     # end with
 
-    # Test loading a reference file
-    res = loader.load('tests/unit_tests/assets/pwscf_relax', suffix='relax_bohr.xyz')
-    res_dbl = loader.load('tests/unit_tests/assets/pwscf_relax', suffix='relax_bohr.xyz', c_pos=2.0)
+    # Test loading a reference file by pointing directly
+    res = loader.load('tests/unit_tests/assets/pwscf_relax/relax_bohr.xyz')
+
+    loader.suffix = 'relax_bohr.xyz'
+    loader.scale = Bohr
+    res_bohr = loader.load('tests/unit_tests/assets/pwscf_relax/')
 
     assert isinstance(res, GeometryResult)
-    assert isinstance(res_dbl, GeometryResult)
 
     # For reference, just copy the load function for testing redundancy
-    el_ref, x, y, z = loadtxt('tests/unit_tests/assets/pwscf_relax/relax_bohr.xyz', dtype=str, unpack=True, skiprows=2)
+    el_ref, x, y, z = loadtxt(
+        'tests/unit_tests/assets/pwscf_relax/relax_bohr.xyz',
+        dtype=str,
+        unpack=True,
+        skiprows=2
+    )
     pos = array([x, y, z], dtype=float)
 
-    for el, el1, el2 in zip(el_ref, res.get_elem(), res_dbl.get_elem()):
+    for el, el1, el2 in zip(el_ref, res.get_elem(), res_bohr.get_elem()):
         assert el == el1 and el == el2
     # end for
-    for x, x1, x2 in zip(pos[0], res.get_pos()[:, 0], res_dbl.get_pos()[:, 0]):
-        assert match_to_tol(x, x1, 1e-8) and match_to_tol(2 * x, x2, 1e-8)
+    for x, x1, x2 in zip(pos[0], res.get_pos()[:, 0], res_bohr.get_pos()[:, 0]):
+        assert match_to_tol(x, x1, 1e-8) and match_to_tol(Bohr * x2, x, 1e-8)
     # end for
-    for y, y1, y2 in zip(pos[1], res.get_pos()[:, 1], res_dbl.get_pos()[:, 1]):
-        assert match_to_tol(y, y1, 1e-8) and match_to_tol(2 * y, y2, 1e-8)
+    for y, y1, y2 in zip(pos[1], res.get_pos()[:, 1], res_bohr.get_pos()[:, 1]):
+        assert match_to_tol(y, y1, 1e-8) and match_to_tol(Bohr * y2, y, 1e-8)
     # end for
-    for z, z1, z2 in zip(pos[2], res.get_pos()[:, 2], res_dbl.get_pos()[:, 2]):
-        assert match_to_tol(z, z1, 1e-8) and match_to_tol(2 * z, z2, 1e-8)
+    for z, z1, z2 in zip(pos[2], res.get_pos()[:, 2], res_bohr.get_pos()[:, 2]):
+        assert match_to_tol(z, z1, 1e-8) and match_to_tol(Bohr * z2, z, 1e-8)
     # end for
     assert res.get_axes() is None
-    assert res_dbl.get_axes() is None
+    assert res_bohr.get_axes() is None
 
     # Test writer
     # default args: (suffix: structure.xyz)
