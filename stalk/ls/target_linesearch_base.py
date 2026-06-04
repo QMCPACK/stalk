@@ -16,6 +16,7 @@ from stalk.ls.tls_settings import TlsSettings
 # Class for line-search with resampling and bias assessment against target
 class TargetLineSearchBase(LineSearchBase):
     _target_settings: TlsSettings
+    _interpolate_kind: str = 'cubic'
 
     def __init__(
         self,
@@ -54,8 +55,9 @@ class TargetLineSearchBase(LineSearchBase):
             fit_func=self.settings.fit_func,
             # M, N, Gs, and interp are set later upon optimization
         )
+        self._interpolate_kind = interpolate_kind
         if self.valid:
-            self.reset_interpolation(interpolate_kind=interpolate_kind)
+            self.reset_interpolation()
         # end if
     # end def
 
@@ -86,36 +88,43 @@ class TargetLineSearchBase(LineSearchBase):
         return self.target_interp is not None
     # end def
 
-    def add_point(self, point):
-        super().add_point(point)
-        if self.valid_target:
-            self.reset_interpolation(
-                interpolate_kind=self.target_settings.interp_kind
-            )
+    @property
+    def interpolate_kind(self):
+        return self._interpolate_kind
+    # end def
+
+    @interpolate_kind.setter
+    def interpolate_kind(self, interpolate_kind):
+        if interpolate_kind not in ['pchip', 'cubic']:
+            raise ValueError("Interpolate kind must be 'pchip' or 'cubic'")
+        else:
+            self._interpolate_kind = interpolate_kind
         # end if
     # end def
 
-    def reset_interpolation(
-        self,
-        interpolate_kind='cubic'
-    ):
+    def add_point(self, point):
+        super().add_point(point)
+        if self.valid_target:
+            self.reset_interpolation()
+        # end if
+    # end def
+
+    def reset_interpolation(self):
         if not self.valid:
             raise AssertionError("Must provide values before interpolation")
         # end if
-        if interpolate_kind == 'pchip':
+        if self.interpolate_kind == 'pchip':
             self.target_settings.interp = PchipInterpolator(
                 self.valid_offsets,
                 self.valid_values,
                 extrapolate=False
             )
-        elif interpolate_kind == 'cubic':
+        elif self.interpolate_kind == 'cubic':
             self.target_settings.interp = CubicSpline(
                 self.valid_offsets,
                 self.valid_values,
                 extrapolate=False
             )
-        else:
-            raise ValueError("Could not recognize interpolate kind" + str(interpolate_kind))
         # end if
     # end def
 

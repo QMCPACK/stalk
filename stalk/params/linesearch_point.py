@@ -13,6 +13,7 @@ from stalk.util.util import FF, FFS, FU
 
 class LineSearchPoint():
     _offset = 0.0
+    # value is None until evaluated, then it is a scalar. If evaluation failed, value is nan.
     _value = None
     _error = 0.0
     _enabled = True
@@ -54,7 +55,7 @@ class LineSearchPoint():
     # end def
 
     @value.setter
-    def value(self, value):
+    def value(self, value: float | None):
         if isscalar(value) or value is None:
             self._value = value
         else:
@@ -88,8 +89,8 @@ class LineSearchPoint():
 
     @property
     def valid(self):
-        '''The value is valid, when it is enabled and has a value'''
-        return self._enabled and isscalar(self._value) and not isnan(self._value)
+        '''The value is valid, when it is enabled and has a finite value'''
+        return self.enabled and self.value and not isnan(self.value)
     # end def
 
     def reset_value(self):
@@ -127,13 +128,13 @@ class LineSearchPoint():
         # end if
     # end def
 
-    # Compare equality of two grid points
     def __eq__(self, other):
+        '''Two points are equal if their offsets are within the tolerance.'''
         return isinstance(other, LineSearchPoint) and abs(self.offset - other.offset) < self.tol
     # end def
 
-    # Compare ordering of two grid points
     def __lt__(self, other):
+        '''Points are ordered by their offset.'''
         return isinstance(other, LineSearchPoint) and self.offset < other.offset
     # end def
 

@@ -70,6 +70,7 @@ def test_linesearchiteration(tmp_path):
         structure=structure,
         pes_func=pes_H2O
     )
+    srg.evaluate()
     with raises(AssertionError):
         # Cannot copy before optimized
         lsi_srg = LineSearchIteration(surrogate=srg, pes_func=pes_H2O)

@@ -176,7 +176,7 @@ class Surrogate(ParallelLineSearch):
         targets=None,
         interpolate_kind='cubic',
         **pls_args
-        # windows=None, window_frac=0.25, noises=None, add_sigma=False, no_eval=False
+        # windows=None, window_frac=0.25, noises=None, add_sigma=False,
         # pes=None, pes_func=None, pes_args={}, loader=None, interactive=False,
         # M=7, fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
     ):

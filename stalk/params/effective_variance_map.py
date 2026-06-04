@@ -85,4 +85,24 @@ class EffectiveVarianceMap():
         return len(self.scaling_map)
     # end def
 
+    def __add__(self, other):
+        if isinstance(other, EffectiveVarianceMap):
+            # TODO: test for consistency between the maps
+            for params, var_eff in other.scaling_map:
+                self.add_var_eff(params, var_eff)
+            # end for
+        else:
+            raise TypeError('Can only add another EffectiveVarianceMap to this EffectiveVarianceMap. Aborting.')
+        # end if
+        return self
+    # end def
+
+    def __str__(self):
+        s = 'EffectiveVarianceMap with {} entries:\n'.format(len(self))
+        for params, var_eff in self.scaling_map:
+            s += '  Params: {}, Var_eff: {}\n'.format(params.params, var_eff)
+        # end for
+        return s
+    # end def
+
 # end class

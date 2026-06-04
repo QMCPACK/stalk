@@ -31,15 +31,11 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
         structure=None,
         hessian=None,
         d=None,
-        path='',
-        interactive=False,
         # sigma=0.0
         offsets=None,
         M=7,
         W=None,
         R=None,
-        pes=None,
-        bracket=True,
         # kwargs related to TargetLineSearchBase
         bias_order=1,
         bias_mix=0.0,
@@ -56,6 +52,7 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
             self,
             bias_mix=bias_mix,
             bias_order=bias_order,
+            interpolate_kind=interpolate_kind,
             fit_kind=fit_kind,
             fit_func=fit_func,
             fit_args=fit_args,
@@ -70,18 +67,8 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
             W=W,
             R=R,
             offsets=offsets,
-            pes=pes,
-            interactive=interactive,
-            path=path,
             **ls_args,
         )
-        # Finally, attempt to reset interpolation
-        if self.valid:
-            self.reset_interpolation(interpolate_kind=interpolate_kind)
-            if bracket:
-                self.bracket_target_bias()
-            # end if
-        # end if
     # end def
 
     @property
@@ -508,6 +495,13 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
         ax.plot(X.flatten(), Y.flatten(), 'k.', alpha=0.3)
         ax.plot(self.W_opt, self.sigma_opt, 'ko')
         plt.tight_layout()
+    # end def
+
+    # Override LineSearchBase method to perform the line-search and store the result to self.fit_res
+    def _search_and_store(self):
+        self.fit_res = self.search_with_error()
+        self.reset_interpolation()
+        self.bracket_target_bias()
     # end def
 
     def _reset_resampling(self):

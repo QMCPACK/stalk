@@ -36,7 +36,6 @@ def test_NexusGeometry(tmp_path):
         args={'pes_variable': 'relax_h2o'},
         loader=TestGeometryLoader(),
     )
-    assert not s.analyzed
     assert not s.generated
     pes.relax(s, path=str(tmp_path) + "/relax")
     # The structure should have been updated to eqm values

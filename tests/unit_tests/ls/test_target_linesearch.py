@@ -132,9 +132,9 @@ def test_TargetLineSearch_generate():
         d=d,
         W=W,
         M=M,
-        pes=PesFunction(pes_H2O),
         interpolate_kind='pchip'
     )
+    tls.evaluate(pes=PesFunction(pes_H2O))
     assert tls.valid
     assert tls.valid_target
     assert not tls.resampled
@@ -287,9 +287,9 @@ def test_TargetLineSearch_optimize():
         d=0,
         W=0.4,
         M=21,
-        pes=PesFunction(pes_H2O),
         interpolate_kind='cubic'
     )
+    tls.evaluate(pes=PesFunction(pes_H2O))
     # Optimization fails for epsilon near zero but exception is captured
     epsilon0 = 1e-10
     tls.optimize(epsilon0, Gs=Gs_N200_M7, fit_kind='pf2')

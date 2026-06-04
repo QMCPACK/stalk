@@ -33,10 +33,6 @@ class LineSearch(LineSearchBase):
         M=7,
         W=None,
         R=None,
-        pes=None,
-        path='',
-        dep_jobs=None,
-        interactive=False,
         **ls_args
         # values=None, errors=None, fraction=0.025, sgn=1
         # fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None
@@ -55,17 +51,8 @@ class LineSearch(LineSearchBase):
         # Try to initialize grid based on available information
         try:
             self.set_grid(M=M, W=W, R=R, offsets=offsets)
-            # Try to evaluate the pes and set the results
-            if isinstance(pes, PesFunction):
-                self.evaluate(
-                    pes=pes,
-                    interactive=interactive,
-                    path=path,
-                    dep_jobs=dep_jobs
-                )
-            # end if
         except (ValueError):
-            # If the grid or pes input values are missing, the grid will be set later
+            # If the grid input values are missing, the grid will be set later
             pass
         # end try
     # end def
@@ -262,18 +249,44 @@ class LineSearch(LineSearchBase):
 
     def evaluate(
         self,
-        pes: PesFunction = None,
+        pes: PesFunction,
+        path='',
+        var_eff_map=None,
+        interactive=False,
+        dep_jobs=[],
         add_sigma=False,
-        **kwargs,  # path='', interactive=False, dep_jobs=None
+        warn_limit=2.0,
+        **kwargs,  # etc.
     ):
         '''Evaluate the PES on the line-search grid using an evaluation function.'''
+        if not self.shifted:
+            raise AssertionError('The line-serarch grid must be generated before evaluation!')
+        # end if
+        structures = self._grid
+        sigmas = len(structures) * [self.sigma]
         pes.evaluate_all(
-            self._grid,
-            sigmas=len(self) * [self.sigma],
+            structures,
+            sigmas=sigmas,
+            path=path,
+            var_eff_map=var_eff_map,
+            interactive=interactive,
+            dep_jobs=dep_jobs,
             add_sigma=add_sigma,
+            warn_limit=warn_limit,
             **kwargs
         )
-        self._search_and_store()
+        if self.evaluated:
+            self._search_and_store()
+        else:
+            print(f'{repr(self)} missing results for the following structures:')
+            for point in self.grid:
+                if point.valid:
+                    continue
+                else:
+                    print(f'  {point.offset}')
+                # end if
+            # end for
+        # end if
     # end def
 
     @property

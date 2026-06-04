@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from numpy import isnan, linspace, random
-from scipy.interpolate import PchipInterpolator, CubicSpline
+from scipy.interpolate import PchipInterpolator
 from pytest import raises
 
 from stalk.ls.linesearch_grid import LineSearchGrid
@@ -147,12 +147,6 @@ def test_TargetLineSearchBase():
     error = tls.compute_error(grid, Gs=Gs)
     assert match_to_tol(error, bias + errorbar_x)
 
-    # Test reset interpolation
-    tls.reset_interpolation(interpolate_kind='cubic')
-    assert isinstance(tls.target_settings.interp, CubicSpline)
-    with raises(ValueError):
-        tls.reset_interpolation('error')
-    # end with
     assert match_to_tol(tls.evaluate_target(grid.offsets), grid.values)
     assert tls.evaluate_target(grid.offsets[4]) == grid.values[4]
     assert isnan(tls.evaluate_target(grid.offsets[0] - 1e-6))

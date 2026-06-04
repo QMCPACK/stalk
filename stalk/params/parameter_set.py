@@ -15,6 +15,7 @@ from stalk.params.parameter import Parameter
 class ParameterSet(LineSearchPoint):
     _param_list: list[Parameter] = []
     _samples = None  # samples for effective variance estimation
+    _sigma = None  # target uncertainty for noisy simulations; sigma=0.0 means no noise
     label = ''  # label for identification
     path = None  # field to be used in file I/O mode
 
@@ -24,11 +25,13 @@ class ParameterSet(LineSearchPoint):
         params_err=None,
         value=None,
         error=0.0,
+        sigma=0.0,
         label=None,
     ):
         self.label = label
         self.params_list = params
         self.params_err = params_err
+        self.sigma = sigma
         if value is not None:
             self.value = value
             self.error = error
@@ -121,6 +124,20 @@ class ParameterSet(LineSearchPoint):
         # end if
     # end def
 
+    @property
+    def sigma(self) -> None:
+        return self._sigma
+    # end def
+
+    @sigma.setter
+    def sigma(self, sigma: float) -> None:
+        if isscalar(sigma) and sigma >= 0:
+            self._sigma = sigma
+        else:
+            raise ValueError(f'Sigma must be >= 0, provided: {sigma}')
+        # end if
+    # end def
+
     def shift_params(self, shifts):
         if len(shifts) != len(self):
             raise ValueError('Shifts has wrong dimensions!')
@@ -174,8 +191,12 @@ class ParameterSet(LineSearchPoint):
 
     # Mean squared distance between this and other ParameterSet
     def distance2(self, other):
-        diff = self - other
-        return sum(array(diff.params)**2)
+        if isinstance(other, ParameterSet):
+            diff = self.params - other.params
+        else:
+            ValueError(f'Cannot compute distance to {repr(other)}')
+        # end if
+        return sum(array(diff)**2)
     # end def
 
     # Mean unsigned distance between this and other ParameterSet
@@ -185,7 +206,7 @@ class ParameterSet(LineSearchPoint):
 
     def __str__(self):
         string = self.__class__.__name__
-        if self.label is not None or self.label != '':
+        if self.label is not None and self.label != '':
             string += ' ({})'.format(self.label)
         # end if
         if self.params is None:

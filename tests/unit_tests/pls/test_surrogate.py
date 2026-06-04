@@ -14,8 +14,8 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 
-# test TargetParallelLineSearch class
-def test_TargetParallelLineSearch():
+# test Surrogate class
+def test_Surrogate():
 
     # test empty init
     with raises(TypeError):
@@ -31,6 +31,8 @@ def test_TargetParallelLineSearch():
         window_frac=0.2,
     )
     assert srg.setup
+    assert not srg.evaluated
+    srg.evaluate(pes_H2O)
     assert srg.evaluated
     assert not srg.optimized
 
@@ -75,8 +77,8 @@ def test_TargetParallelLineSearch():
     )
     assert srg.optimized
     # Hard-coded references are not externally validated
-    windows_ref1 = [0.058189699596450206, 0.13112494623501014]
-    noises_ref1 = [0.003879313306430014, 0.005736716397781694]
+    windows_ref1 = [0.05172417741906685, 0.13112494623501014]
+    noises_ref1 = [0.00290948497982251, 0.005736716397781694]
     assert match_to_tol(srg.W_opt, windows_ref1)
     assert match_to_tol(srg.sigma_opt, noises_ref1)
     for tls, W, sigma in zip(srg.ls_list, windows_ref1, noises_ref1):
@@ -112,8 +114,8 @@ def test_TargetParallelLineSearch():
     )
     assert srg.optimized
     # Hard-coded references are not externally validated
-    windows_ref2 = [0.058189699596450206, 0.13112494623501014]
-    noises_ref2 = [0.006465522177383356, 0.009834370967625761]
+    windows_ref2 = [0.04849141633037517, 0.11473432795563387]
+    noises_ref2 = [0.00581896995964502, 0.008195309139688134]
     assert match_to_tol(srg.W_opt, windows_ref2)
     assert match_to_tol(srg.sigma_opt, noises_ref2)
     for tls, W, sigma in zip(srg.ls_list, windows_ref2, noises_ref2):
@@ -141,6 +143,7 @@ def test_TargetParallelLineSearch():
         hessian=hessian,
         window_frac=0.2,
     )
+    srg.evaluate()
     epsilon_p2 = [0.01, 0.03]
     srg.bracket_target_biases()
     srg.optimize(

@@ -58,12 +58,9 @@ class ParallelLineSearch():
         windows=None,
         window_frac=0.25,
         noises=None,
-        add_sigma=False,
-        no_eval=False,
         pes=None,
         pes_func=None,
         pes_args={},
-        interactive=False,
         load=None,  # eliminate loading arg
         # LineSearch args
         **ls_args
@@ -93,10 +90,6 @@ class ParallelLineSearch():
                 window_frac,
                 **ls_args
             )
-            if self.shifted and not no_eval:
-                # Successful evaluation leads to estimation of next structure
-                self.evaluate(add_sigma=add_sigma, interactive=interactive)
-            # end if
         # end if
     # end def
 
@@ -306,16 +299,16 @@ class ParallelLineSearch():
         structures, sigmas = self._collect_enabled()
         self.pes.evaluate_all(
             structures,
-            sigmas,
-            add_sigma=add_sigma,
+            sigmas=sigmas,
             path=self.path,
+            add_sigma=add_sigma,
             interactive=interactive,
             dep_jobs=dep_jobs,
             var_eff_map=var_eff_map,
         )
         # Set the eqm energy
         for ls in self.ls_list:
-            eqm = ls.find_point(0.0)
+            eqm = ls.get(0.0)
             if eqm is not None:
                 self.structure.value = eqm.value
                 self.structure.error = eqm.error
@@ -468,7 +461,6 @@ class ParallelLineSearch():
             hessian=hessian,
             windows=windows,
             noises=noises,
-            no_eval=True,
             pes=pes,
             **pls_args,
         )
