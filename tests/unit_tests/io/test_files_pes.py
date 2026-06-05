@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from numpy import loadtxt, savetxt
+from numpy import savetxt
 
 from stalk.io.files_pes import FilesPes
 from stalk.io.pes_loader import PesLoader
@@ -25,25 +25,25 @@ def test_FilesPes(tmp_path):
 
     # Test evaluate
     s = get_structure_H2O()
-    path = str(tmp_path) + '/test0'
+    path = tmp_path / 'test0'
     # This creates the structure file but does not load the energy yet
     pes.evaluate(s, path=path)
     assert s.value is None
     assert s.error == 0.0
     res = XyzGeometry(suffix='structure.xyz').load(path)
-    sigma_ref = loadtxt(path + "/sigma.dat")
+    sigma_path = path / 'sigma.dat'
+    assert not sigma_path.exists()
     assert match_to_tol(s.pos, res.get_pos())
     for e, e_ref in zip(s.elem, res.get_elem()):
         assert e == e_ref
     # end for
-    assert sigma_ref == 0.0
     assert s.value is None
     assert s.error == 0.0
 
     # Next, add energy
     value_ref = 1.0
     error_ref = 0.1
-    savetxt(path + '/energy.dat', [value_ref, error_ref])
+    savetxt(path / 'energy.dat', [value_ref, error_ref])
     pes.evaluate(s, path=path)
     assert match_to_tol(s.value, value_ref)
     assert match_to_tol(s.error, error_ref)
@@ -66,7 +66,7 @@ def test_FilesPes(tmp_path):
     values_ref = [1.1, 2.1]
     errors_ref = [0.11, 0.22]
     # Adding one structure energy but not the other
-    savetxt(path + '/2b/energy.dat', [values_ref[1], errors_ref[1]])
+    savetxt(path / '2b/energy.dat', [values_ref[1], errors_ref[1]])
     pes.evaluate_all(
         [s2a, s2b],
         path=path,
@@ -78,7 +78,7 @@ def test_FilesPes(tmp_path):
     assert match_to_tol(s2b.error, errors_ref[1])
     assert s2a.value is None
     # Adding the remaining structure energy
-    savetxt(path + '/2a/energy.dat', [values_ref[0], errors_ref[0]])
+    savetxt(path / '2a/energy.dat', [values_ref[0], errors_ref[0]])
     pes.evaluate_all(
         [s2a, s2b],
         path=path,

@@ -36,7 +36,8 @@ class NexusStructure(ParameterStructure):
 
     @property
     def generated(self):
-        return self.jobs is not None and len(self.jobs) > 0
+        '''The Nexus structure is generated if the jobs have been created.'''
+        return self.jobs is not None
     # end def
 
     @property

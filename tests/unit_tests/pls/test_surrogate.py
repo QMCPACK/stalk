@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from numpy import array, flipud
-from pytest import raises
 from stalk.ls.polynomial_fit import PolynomialFit
+from stalk.params.pes_function import PesFunction
 from stalk.pls.surrogate import Surrogate
 from stalk.util import match_to_tol
 
@@ -18,21 +18,18 @@ __license__ = "BSD-3-Clause"
 def test_Surrogate():
 
     # test empty init
-    with raises(TypeError):
-        Surrogate()
-    # end with
     structure = get_structure_H2O()
     hessian = get_hessian_H2O()
     srg = Surrogate(
         fit_kind='pf3',
-        pes_func=pes_H2O,
         structure=structure,
         hessian=hessian,
         window_frac=0.2,
     )
     assert srg.setup
     assert not srg.evaluated
-    srg.evaluate(pes_H2O)
+    pes = PesFunction(pes_H2O)
+    srg.evaluate(pes)
     assert srg.evaluated
     assert not srg.optimized
 
@@ -138,12 +135,12 @@ def test_Surrogate():
     # Test LS optimization to epsilon_p
     srg = Surrogate(
         fit_kind='pf3',
-        pes_func=pes_H2O,
         structure=structure,
         hessian=hessian,
         window_frac=0.2,
     )
-    srg.evaluate()
+    pes = PesFunction(pes_H2O)
+    srg.evaluate(pes)
     epsilon_p2 = [0.01, 0.03]
     srg.bracket_target_biases()
     srg.optimize(

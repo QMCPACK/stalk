@@ -81,9 +81,17 @@ def test_NexusPes(tmp_path):
         sigmas=sigmas,
         add_sigma=True
     )
-    assert all([s.generated for s in structures[:-1]])
-    assert not structures[-1].generated
+    # All are generated but the later duplicate eqm should match the first one
+    assert all([s.generated for s in structures])
+    assert structures[-1].jobs == []
     assert match_to_tol([s.error for s in structures], sigmas)
+    # Re-evaluation makes no difference
+    pes.evaluate_all(
+        structures,
+        path=str(tmp_path) + '/eval_all',
+        sigmas=sigmas,
+        add_sigma=True
+    )
     # 2a: Test dep_jobs
     s2de = s.copy(pos=pos_H2O, label='eqm')
     s2dd = s.copy(pos=pos_H2O * 1.2, label='dep')

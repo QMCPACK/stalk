@@ -10,7 +10,7 @@ from textwrap import indent
 from dill import dumps, loads
 from os import makedirs, path
 
-from stalk.params.pes_function import PesFunction
+from stalk.params.pes_function import NotEvaluatedException, PesFunction
 from stalk.util import get_fraction_error
 from stalk.params import ParameterSet
 from stalk.params import ParameterHessian
@@ -24,8 +24,7 @@ class ParallelLineSearch():
     _hessian = None  # hessian object
     _structure = None  # eqm structure
     _structure_next = None  # next structure
-    _path = ''
-    _pes: PesFunction = None
+    _path = None
 
     # Try to load the instance from file before ordinary init
     def __new__(cls, path='', load=None, *args, **kwargs):
@@ -58,23 +57,14 @@ class ParallelLineSearch():
         windows=None,
         window_frac=0.25,
         noises=None,
-        pes=None,
-        pes_func=None,
-        pes_args={},
         load=None,  # eliminate loading arg
         # LineSearch args
         **ls_args
         # M=7, fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
     ):
-        if load is not None and self.pes is not None:
-            # Proxies of successful loading from disk
+        # Proxies of successful loading from disk
+        if self.path is not None:
             return
-        # end if
-        if isinstance(pes, PesFunction):
-            self.pes = pes
-        else:
-            # If none are provided, raises TypeError
-            self.pes = PesFunction(pes_func, pes_args)
         # end if
         self.path = path
         if structure is not None:
@@ -90,20 +80,6 @@ class ParallelLineSearch():
                 window_frac,
                 **ls_args
             )
-        # end if
-    # end def
-
-    @property
-    def pes(self):
-        return self._pes
-    # end def
-
-    @pes.setter
-    def pes(self, pes):
-        if isinstance(pes, PesFunction):
-            self._pes = pes
-        else:
-            raise TypeError("Must provide PES that is inherited from PesFunction.")
         # end if
     # end def
 
@@ -147,6 +123,11 @@ class ParallelLineSearch():
             return len(self.hessian)
         # end if
     # ed def
+
+    @property
+    def generated(self):
+        return len(self) > 0 and all([ls.generated for ls in self.ls_list])
+    # end def
 
     @property
     def evaluated(self):
@@ -195,12 +176,12 @@ class ParallelLineSearch():
     # end def
 
     @property
-    def structure_next(self):
+    def structure_next(self) -> ParameterSet:
         return self._structure_next
     # end def
 
     @property
-    def Lambdas(self):
+    def Lambdas(self) -> ndarray:
         if self.hessian is None:
             return array([])
         else:
@@ -209,7 +190,7 @@ class ParallelLineSearch():
     # end def
 
     @property
-    def windows(self):
+    def windows(self) -> list[float]:
         result = []
         for ls in self.ls_list:
             if isinstance(ls, LineSearch):
@@ -223,17 +204,17 @@ class ParallelLineSearch():
     # end def
 
     @property
-    def noises(self):
+    def noises(self) -> list[float]:
         return [ls.sigma for ls in self.ls_list]
     # end def
 
     @property
-    def noises_min(self):
+    def noises_min(self) -> float:
         return array([ls.sigma for ls in self.ls_list]).min()
     # end def
 
     @property
-    def D_list(self):
+    def D_list(self) -> list[int]:
         return [d for d in range(len(self.hessian)) if self.hessian.enabled[d]]
     # end def
 
@@ -244,7 +225,7 @@ class ParallelLineSearch():
         window_frac=None,
         **ls_args
         # M=7, fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
-    ):
+    ) -> None:
         if windows is None:
             windows = abs(self.Lambdas)**0.5 * window_frac
         # end if
@@ -261,7 +242,7 @@ class ParallelLineSearch():
         M=7,
         **ls_args,
         # fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
-    ):
+    ) -> None:
         if isinstance(M, int):
             M = len(self.hessian) * [M]
         # end if
@@ -288,16 +269,17 @@ class ParallelLineSearch():
 
     def evaluate(
         self,
+        pes: PesFunction,
         add_sigma=False,
         interactive=False,
         dep_jobs=[],
         var_eff_map=None,
-    ):
+    ) -> None:
         if not self.shifted:
             raise AssertionError("Must have shifted structures first!")
         # end if
         structures, sigmas = self._collect_enabled()
-        self.pes.evaluate_all(
+        pes.evaluate_all(
             structures,
             sigmas=sigmas,
             path=self.path,
@@ -306,6 +288,10 @@ class ParallelLineSearch():
             dep_jobs=dep_jobs,
             var_eff_map=var_eff_map,
         )
+        if not all([s.value is not None and s.enabled for s in structures]):
+            print('Cannot solve the line-searches, as not all structures were successfully evaluated.')
+            return
+        # end if
         # Set the eqm energy
         for ls in self.ls_list:
             eqm = ls.get(0.0)
@@ -326,14 +312,15 @@ class ParallelLineSearch():
 
     def evaluate_eqm(
         self,
+        pes: PesFunction,
         add_sigma=False,
         interactive=False,
         dep_jobs=[],
         var_eff_map=None,
     ):
-        self.pes.evaluate(
+        pes.evaluate(
             self.structure,
-            sigma=array(self.noises).min(),
+            sigma=self.noises_min,
             path=self.path,
             add_sigma=add_sigma,
             interactive=interactive,
@@ -342,7 +329,7 @@ class ParallelLineSearch():
         )
     # end def
 
-    def _collect_enabled(self):
+    def _collect_enabled(self) -> tuple[list[ParameterSet], list[float]]:
         structures = []
         sigmas = []
         sigma_eqm = self.noises_min
@@ -443,14 +430,12 @@ class ParallelLineSearch():
         hessian=None,
         windows=None,
         noises=None,
-        pes=None,
         M=None,
     ):
         structure = structure if structure is not None else self.structure
         hessian = hessian if hessian is not None else self.hessian
         windows = windows if windows is not None else self.windows
         noises = noises if noises is not None else self.noises
-        pes = pes if pes is not None else self.pes
         pls_args = {}
         if M is not None:
             pls_args['M'] = M
@@ -461,21 +446,17 @@ class ParallelLineSearch():
             hessian=hessian,
             windows=windows,
             noises=noises,
-            pes=pes,
             **pls_args,
         )
         for ls, ls_new in zip(self.ls_list, copy_pls.ls_list):
             ls_new._settings = ls._settings
         # end for
-        # If no new pes was supplied, use the old one
-        if copy_pls.pes is None:
-            copy_pls.pes = self.pes
-        # end if
         return copy_pls
     # end def
 
     def propagate(
         self,
+        pes: PesFunction,
         path=None,
         write=True,
         overwrite=True,
@@ -485,7 +466,10 @@ class ParallelLineSearch():
         **kwargs  # dep_jobs=[], var_eff_map=None
     ):
         if not self.evaluated:
-            self.evaluate(add_sigma=add_sigma, interactive=interactive, **kwargs)
+            self.evaluate(pes=pes, add_sigma=add_sigma, interactive=interactive, **kwargs)
+        # end if
+        if not self.evaluated:
+            raise NotEvaluatedException("Cannot propagate, as not all line-searches were successfully evaluated.")
         # end if
         path = path if path is not None else self.path + '_next/'
         # Write to disk

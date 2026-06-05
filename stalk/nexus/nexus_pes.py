@@ -14,12 +14,9 @@ from stalk.io.pes_loader import PesLoader
 from stalk.nexus.nexus_structure import NexusStructure
 from stalk.params.pes_function import NotEvaluatedException, PesFunction
 from stalk.params.effective_variance_map import EffectiveVarianceMap
-from stalk.util.util import directorize
 
 
 class NexusPes(PesFunction):
-    loader: PesLoader = None
-    disable_failed = False
     bundle_jobs = False
 
     def __init__(
@@ -27,13 +24,11 @@ class NexusPes(PesFunction):
         func,
         args: dict = {},  # Keep 'args' for backward compatibility
         loader: PesLoader = None,
-        disable_failed=False,
         bundle_jobs=False,
-        **kwargs,
+        **kwargs,  # disable_failed=False, ...
     ):
         # Init the function caller
         super().__init__(func, args=args, **kwargs)
-        self.disable_failed = disable_failed
         self.bundle_jobs = bundle_jobs
         self.loader = loader
     # end def
@@ -48,30 +43,28 @@ class NexusPes(PesFunction):
         var_eff_map: EffectiveVarianceMap = None,
         interactive=False,
         dep_jobs=[],
-        # Track repeated Nexus identifiers to avoid redundant job generation
-        gen_paths: set = set(),
         **kwargs
     ) -> None:
-        # Do not redo jobs
-        if structure.generated:
-            return
-        # end if
-        # Write the file path to the structure
-        structure.path = f'{directorize(path)}{structure.label}/'
-        # Hot update of eval_args
-        eval_args = self.args.copy()
-        eval_args.update(**kwargs)
+        # Store the file path to the structure
+        structure.path = self._get_path(structure, path)
         # Associate the sigma with the structure
         structure.sigma = sigma
         # Set the number of samples
         self._set_samples(structure, var_eff_map=var_eff_map, samples=samples)
-        # Create the jobs and store them in the structure
-        if structure.path in gen_paths:
-            structure.jobs = []
+        # Use params.dat to determine if the jobs have been already generated
+        if self.params_file.exists(structure.path):
+            print(f'Nexus jobs in {structure.path} are already generated. Not regenerating.')
+            structure.jobs = []  # Set empty jobs to indicate that the structure is generated
         else:
+            self._create_files(structure)
+            # Create the jobs and store them in the structure
+            # Hot update of eval_args
+            eval_args = self.args.copy()
+            eval_args.update(**kwargs)
             structure.jobs = self.func(structure, dep_jobs=dep_jobs, **eval_args)
-            gen_paths.add(structure.path)
         # end if
+        # Try to load the value from disk if it exists
+        self._try_load_value(structure)
     # end def
 
     def _generate_structure_all(
@@ -87,8 +80,6 @@ class NexusPes(PesFunction):
         if sigmas is None:
             sigmas = [0.0] * len(structures)
         # end if
-        # Generate the jobs only in unique paths
-        gen_paths = set()
         for structure, sigma in zip(structures, sigmas):
             self._generate_structure(
                 structure,
@@ -97,8 +88,6 @@ class NexusPes(PesFunction):
                 var_eff_map=var_eff_map,
                 interactive=interactive,
                 dep_jobs=dep_jobs,
-                # track repeated Nexus identifiers
-                gen_paths=gen_paths,
                 **kwargs
             )
         # end for
@@ -159,7 +148,7 @@ class NexusPes(PesFunction):
             # end if
             structure.value = result.value
             structure.error = result.error
-            # TODO: write to disk
+            self._save_value(structure)
             # TODO: interactively discard bad data?
             self._warn_energy(structure, warn_limit=warn_limit)
             # Nothing to do here but update the var_eff_map if needed

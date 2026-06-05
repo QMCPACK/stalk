@@ -4,11 +4,13 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from os import makedirs
 import warnings
 
 from numpy import isscalar
 from scipy.optimize import minimize
 
+from stalk.io.txt_data import TxtData
 from stalk.params.effective_variance import EffectiveVariance
 from stalk.params.effective_variance_map import EffectiveVarianceMap
 from stalk.params.parameter_set import ParameterSet
@@ -18,6 +20,52 @@ from stalk.util.util import directorize
 
 
 class PesFunction(FunctionCaller):
+    sigma_file: TxtData = None
+    params_file: TxtData = None
+    value_file: TxtData = None
+    disable_failed = False
+    # If True, direct PES evaluations will be written do disk
+    create_files = None
+
+    def __init__(
+        self,
+        func,
+        args: dict = {},  # Keep 'args' for backward compatibility
+        disable_failed=False,
+        create_files=False,
+        **kwargs,
+    ):
+        # Init the function caller
+        super().__init__(func, args=args, **kwargs)
+        self.disable_failed = disable_failed
+        self.create_files = create_files
+        self.sigma_file = TxtData('sigma.dat')  # Initialize the sigma file handler
+        self.params_file = TxtData('params.dat')  # Initialize the params file handler
+        self.value_file = TxtData('value.dat')  # Initialize the value file handler
+    # end def
+
+    def generate(
+        self,
+        structure: ParameterSet,
+        path='',
+        sigma=0.0,
+        samples=None,
+        var_eff_map: EffectiveVarianceMap = None,
+        interactive=False,
+        dep_jobs=[],
+        **kwargs
+    ) -> None:
+        self._generate_structure(
+            structure,
+            path=path,
+            sigma=sigma,
+            samples=samples,
+            var_eff_map=var_eff_map,
+            interactive=interactive,
+            dep_jobs=dep_jobs,
+            **kwargs
+        )
+    # end def
 
     def evaluate(
         self,
@@ -30,7 +78,7 @@ class PesFunction(FunctionCaller):
         interactive=False,
         warn_limit=2.0,
         dep_jobs=[],
-        **kwargs  # samples, etc.
+        **kwargs  # etc.
     ) -> None:
         # Generate hook creates the structure file and sigma
         self._generate_structure(
@@ -96,6 +144,10 @@ class PesFunction(FunctionCaller):
         )
     # end def
 
+    def _get_path(self, structure: ParameterSet, path: str) -> str:
+        return f'{directorize(path)}{structure.label}/'
+    # end def
+
     def _generate_structure(
         self,
         structure: ParameterSet,
@@ -107,12 +159,45 @@ class PesFunction(FunctionCaller):
         dep_jobs=[],
         **kwargs
     ) -> None:
-        # Write the file path to the structure
-        structure.path = f'{directorize(path)}{structure.label}/'
-        # TODO: write the appropriate files to disk if not already there
+        # Store the file path to the structure
+        structure.path = self._get_path(structure, path)
         # Associate the sigma with the structure
         structure.sigma = sigma
         self._set_samples(structure, var_eff_map=var_eff_map, samples=samples)
+        # Use params.dat to determine if the files have been already generated
+        if self.create_files:
+            if not self.params_file.exists(structure.path):
+                self._create_files(structure)
+            # end if
+        # end if
+        # Try to load from disk
+        self._try_load_value(structure)
+    # end def
+
+    def _create_files(self, structure: ParameterSet):
+        '''Check if the files for the structure have been already generated, and if not, create them.'''
+        makedirs(structure.path, exist_ok=True)
+        # Write the parameters to disk in a simple format (e.g., params.dat)
+        self.params_file.save_result(structure.path, structure.params)
+        # If the sigma is meaningful, write it to disk as well
+        if structure.sigma is not None and structure.sigma > 0.0:
+            self.sigma_file.save_result(structure.path, [structure.sigma])
+        # end if
+    # end def
+
+    def _try_load_value(self, structure: ParameterSet):
+        '''Try to load the value from disk, and if it exists, set it to the structure.'''
+        if self.value_file.exists(structure.path):
+            print(f'{structure.path} loaded value from disk.')
+            result = self.value_file.load_result(structure.path, [None, 0.0])
+            structure.value = result[0]
+            structure.error = result[1] if len(result) > 1 else 0.0
+        # end if
+    # end def
+
+    def _save_value(self, structure: ParameterSet):
+        '''Save the value+error of the structure to disk.'''
+        self.value_file.save_result(structure.path, [structure.value, structure.error])
     # end def
 
     def _generate_structure_all(
@@ -151,15 +236,22 @@ class PesFunction(FunctionCaller):
         if interactive:
             self._prompt([structure])
         # end if
-        # TODO: Try to load result from disk first
+        if structure.evaluated:
+            print(f'{structure.path} is already evalued.')
+            return
+        # end if
         try:
             value, error = self.func(structure, **self.args)
+            print(f'{structure.path} evaluated to {value} +/- {error}.')
             # Unlike elsewhere, the value and error can be set here directly and bypass
             # using loaders. The data is transferred via the structure
             structure.value = value
             structure.error = error
+            if self.create_files:
+                self._save_value(structure)
+            # end if
         except NotEvaluatedException:
-            print(f'Structure {structure.label} could not be evaluated.')
+            print(f'{structure.label} could not be evaluated.')
         # end try
     # end def
 

@@ -45,11 +45,15 @@ class XsfGeometry(GeometryLoader, GeometryWriter):
         path: Path,
         **kwargs,
     ):
-        if not isinstance(structure, NexusStructure):
+        if isinstance(structure, Structure):
+            # If a Nexus Structure is given, we can write it directly
+            structure.write_xsf(self.get_filename(path))
+        elif isinstance(structure, NexusStructure):
+            s = structure.get_nexus_structure()
+            s.write_xsf(self.get_filename(path))
+        else:
             raise TypeError('Presently only NexusStructure can be written to XSF file. Aborting.')
-        # end ifs
-        s = structure.get_nexus_structure()
-        s.write_xsf(path)
+        # end if
     # end def
 
 # end class

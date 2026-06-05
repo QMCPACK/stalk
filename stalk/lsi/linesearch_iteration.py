@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 
 from stalk.params.effective_variance_map import EffectiveVarianceMap
 from stalk.params.parameter_set import ParameterSet
-from stalk.params.pes_function import PesFunction
+from stalk.params.pes_function import NotEvaluatedException, PesFunction
 from stalk.pls.surrogate import Surrogate
 from stalk.util import directorize
 from stalk.pls import ParallelLineSearch
@@ -29,9 +29,6 @@ class LineSearchIteration():
         surrogate=None,
         structure=None,
         hessian=None,
-        pes=None,
-        pes_func=None,
-        pes_args={},
         var_eff_map=None,
         **pls_args
     ):
@@ -41,17 +38,12 @@ class LineSearchIteration():
         # Try to load serialized iterations:
         self.load_pls()
         # if no iterations loaded, try to initialize
-        if len(self) == 0 or not self.pls(0).evaluated:
-            if not isinstance(pes, PesFunction):
-                # If none are provided, raises TypeError
-                pes = PesFunction(pes_func, pes_args)
-            # end if
+        if len(self) == 0 or not self[0].evaluated:
             # Try to load from surrogate ParallelLineSearch object
             if surrogate is not None:
                 self.init_from_surrogate(
                     surrogate=surrogate,
                     structure=structure,
-                    pes=pes,
                 )
             # end if
             # When present, manually provided mappings, parameters and positions
@@ -60,7 +52,6 @@ class LineSearchIteration():
                 self.init_from_hessian(
                     hessian,
                     structure,
-                    pes=pes,
                     **pls_args
                 )
             # end if
@@ -87,12 +78,30 @@ class LineSearchIteration():
     # end def
 
     @property
+    def generated(self):
+        return self[-1].generated if len(self) > 0 else False
+    # end def
+
+    @property
+    def evaluated(self):
+        return self[-1].evaluated if len(self) > 0 else False
+    # end def
+
+    @property
     def structure_init(self):
-        return self.pls(0).structure
+        if len(self) == 0:
+            return None
+        else:
+            return self[0].structure
+        # end if
     # end def
 
     @property
     def structure_final(self):
+        # TODO: this should be patched mor elegantly
+        if len(self) == 1:
+            return self.structure_init
+        # end if
         params_list = []
         params_err_list = []
         values_list = []
@@ -160,19 +169,16 @@ class LineSearchIteration():
         self,
         surrogate: ParallelLineSearch,
         structure=None,
-        pes=None,
     ):
         if isinstance(surrogate, Surrogate):
             pls = surrogate.copy(
                 path=self._get_pls_path(0),
                 structure=structure,
-                pes=pes
             )
         elif isinstance(surrogate, ParallelLineSearch):
             pls = surrogate.copy(
                 path=self._get_pls_path(0),
                 structure=structure,
-                pes=pes
             )
         else:
             raise AssertionError('Surrogate parameter must be a ParallelLineSearch object')
@@ -180,11 +186,15 @@ class LineSearchIteration():
         self._pls_list = [pls]
     # end def
 
+    # Kept for backward compatibility
+    def pls(self, i=-1):
+        return self[i]
+    # end def
+
     def init_from_hessian(
         self,
         hessian,
         structure=None,
-        pes=None,
         **pls_args
     ):
         if len(self) == 0:
@@ -192,12 +202,11 @@ class LineSearchIteration():
                 path=self._get_pls_path(0),
                 hessian=hessian,
                 structure=structure,
-                pes=pes,
                 **pls_args
             )
             self.pls_list.append(pls)
         else:
-            pls = self.pls(0)
+            pls = self[0]
             pls.hessian = hessian
             pls.structure = structure
         # end if
@@ -209,24 +218,14 @@ class LineSearchIteration():
 
     def evaluate(
         self,
+        pes: PesFunction,
         add_sigma=False
+        # TODO: add other evaluate kwargs
     ):
-        return self._get_current_pls().evaluate(add_sigma=add_sigma)
-    # end def
-
-    def _get_current_pls(self):
-        # The list cannot be empty
-        return self.pls_list[-1]
-    # end def
-
-    def pls(self, i=None):
-        if i is None:
-            return self._get_current_pls()
-        elif i < len(self.pls_list):
-            return self.pls_list[i]
-        else:
-            return None
+        if len(self) == 0:
+            raise AssertionError('No ParallelLineSearch objects to evaluate')
         # end if
+        self[-1].evaluate(pes, add_sigma=add_sigma)
     # end def
 
     def load_pls(self):
@@ -250,6 +249,7 @@ class LineSearchIteration():
 
     def propagate(
         self,
+        pes: PesFunction,
         i=None,
         write=True,
         overwrite=True,
@@ -263,22 +263,28 @@ class LineSearchIteration():
             return
         # end if
         i = len(self)
-        pls_next = self.pls().propagate(
-            path=self._get_pls_path(i),
-            write=write,
-            overwrite=overwrite,
-            fname=fname,
-            add_sigma=add_sigma,
-            interactive=interactive,
-            var_eff_map=self.var_eff_map,
-            **kwargs
-        )
-        self.pls_list.append(pls_next)
+        try:
+            pls_next = self[-1].propagate(
+                pes=pes,
+                path=self._get_pls_path(i),
+                write=write,
+                overwrite=overwrite,
+                fname=fname,
+                add_sigma=add_sigma,
+                interactive=interactive,
+                var_eff_map=self.var_eff_map,
+                **kwargs
+            )
+            self.pls_list.append(pls_next)
+        except NotEvaluatedException:
+            print(f"Propagation paused at iteration {i} due to not all line-searches being successfully evaluated.")
+            exit(0)
+        # end try
     # end
 
-    # Evalutate last eqm
+    # Evaluate last eqm
     def evaluate_eqm(self, **kwargs):
-        self.pls().evaluate_eqm(var_eff_map=self.var_eff_map, **kwargs)
+        self[-1].evaluate_eqm(var_eff_map=self.var_eff_map, **kwargs)
     # end def
 
     # Keeping a limited version for backward compatibility
@@ -347,8 +353,8 @@ class LineSearchIteration():
             target_value = target.params[pi]
         # end if
         grid = [0]
-        values = [self.pls(0).structure.params[pi] - target_value]
-        errors = [self.pls(0).structure.params_err[pi]]
+        values = [self[0].structure.params[pi] - target_value]
+        errors = [self[0].structure.params_err[pi]]
         for i, pls in enumerate(self.pls_list):
             if pls.evaluated:
                 grid.append(i + 1)
@@ -380,8 +386,8 @@ class LineSearchIteration():
             target_value = target.value
         # end if
         grid = [0]
-        values = [self.pls(0).structure.value - target_value]
-        errors = [self.pls(0).structure.error]
+        values = [self[0].structure.value - target_value]
+        errors = [self[0].structure.error]
         for i, pls in enumerate(self.pls_list[0:]):
             if pls.structure.value is not None:
                 grid.append(i)
@@ -410,12 +416,12 @@ class LineSearchIteration():
     def __str__(self):
         string = self.__class__.__name__
         if len(self) > 0:
-            fmt = '\n  ' + FI + FF + FU + self.pls().D * (FF + FU)
-            fmts = '\n  ' + FIS + FFS + FFS + self.pls().D * (FFS + FFS)
+            fmt = '\n  ' + FI + FF + FU + self[-1].D * (FF + FU)
+            fmts = '\n  ' + FIS + FFS + FFS + self[-1].D * (FFS + FFS)
 
             # Labels row
             plabels = ['pls', 'Energy', '']
-            for param in self.pls().structure.params_list:
+            for param in self[-1].structure.params_list:
                 plabels += [param.label, '']
             # end for
             string += fmts.format(*tuple(plabels))
@@ -442,6 +448,10 @@ class LineSearchIteration():
             data.append(perr)
         # end for
         return fmt.format(p, *tuple(array(data)))
+    # end def
+
+    def __getitem__(self, key: int) -> ParallelLineSearch:
+        return self.pls_list[key]
     # end def
 
 # end class

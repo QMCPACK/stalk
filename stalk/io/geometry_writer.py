@@ -12,7 +12,6 @@ from stalk.util.args_container import ArgsContainer
 class GeometryWriter(ArgsContainer, TxtData):
 
     def write(self, structure, path: str):
-        path = self.get_filename(path)
         # Writing hook
         self._write(structure, path, **self.args)
     # end def

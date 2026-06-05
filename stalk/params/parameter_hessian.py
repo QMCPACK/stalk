@@ -9,7 +9,7 @@ import warnings
 from numpy import array, linalg, diag, isscalar, ndarray, zeros, ones, where, mean, polyfit
 
 from stalk.params.parameter_structure import ParameterStructure
-from stalk.params.pes_function import PesFunction
+from stalk.params.pes_function import NotEvaluatedException, PesFunction
 from stalk.util import bipolyfit
 from stalk.params.parameter_set import ParameterSet
 
@@ -189,6 +189,10 @@ class ParameterHessian():
         # Get list of displacements and structures
         dp_list, structure_list = self._get_fdiff_data(dps, dpos_mode=dpos_mode)
         pes.evaluate_all(structure_list, **kwargs)
+        if not all([s.value is not None and s.enabled for s in structure_list]):
+            print('Did not update the Hessian, as not all structures were evaluated successfully!')
+            return
+        # end if
         # Issue warning when eqm energy is not the apparent minimum
         self._warn_energy(structure_list)
 
@@ -285,10 +289,13 @@ class ParameterHessian():
 
     def _warn_energy(self, structure_list: list[ParameterSet]):
         eqm_value = structure_list[0].value
+        if eqm_value is None:
+            raise NotEvaluatedException('Cannot issue energy warning, eqm energy is not available!')
+        # end if
         self.structure.value = eqm_value
         for structure in structure_list[0:]:
             if structure.value < eqm_value:
-                warnings.warn(f'Offset energy lower than eqm: E({structure.label})={structure.value} < E(eqm)={eqm_value}!')
+                warnings.warn(f'E({structure.label})={structure.value} < E(eqm)={eqm_value}!')
             # end if
         # end for
     # end def

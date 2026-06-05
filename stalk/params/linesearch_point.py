@@ -93,6 +93,12 @@ class LineSearchPoint():
         return self.enabled and self.value and not isnan(self.value)
     # end def
 
+    @property
+    def evaluated(self):
+        '''The point is evaluated if the value is not None.'''
+        return self.value is not None
+    # end def
+
     def reset_value(self):
         self.value = None
         self.error = 0.0

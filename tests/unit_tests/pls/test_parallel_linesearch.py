@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 from pytest import raises
+from stalk.params.pes_function import PesFunction
 from stalk.util import match_to_tol
+from stalk import ParallelLineSearch
 
 from ..assets.h2o import pes_H2O, get_structure_H2O, get_hessian_H2O
 
@@ -12,17 +14,13 @@ __license__ = "BSD-3-Clause"
 
 # Test ParallelLineSearch class
 def test_ParallelLineSearch(tmp_path):
-    from stalk import ParallelLineSearch
 
-    with raises(TypeError):
-        # Cannot init without PES
-        ParallelLineSearch()
-    # end with
-
-    # Test empty init
-    pls = ParallelLineSearch(pes_func=pes_H2O)
+    # Test default values
+    pls = ParallelLineSearch()
+    assert pls.path == 'pls'
     assert not pls.setup
     assert not pls.shifted
+    assert not pls.generated
     assert not pls.evaluated
     assert len(pls) == 0
     assert pls.D == 0
@@ -45,8 +43,9 @@ def test_ParallelLineSearch(tmp_path):
     pls.hessian = h
     assert pls.setup
     assert not pls.shifted
+    pes = PesFunction(pes_H2O)
     with raises(AssertionError):
-        pls.evaluate()
+        pls.evaluate(pes=pes)
     # end with
     # To shift structures and generate ls_list, provide windows, noises etc
     M = 5
@@ -62,7 +61,7 @@ def test_ParallelLineSearch(tmp_path):
     assert not pls.evaluated
     assert pls.structure_next is None
 
-    pls.evaluate()
+    pls.evaluate(pes)
     assert pls.evaluated
     # Checking against hard-coded references
     assert match_to_tol(pls.structure_next.params, [1.02550264, 104.12792928])
@@ -71,11 +70,11 @@ def test_ParallelLineSearch(tmp_path):
     # Test propagate and write
     pls.path = str(tmp_path)
     fname = 'test_fname.p'
-    pls_next = pls.propagate(write=True, fname=fname)
+    pls_next = pls.propagate(pes, write=True, fname=fname)
     assert pls_next.path == str(tmp_path) + '_next/'
 
     # Test loading of pickle
-    pls_load = ParallelLineSearch(load=str(tmp_path) + '/' + fname)
+    pls_load = ParallelLineSearch(path=str(tmp_path), load=fname)
     assert pls_load.evaluated
 
 # end def

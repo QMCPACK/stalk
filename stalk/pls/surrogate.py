@@ -176,8 +176,7 @@ class Surrogate(ParallelLineSearch):
         targets=None,
         interpolate_kind='cubic',
         **pls_args
-        # windows=None, window_frac=0.25, noises=None, add_sigma=False,
-        # pes=None, pes_func=None, pes_args={}, loader=None, interactive=False,
+        # windows=None, window_frac=0.25, noises=None,
         # M=7, fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
     ):
         ParallelLineSearch.__init__(
@@ -185,17 +184,12 @@ class Surrogate(ParallelLineSearch):
             path=path,
             structure=structure,
             hessian=hessian,
+            interpolate_kind=interpolate_kind,
             **pls_args
         )
         if targets is not None:
             self.x_targets = targets
         # end if
-        for tls in self.ls_list:
-            if tls.valid:
-                tls._search_and_store()
-                tls.reset_interpolation(interpolate_kind=interpolate_kind)
-            # end if
-        # end for
     # end def
 
     def optimize(

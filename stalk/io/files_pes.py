@@ -4,43 +4,32 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-
-from os import makedirs
-
 from stalk.io.pes_loader import PesLoader
-from stalk.io.txt_data import TxtData
 from stalk.io.xyz_geometry import XyzGeometry
 from stalk.params.effective_variance_map import EffectiveVarianceMap
 from stalk.params.parameter_set import ParameterSet
 from stalk.params.pes_function import NotEvaluatedException, PesFunction
-from stalk.util.util import directorize
 
 
 def write_xyz_sigma(
     structure: ParameterSet,
     suffix='structure.xyz',
-    sigma=None,
-    sigma_suffix='sigma.dat',
     **kwargs
 ):
     g = XyzGeometry(suffix=suffix)
     g.write(structure=structure, path=structure.path)
-    if sigma is not None:
-        s = TxtData(suffix=sigma_suffix)
-        s.save_result(structure.path, [sigma])
-    # end if
+    # Note: creating sigma.dat has been moved to default implementation of the function.
 # end def
 
 
 class FilesPes(PesFunction):
-    loader: PesLoader = None
 
     def __init__(
         self,
         func=write_xyz_sigma,
         args={},
         loader: PesLoader = PesLoader(),
-        **kwargs  # extra kwargs for PES evaluation
+        **kwargs  # disable_failed=False, ...
     ):
         # Init the function caller
         super().__init__(func=func, args=args, **kwargs)
@@ -58,23 +47,26 @@ class FilesPes(PesFunction):
         interactive=False,  # catch interactive
         **kwargs
     ):
-        # Write the file path to the structure
-        structure.path = f'{directorize(path)}{structure.label}/'
-        # Hot update of eval_args
-        eval_args = self.args.copy()
-        eval_args.update(**kwargs)
+        # Store the file path to the structure
+        structure.path = self._get_path(structure, path)
         # Associate the sigma with the structure
         structure.sigma = sigma
         # Set the number of samples
         self._set_samples(structure, var_eff_map=var_eff_map, samples=samples)
-        # Write the input files to disk
-        makedirs(structure.path, exist_ok=True)
-        # Call for the evaluation function
-        self.func(
-            structure,
-            sigma=sigma,
-            **eval_args
-        )
+        # Use params.dat to determine if the jobs have been already generated
+        if self.params_file.exists(structure.path):
+            print(f'Input files in {structure.path} are already generated. Not regenerating.')
+        else:
+            self._create_files(structure)
+            # Create the jobs and store them in the structure
+            # Hot update of eval_args
+            eval_args = self.args.copy()
+            eval_args.update(**kwargs)
+            # Call for the evaluation function
+            self.func(structure, sigma=sigma, **eval_args)
+        # end if
+        # Try to load the value from disk if it exists
+        self._try_load_value(structure)
     # end def
 
     def _evaluate_structure(
@@ -95,6 +87,10 @@ class FilesPes(PesFunction):
         warn_limit=2.0,
         interactive: bool = False,
     ) -> None:
+        if structure.valid:
+            print(f'Structure {structure.label} is already valid. Not re-evaluating.')
+            return
+        # end if
         # Try to load the result from disk
         try:
             result = self.loader.load(structure.path)
@@ -108,7 +104,7 @@ class FilesPes(PesFunction):
             # Nothing to do here but update the var_eff_map if needed
             self._update_var_eff_map(structure, var_eff_map=var_eff_map)
         except NotEvaluatedException:
-            print(f'Structure {structure.label} has not be evaluated. Supply output file to disk to continue.')
+            print(f'Structure {structure.label} has not been evaluated. Supply output file to disk to continue.')
         # end try
     # end def
 

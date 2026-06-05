@@ -1,7 +1,7 @@
 #!/usr/bin env python3
 
 from pathlib import Path
-from numpy import ndarray, loadtxt, array, isscalar, savetxt
+from numpy import ndarray, loadtxt, array, isscalar, savetxt, nan
 
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
@@ -50,14 +50,19 @@ class TxtData:
         # end if
     # end def
 
+    def exists(self, filename: Path | str) -> bool:
+        filename = self.get_filename(filename)
+        return filename.exists()
+    # end def
+
     def get_filename(self, filename: Path | str) -> Path:
         if isinstance(filename, str):
             filename = Path(filename)
         # end if
-        if filename.is_dir():
-            filename = filename / self.suffix
-        else:
+        if filename.is_file():
             filename = filename
+        else:
+            filename = filename / self.suffix
         # end if
         return filename
     # end def
@@ -72,17 +77,16 @@ class TxtData:
         filename = self.get_filename(filename)
         if filename.exists():
             data = loadtxt(filename, **kwargs)
+            # Normally rescale the data by the scale factor, but if rescale is False, return the raw data
             if rescale:
                 data /= self.scale
             # end if
         else:
-            msg = f"Could not find {filename}"
-            if default is not None:
-                print(msg + " Returning NaN result.")
-                data = array(default)
-            else:
+            if default is None:
                 # If no default is given, raise an error if the file is missing
-                raise FileNotFoundError(msg)
+                raise FileNotFoundError(f"Could not find {filename}")
+            else:
+                data = default
             # end if
         return data
     # end def
@@ -90,13 +94,19 @@ class TxtData:
     def save_result(
         self,
         filename: Path | str,
-        data: ndarray,
+        data: ndarray | float,
         overwrite=False,
         **kwargs
-    ) -> ndarray:
+    ) -> None:
         filename = self.get_filename(filename)
         filename.parent.mkdir(parents=True, exist_ok=True)
         if not filename.exists() or overwrite:
+            if data is None:
+                data = nan
+            # end if
+            if isscalar(data):
+                data = array([data])
+            # end if
             savetxt(filename, data, **kwargs)
         # end if
     # end def
