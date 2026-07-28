@@ -8,6 +8,7 @@ __license__ = "BSD-3-Clause"
 import warnings
 from numpy import array, linalg, diag, isscalar, ndarray, zeros, ones, where, mean, polyfit
 
+from stalk.io.txt_data import TxtData
 from stalk.params.parameter_structure import ParameterStructure
 from stalk.params.pes_function import NotEvaluatedException, PesFunction
 from stalk.util import bipolyfit
@@ -15,34 +16,37 @@ from stalk.params.parameter_set import ParameterSet
 
 
 class ParameterHessian():
-    _structure = None
-    _hessian = None
-    _Lambda = None
-    _U = None
-    _enabled = None
-    _disable_limit = None
+    _structure: ParameterSet = None
+    _hessian: ndarray = None
+    _Lambda: ndarray = None
+    _U: ndarray = None
+    _enabled: list[bool] = None
+    _disable_limit: float = None
+    hessian_file: TxtData = None
+    params_file: TxtData = None
 
     def __init__(
         self,
-        hessian=None,
-        structure=None,
-        disable_limit=0.0,
+        hessian: ndarray | None = None,
+        structure: ParameterSet = None,
+        disable_limit: float = 0.0,
     ):
         self.structure = structure
         self.disable_limit = disable_limit
-        # Hessian must be set after structure
+        self.hessian_file = TxtData('hessian.dat')
+        self.params_file = TxtData('hessian_params.dat')
         if self.structure is not None:
             self.hessian = hessian
         # end if
     # end def
 
     @property
-    def structure(self):
+    def structure(self) -> ParameterSet:
         return self._structure
     # end def
 
     @structure.setter
-    def structure(self, structure):
+    def structure(self, structure) -> None:
         if structure is None:
             self.reset()
         elif isinstance(structure, ParameterSet):
@@ -60,12 +64,12 @@ class ParameterHessian():
     # end def
 
     @property
-    def hessian(self):
+    def hessian(self) -> ndarray:
         return self._hessian
     # end def
 
     @hessian.setter
-    def hessian(self, hessian):
+    def hessian(self, hessian) -> None:
         if self.structure is None:
             raise AssertionError('Cannot set Hessian without setting structure first!')
         # end if
@@ -167,6 +171,7 @@ class ParameterHessian():
     def compute_fdiff(
         self,
         pes: PesFunction,
+        path='fdiff',
         structure=None,
         dp=0.01,
         dpos_mode=False,
@@ -188,7 +193,11 @@ class ParameterHessian():
 
         # Get list of displacements and structures
         dp_list, structure_list = self._get_fdiff_data(dps, dpos_mode=dpos_mode)
-        pes.evaluate_all(structure_list, **kwargs)
+        pes.evaluate_all(
+            structure_list,
+            path=path,
+            **kwargs
+        )
         if not all([s.value is not None and s.enabled for s in structure_list]):
             print('Did not update the Hessian, as not all structures were evaluated successfully!')
             return
@@ -244,6 +253,9 @@ class ParameterHessian():
             # end for
         # end if
         self.hessian = hessian
+        if pes.create_files:
+            self.save_hessian(path)
+        # end if
     # end def
 
     def _get_fdiff_data(self, dps, dpos_mode=False):
@@ -287,6 +299,32 @@ class ParameterHessian():
         return dp_list, structure_list
     # end def
 
+    def load_hessian(self, path: str) -> bool:
+        params = self.params_file.load_result(path, False)
+        hessian = self.hessian_file.load_result(path, False)
+        if isinstance(params, ndarray) and isinstance(self.structure, ParameterSet):
+            self.structure.params = params
+            print(f'Loaded Hessian parameters from {self.params_file.get_filename(path)}.')
+            if isinstance(hessian, ndarray):
+                self.hessian = hessian
+                print(f'Loaded Hessian from {self.hessian_file.get_filename(path)}.')
+                return True
+            # end if
+        # end if
+        return False
+    # end def
+
+    def save_hessian(self, path: str) -> None:
+        if self.hessian is not None:
+            self.hessian_file.save_result(path, self.hessian)
+            print(f'Saved Hessian to {path}.')
+        # end if
+        if self.structure is not None and self.structure.params is not None:
+            self.params_file.save_result(path, self.structure.params)
+            print(f'Saved Hessian parameters to {path}.')
+        # end if
+    # end def
+
     def _warn_energy(self, structure_list: list[ParameterSet]):
         eqm_value = structure_list[0].value
         if eqm_value is None:
@@ -300,7 +338,7 @@ class ParameterHessian():
         # end for
     # end def
 
-    def __len__(self):
+    def __len__(self) -> int:
         if self.structure is None:
             return 0
         else:
@@ -308,7 +346,7 @@ class ParameterHessian():
         # end if
     # end def
 
-    def __str__(self):
+    def __str__(self) -> str:
         string = self.__class__.__name__
         if self.hessian is not None:
             string += '\n  hessian:'
