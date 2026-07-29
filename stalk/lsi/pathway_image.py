@@ -6,8 +6,7 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from copy import copy
-from os import makedirs
-from numpy import savetxt, loadtxt, array
+from numpy import array
 from functools import partial
 
 from numpy import ndarray, zeros
@@ -92,8 +91,6 @@ class PathwayImage():
         path='',
         **hessian_args  # dp=0.01, dpos_mode=False, structure=None
     ):
-        hessian_file = f'{path}/hessian.dat'
-        makedirs(path, exist_ok=True)
         if tangent is None:
             # points A and B are calculated in full parametric space
             hessian = ParameterHessian(structure=self.structure)
@@ -109,16 +106,9 @@ class PathwayImage():
             structure_sub = ParameterSet(zeros(len(subspace)))
             hessian = ParameterHessian(structure=structure_sub)
         # end if
-        try:
-            hessian_array = loadtxt(hessian_file, ndmin=2)
-            hessian.init_hessian_array(hessian_array)
-        except FileNotFoundError:
-            hessian.compute_fdiff(
-                pes=pes_comp,
-                **hessian_args
-            )
-            savetxt(hessian_file, hessian.hessian)
-        # end try
+        if not hessian.load_hessian(path):
+            hessian.compute_fdiff(pes=pes, path=path, dp=0.01)
+        # end if
         self._path = path
         self._subspace = subspace
         self._tangent = tangent
@@ -143,9 +133,9 @@ class PathwayImage():
             load='data.p',
             path=path,
             hessian=self.hessian,
-            pes=pes_sub,
             **surrogate_args
         )
+        surrogate.evaluate(pes=pes_sub)
         surrogate.write_to_disk(overwrite=overwrite)
         self._surrogate = surrogate
     # end def
@@ -155,7 +145,6 @@ class PathwayImage():
         overwrite=True,
         **optimize_args
     ):
-        self.surrogate.bracket_target_biases()
         self.surrogate.optimize(**optimize_args)
         self.surrogate.write_to_disk(overwrite=overwrite)
     # end def

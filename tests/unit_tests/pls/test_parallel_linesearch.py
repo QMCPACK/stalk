@@ -20,7 +20,6 @@ def test_ParallelLineSearch(tmp_path):
     assert pls.path == 'pls'
     assert not pls.setup
     assert not pls.shifted
-    assert not pls.generated
     assert not pls.evaluated
     assert len(pls) == 0
     assert pls.D == 0

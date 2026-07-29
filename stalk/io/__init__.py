@@ -10,6 +10,7 @@ from .files_pes import write_xyz_sigma
 from .geometry_loader import GeometryLoader
 from .geometry_writer import GeometryWriter
 from .pes_loader import PesLoader
+from .txt_data import TxtData
 from .xyz_geometry import XyzGeometry
 
 
@@ -19,5 +20,6 @@ __all__ = [
     'GeometryLoader',
     'GeometryWriter',
     'PesLoader',
+    'TxtData',
     'XyzGeometry',
 ]

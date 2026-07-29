@@ -78,11 +78,6 @@ class LineSearchIteration():
     # end def
 
     @property
-    def generated(self):
-        return self[-1].generated if len(self) > 0 else False
-    # end def
-
-    @property
     def evaluated(self):
         return self[-1].evaluated if len(self) > 0 else False
     # end def

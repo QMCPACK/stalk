@@ -76,7 +76,7 @@ class TxtData:
     ) -> ndarray:
         filename = self.get_filename(filename)
         if filename.exists():
-            data = loadtxt(filename, **kwargs)
+            data = loadtxt(filename, ndmin=1, **kwargs)
             # Normally rescale the data by the scale factor, but if rescale is False, return the raw data
             if rescale:
                 data /= self.scale

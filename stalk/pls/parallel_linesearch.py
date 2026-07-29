@@ -125,11 +125,6 @@ class ParallelLineSearch():
     # ed def
 
     @property
-    def generated(self):
-        return len(self) > 0 and all([ls.generated for ls in self.ls_list])
-    # end def
-
-    @property
     def evaluated(self):
         return len(self) > 0 and all([ls.evaluated for ls in self.ls_list])
     # end def

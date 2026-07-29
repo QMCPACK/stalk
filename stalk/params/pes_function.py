@@ -237,7 +237,7 @@ class PesFunction(FunctionCaller):
             self._prompt([structure])
         # end if
         if structure.evaluated:
-            print(f'{structure.path} is already evalued.')
+            print(f'{structure.path} is already evaluated.')
             return
         # end if
         try:
@@ -354,6 +354,9 @@ class PesFunction(FunctionCaller):
         structure: ParameterSet,
         **kwargs
     ):
+        create_files = self.create_files
+        self.create_files = False  # Disable file creation during relaxation
+
         # Relax numerically using a wrapper around SciPy minimize
         def relax_aux(p):
             s = structure.copy(params=p)
@@ -363,6 +366,7 @@ class PesFunction(FunctionCaller):
         p0 = structure.params
         res = minimize(relax_aux, p0, **kwargs)
         structure.params = res.x
+        self.create_files = create_files  # Restore the original setting
     # end def
 
     def _warn_energy(self, structure: ParameterSet, warn_limit=2.0):

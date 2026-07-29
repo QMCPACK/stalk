@@ -260,7 +260,7 @@ class LineSearch(LineSearchBase):
     ):
         '''Evaluate the PES on the line-search grid using an evaluation function.'''
         if not self.shifted:
-            raise AssertionError('The line-serarch grid must be generated before evaluation!')
+            raise AssertionError('The line-search grid must be generated before evaluation!')
         # end if
         structures = self._grid
         sigmas = len(structures) * [self.sigma]

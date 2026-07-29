@@ -12,6 +12,7 @@ from stalk.io import GeometryLoader
 from stalk.io import GeometryWriter
 from stalk.io import PesLoader
 from stalk.io import XyzGeometry
+from stalk.io import TxtData
 from stalk.io import write_xyz_sigma
 # ls module
 from stalk.ls import FittingFunction
@@ -87,6 +88,7 @@ __all__ = [
     'GeometryWriter',
     'PesLoader',
     'XyzGeometry',
+    'TxtData',
     'write_xyz_sigma',
     # ls module
     'FittingFunction',

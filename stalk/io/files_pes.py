@@ -34,6 +34,8 @@ class FilesPes(PesFunction):
         # Init the function caller
         super().__init__(func=func, args=args, **kwargs)
         self.loader = loader
+        # Always true for the files PES
+        self.create_files = True
     # end def
 
     def _generate_structure(

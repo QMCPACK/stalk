@@ -34,7 +34,7 @@ class GeometryLoader(ArgsContainer, TxtData):
     def load(self, path) -> GeometryResult:
         # Loading hook
         res = self._load(path, **self.args)
-        print(f'Loaded geometry from {path}')
+        print(f'Loaded geometry from {self.get_filename(path)}.')
         return res
     # end def
 
