@@ -15,6 +15,8 @@ class FittingResult():
     y0 = None
     y0_err = 0.0
     fit = None
+    # Flag indicating if the result is at the boundary
+    boundary = False
 
     def __init__(
         self,

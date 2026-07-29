@@ -9,6 +9,8 @@ from bisect import bisect
 from scipy.interpolate import LinearNDInterpolator
 from numpy import array, argsort, append, where, isscalar
 
+from stalk.io.stalk_logger import StalkLogger
+
 
 class ErrorSurface():
     _E_mat = None  # Matrix of total errors
@@ -16,14 +18,16 @@ class ErrorSurface():
     _Y_mat = None  # Y-mesh
     X_res = None  # fractional X resolution
     Y_res = None  # fractional Y resolution
-    verbosity = None  # Verbosity level of output:
-    # 0 -> no output; 1 -> only critical errors; 2 -> all output
+    logger: StalkLogger = None
+    label = None
+    warnings: set = set()  # Set of warnings to avoid duplicates
 
     def __init__(
         self,
+        label: str = '',
         X_res=0.1,
         Y_res=0.1,
-        verbosity=1
+        logger=StalkLogger(log_level=1)
     ):
         # Initialize with zero error at the origin
         self._E_mat = array([[0.0]])
@@ -31,7 +35,9 @@ class ErrorSurface():
         self._Y_mat = array([[0.0]])
         self.X_res = X_res
         self.Y_res = Y_res
-        self.verbosity = verbosity
+        self.logger = logger
+        self.label = label
+        self.warnings = set()
     # end def
 
     @property
@@ -66,10 +72,18 @@ class ErrorSurface():
 
     def insert_row(self, y, row):
         if len(row) != len(self.Xs):
-            raise ValueError(f"Cannot add row with len={len(row)} to data with len={len(self.Xs)}")
+            self.logger.log_and_raise(
+                f"  {self.label}: Cannot add row with len={len(row)} to data with len={len(self.Xs)}",
+                exception=ValueError,
+                level=1
+            )
         # end if
         if not isscalar(y) or (y < 0.0):
-            raise ValueError("Cannot add y < 0.0.")
+            self.logger.log_and_raise(
+                f"  {self.label}: Cannot add y < 0.0.",
+                exception=ValueError,
+                level=1
+            )
         # end if
         X_mat = append(self._X_mat, [self.Xs], axis=0)
         Y_mat = append(self._Y_mat, [len(self.Xs) * [y]], axis=0)
@@ -82,10 +96,10 @@ class ErrorSurface():
 
     def insert_col(self, x, col):
         if len(col) != len(self.Ys):
-            raise ValueError(f"Cannot add row with len={len(col)} to data with len={len(self.Ys)}")
+            raise ValueError(f"  {self.label}: Cannot add row with len={len(col)} to data with len={len(self.Ys)}")
         # end if
         if not isscalar(x) or (x < 0.0):
-            raise ValueError("Cannot add x < 0.0.")
+            raise ValueError(f"  {self.label}: Cannot add x < 0.0.")
         # end if
         X_mat = append(self._X_mat, array([len(self.Ys) * [x]]).T, axis=1)
         Y_mat = append(self._Y_mat, array([self.Ys]).T, axis=1)
@@ -109,18 +123,20 @@ class ErrorSurface():
         if xi < len(self.Xs):
             xi_prev = xi - 1
         else:
-            if self.verbosity >= 2:
-                print(f"  Requested x>={self.Xs[-1]}, reverting to x={self.Xs[-1]}")
-            # end if
+            self.logger.log(
+                f"  {self.label}: Requested x>={self.Xs[-1]}, reverting to x={self.Xs[-1]}",
+                level=2
+            )
             xi, xi_prev = xi - 1, xi - 1
         # end if
 
         if yi < len(self.Ys):
             yi_prev = yi - 1
         else:
-            if self.verbosity >= 2:
-                print(f"  Requested y>={self.Ys[-1]}, reverting to y={self.Ys[-1]}")
-            # end if
+            self.logger.log(
+                f"  {self.label}: Requested y>={self.Ys[-1]}, reverting to y={self.Ys[-1]}",
+                level=2
+            )
             yi, yi_prev = yi - 1, yi - 1
         # end if
 
@@ -168,7 +184,7 @@ class ErrorSurface():
     def _argmax_y(self, epsilon):
         """Return indices to the highest point in E matrix that is lower than epsilon"""
         if (epsilon <= 0.0):
-            raise ValueError("Cannot optimize to epsilon <= 0.0")
+            raise ValueError(f"  {self.label}: Cannot optimize to epsilon <= 0.0")
         # end if
         xi, yi = 0, 0
         for i in range(len(self.E_mat), 0, -1):  # from high to low
@@ -195,11 +211,12 @@ class ErrorSurface():
         if X_diff > self.X_res:
             return [X_new]
         else:
-            if self.verbosity >= 1:
-                msg = f"  Persistent x-underflow. Could not add x={X_new}. "
+            if 'persistent_x_underflow' not in self.warnings:
+                msg = f"  {self.label}: Persistent x-underflow. Could not add x={X_new}. "
                 msg += "Check the data behind error surface: "
                 msg += f"E(x={X_right}, y=0)={self.E_mat[1, 0]}."
-                print(msg)
+                self.logger.log(msg, level=2)
+                self.warnings.add('persistent_x_underflow')
             # end if
             return []
         # end if
@@ -214,11 +231,12 @@ class ErrorSurface():
         if X_diff > self.X_res:
             return [X_new]
         else:
-            if self.verbosity >= 1:
-                msg = f"  Persistent x-overflow. Did not add x={X_new} "
+            if 'persistent_x_overflow' not in self.warnings:
+                msg = f"  {self.label}: Persistent x-overflow. Did not add x={X_new} "
                 msg += f"next to x-max={X_this} to maintain x-resolution={self.X_res}. "
                 msg += f"Gain performance by adding data beyond x>{X_this}."
-                print(msg)
+                self.warnings.add('persistent_x_overflow')
+                self.logger.log(msg, level=2)
             # end if
             return []
         # end if
@@ -254,10 +272,12 @@ class ErrorSurface():
         if Y_diff > self.Y_res:
             return [Y_new]
         else:
-            if self.verbosity >= 1:
-                msg = f"  Persistent y-underflow. Did not add y={Y_new} "
-                msg += f"below y={Y_up} to maintain y-resolution={self.Y_res}. "
-                print(msg)
+            if 'persistent_y_underflow' not in self.warnings:
+                msg = f"  {self.label}: Persistent y-underflow. Did not add y={Y_new} "
+                msg += f"between y={Y_this} and y={Y_up} to maintain y-resolution={self.Y_res}. "
+                msg += f"Gain performance by adding data beyond y>{Y_up}."
+                self.warnings.add('persistent_y_underflow')
+                self.logger.log(msg, level=2)
             # end if
             return []
         # end if
@@ -269,8 +289,10 @@ class ErrorSurface():
         X_max = self.Xs[-1]
         Y_new = 2 * Y_this
         if Y_new > X_max:
-            if self.verbosity >= 2:
-                print(f"  Capping y-new to x-max={X_max}.")
+            if 'capping_y_new' not in self.warnings:
+                msg = f"  {self.label}: Capping y-new to x-max={X_max}."
+                self.warnings.add('capping_y_new')
+                self.logger.log(msg, level=2)
             # end if
             Y_new = X_max
         # end if
@@ -278,11 +300,13 @@ class ErrorSurface():
         if Y_diff > self.Y_res:
             return [Y_new]
         else:
-            if self.verbosity >= 1:
-                msg = f"  Persistent y-overflow. Did not add y={Y_new} "
+            if 'persistent_y_overflow' not in self.warnings:
+                msg = f"  {self.label}: Persistent y-overflow. Did not add y={Y_new} "
                 msg += f"between y={Y_this} and x-max={X_max} "
                 msg += f"to maintain y-resolution={self.Y_res}. "
-                print(msg)
+                msg += f"Gain performance by adding data beyond y>{Y_this}."
+                self.warnings.add('persistent_y_overflow')
+                self.logger.log(msg, level=2)
             # end if
             return []
         # end if

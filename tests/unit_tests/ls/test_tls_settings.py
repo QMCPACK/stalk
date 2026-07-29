@@ -145,11 +145,6 @@ def test_TlsSettings():
         values,
         extrapolate=True
     )
-    interp_spl_noext = CubicSpline(
-        offsets,
-        values,
-        extrapolate=False
-    )
     interp_pch_ext = PchipInterpolator(
         offsets,
         values,
@@ -171,29 +166,6 @@ def test_TlsSettings():
         warnings.simplefilter("error")
         offsets_out = ls3.get_safe_offsets(offsets.copy())
         assert match_to_tol(offsets_out, offsets)
-    # end with
-    with warns(UserWarning, match='Extrapolating'):
-        dp = 0.02
-        offsets_out = ls3.get_safe_offsets(offsets + dp)
-        assert match_to_tol(offsets_out, offsets + dp)
-    # end with
-    with warns(UserWarning, match='Extrapolating'):
-        dp = -0.02
-        offsets_out = ls3.get_safe_offsets(offsets + dp)
-        assert match_to_tol(offsets_out, offsets + dp)
-    # end with
-    ls3.interp = interp_spl_noext
-    with warns(UserWarning, match='Reset offset='):
-        dp = 0.02
-        offsets_out = ls3.get_safe_offsets(offsets + dp)
-        assert match_to_tol(offsets_out[:-1], offsets[:-1] + dp)
-        assert match_to_tol(offsets_out[-1], offsets[-1])
-    # end with
-    with warns(UserWarning, match='Reset offset'):
-        dp = -0.02
-        offsets_out = ls3.get_safe_offsets(offsets + dp)
-        assert match_to_tol(offsets_out[1:], offsets[1:] + dp)
-        assert match_to_tol(offsets_out[0], offsets[0])
     # end with
 
     ls3.interp = interp_pch_ext

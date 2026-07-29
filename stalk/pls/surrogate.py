@@ -8,9 +8,9 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-import warnings
 from numpy import argmin, array, isscalar, mean, linspace, nan
 
+from stalk.io.stalk_logger import StalkLogger
 from stalk.ls.linesearch_grid import LineSearchGrid
 from stalk.ls.ls_settings import LsSettings
 from stalk.util import get_fraction_error
@@ -29,6 +29,8 @@ class Surrogate(ParallelLineSearch):
     _error_p = None
     # Search direction errors from correlated sampling
     _error_d = None
+    # Logger
+    _logger: StalkLogger = None
 
     # Return a list of enabled line-searches
     @property
@@ -168,6 +170,24 @@ class Surrogate(ParallelLineSearch):
         # end if
     # end def
 
+    @property
+    def logger(self):
+        if isinstance(self._logger, StalkLogger):
+            return self._logger
+        else:
+            return StalkLogger(1)
+        # end if
+    # end def
+
+    @logger.setter
+    def logger(self, logger):
+        if isinstance(logger, StalkLogger) or logger is None:
+            self._logger = logger
+        else:
+            raise TypeError("Logger must be a StalkLogger instance.")
+        # end if
+    # end def
+
     def __init__(
         self,
         path='surrogate',
@@ -205,18 +225,26 @@ class Surrogate(ParallelLineSearch):
         starting_mix=0.5,
         write=None,
         overwrite=False,
+        logger=StalkLogger(2, 'optimizer.log', append=True),
         **ls_args
         # M=7, fit_kind=None, fit_func=None, fit_args={}, Gs=None, fraction=0.025
         # bias_mix=0.0, bias_order=1, noise_frac=0.05,
-        # W_resolution=0.05, S_resolution=0.05, verbosity=1, max_rounds=10
+        # W_resolution=0.05, S_resolution=0.05, max_rounds=10
         # W_num=3, W_max=None, sigma_num=3, sigma_max=None
     ):
+        self.logger = logger
+        if logger.filename is not None:
+            print(f'Optimizing. Writing optimizer output to {logger.filename}')
+        # end if
         if self.optimized and not reoptimize:
-            warnings.warn('Already optimized, use reoptimize = True to reoptimize.')
+            self.logger.log('Already optimized, use reoptimize = True to reoptimize.')
             return
         # end if
         if not self.evaluated:
-            raise AssertionError('Cannot optimize before data has been evaluated.')
+            self.logger.log_and_raise(
+                'Cannot optimize before data has been evaluated.',
+                AssertionError
+            )
         # end if
         if windows is not None and noises is not None:
             self.optimize_windows_noises(
@@ -245,7 +273,7 @@ class Surrogate(ParallelLineSearch):
                 **ls_args
             )
         else:
-            raise AssertionError('Optimizer constraint not identified')
+            self.logger.log_and_raise('Optimizer constraint not identified')
         # end if
         # Finalize and store the result, write to disk if requested
         self._finalize_optimization(write=write, overwrite=overwrite)
@@ -264,17 +292,17 @@ class Surrogate(ParallelLineSearch):
         # W_num=3, W_max=None, sigma_num=3, sigma_max=None
     ):
         # If provided, distribute Gs per line-search; if not, provide None
-        print("Optimizing to windows + noises:")
-        fmt = ' tls=' + FI + ' (window=' + FF + ', noise=' + FF + ')'
+        self.logger.log("Optimizing to windows, noises:", level=1)
         if Gs is None:
             Gs = len(windows) * [None]
         # end if
         for window, sigma, tls, Gs_this in zip(windows, noises, self.ls_list, Gs):
             # No optimization necessary if the windows, noises are readily provided but
             # generating error surface to store all required settings
-            print(fmt.format(tls.d, window, sigma))
+            self.logger.log(f' tls={tls.d} (window={window}, noise={sigma})', level=1)
             tls.setup_optimization(
                 Gs=Gs_this,
+                logger=self.logger,
                 **ls_args
             )
             tls.W_opt = window
@@ -294,14 +322,19 @@ class Surrogate(ParallelLineSearch):
         # W_num=3, W_max=None, sigma_num=3, sigma_max=None
     ):
         # If provided, distribute Gs per line-search; if not, provide None
-        print("Optimizing to epsilon_d")
-        fmt = ' tls=' + FI + ' (epsilon=' + FF + ')'
+        self.logger.log("Optimizing to epsilon_d", level=1)
         if Gs is None:
             Gs = len(epsilon_d) * [None]
         # end if
         for epsilon, tls, Gs_this in zip(epsilon_d, self.ls_list, Gs):
-            print(fmt.format(tls.d, epsilon))
-            tls.optimize(epsilon, Gs=Gs_this, skip_setup=skip_setup, **ls_args)
+            self.logger.log(f'  tls={tls.d} (epsilon={epsilon})', level=1)
+            tls.optimize(
+                epsilon,
+                Gs=Gs_this,
+                skip_setup=skip_setup,
+                logger=self.logger,
+                **ls_args
+            )
         # end for
         # These will be reset now and updated later if applicable
         self.epsilon_p = None
@@ -317,7 +350,7 @@ class Surrogate(ParallelLineSearch):
         # W_resolution=0.05, S_resolution=0.05, max_rounds=10
         # W_num=3, W_max=None, sigma_num=3, sigma_max=None
     ):
-        print(('Calculating epsilon_d for temperature=' + FF).format(temperature))
+        self.logger.log(f"Calculating epsilon_d for temperature={temperature}", level=1)
         epsilon_d = self._get_thermal_epsilon_d(temperature)
         self.optimize_epsilon_d(epsilon_d, **ls_args)
         self.temperature = temperature
@@ -330,7 +363,6 @@ class Surrogate(ParallelLineSearch):
         thermal=False,
         Gs=None,
         resolution=0.01,
-        verbosity=1,
         **ls_args,
         # N=500, M=7, fraction=0.025, fit_kind=None, fit_func=None,
         # fit_args={}, bias_mix=0.0, bias_order=1, noise_frac=0.05,
@@ -343,33 +375,27 @@ class Surrogate(ParallelLineSearch):
         for tls, Gs_this in zip(self.ls_list, Gs):
             tls.setup_optimization(
                 Gs=Gs_this,
-                verbosity=verbosity,
+                logger=self.logger,
                 **ls_args
             )
         # end for
         epsilon_p = array(epsilon_p, dtype=float)
         if thermal:
-            if verbosity >= 1:
-                print("Optimizing to epsilon_p with the thermal constraint")
-                self._print_epsilon(epsilon_p)
-            # end if
+            self.logger.log("Optimizing to epsilon_p with the thermal constraint", level=1)
+            self._print_epsilon(epsilon_p)
             epsilon_d_opt, T = self._optimize_epsilon_p_thermal(
                 epsilon_p,
                 resolution=resolution,
-                verbosity=verbosity,
             )
             self.optimize_epsilon_d(epsilon_d_opt, skip_setup=True, **ls_args)
             self.temperature = T
         else:
-            if verbosity >= 1:
-                print("Optimizing to epsilon_p using line-search")
-                self._print_epsilon(epsilon_p)
-            # end if
+            self.logger.log("Optimizing to epsilon_p with line-search", level=1)
+            self._print_epsilon(epsilon_p)
             epsilon_d_opt = self._optimize_epsilon_p_ls(
                 epsilon_p,
                 starting_mix=starting_mix,
                 resolution=resolution,
-                verbosity=verbosity,
             )
             self.optimize_epsilon_d(epsilon_d_opt, skip_setup=True, **ls_args)
         # end if
@@ -380,7 +406,6 @@ class Surrogate(ParallelLineSearch):
         self,
         epsilon_p,
         resolution=0.01,  # Relative temperature resolution
-        verbosity=1,
     ):
         # initial temperature
         T = self._get_epsilon_p_temperature(epsilon_p) * resolution
@@ -389,10 +414,8 @@ class Surrogate(ParallelLineSearch):
         # First loop: increase T until the errors are no longer capped
         while all(error_p - epsilon_p < 0.0):
             epsilon_d = self._get_thermal_epsilon_d(T)
-            if verbosity >= 2:
-                max_diff = (error_p - epsilon_p).max()
-                print(('  T=' + FF + ', max(error_p-epsilon_p)=' + FF).format(T, max_diff))
-            # end if
+            max_diff = (error_p - epsilon_p).max()
+            self.logger.log(f'  T={T}, max(error_p-epsilon_p)={max_diff}', level=3)
             error_p = self._resample_errors_p_of_d(epsilon_d, max_rounds=4)
             T *= 1.5
         # end while
@@ -412,7 +435,6 @@ class Surrogate(ParallelLineSearch):
         it_max=10,
         starting_mix=0.5,
         cost_factor=0.5,
-        verbosity=1,
     ):
         U = self.hessian.directions
         # Starting mixure of bias + noise
@@ -429,12 +451,10 @@ class Surrogate(ParallelLineSearch):
 
         epsilon_d_opt = array(epsilon_d0)
         # Initial optimization to get statistical cost
-        if verbosity >= 2:
-            print("Initial optimization:")
-            self._print_epsilon(epsilon_d0, 'd')
-        # end if
+        self.logger.log("Initial optimization to get statistical cost", level=2)
+        self._print_epsilon(epsilon_d0, 'd')
         for tls, epsilon in zip(self.ls_list, epsilon_d0):
-            tls.optimize(epsilon, skip_setup=True)
+            tls.optimize(epsilon, logger=self.logger, skip_setup=True)
         # end for
 
         for it in range(it_max):
@@ -461,10 +481,8 @@ class Surrogate(ParallelLineSearch):
             # end for
             error_p = self._resample_errors_p_of_d(epsilon_d_opt)
             cost_it = cost(error_p, 0.0)
-            if verbosity >= 2:
-                print(('  iter=' + FI + 'cost=' + FF).format(it, cost_it))
-                self._print_epsilon(epsilon_d_opt, 'd')
-            # end if
+            self.logger.log(f'  iter={it}, cost={cost_it}', level=3)
+            self._print_epsilon(epsilon_d_opt, 'd', 3)
             diff_epsilon_d = mean(abs(epsilon_d_old - epsilon_d_opt))
             if cost_it < resolution or diff_epsilon_d < resolution / 10:
                 break
@@ -514,7 +532,7 @@ class Surrogate(ParallelLineSearch):
         # pes=None, pes_func=None, pes_args={}
     ):
         if not self.optimized:
-            raise AssertionError("Must optimize surrogate before copying")
+            self.logger.log_and_raise("Must optimize surrogate before copying")
         # end if
         pls = ParallelLineSearch.copy(
             self,
@@ -534,20 +552,26 @@ class Surrogate(ParallelLineSearch):
     # end def
 
     # Finalize optimization by computing error estimates
-    def _finalize_optimization(self, write=None, overwrite=False):
+    def _finalize_optimization(self, write=None, overwrite=False) -> None:
         # The errors are calculated strictly based on settings stored in line-searches
         errors = self._resample_errors()
         self.error_d, self.error_p = errors
 
-        print('  Optimization complete:')
+        self.logger.log('  Optimization complete:', level=1)
         self._print_optimization('d', self.D_list, self.epsilon_d, self.error_d)
         if self.epsilon_p is not None:
-            self._print_optimization('p', range(len(self.epsilon_p)), self.epsilon_p, self.error_p)
+            self._print_optimization(
+                'p',
+                range(len(self.epsilon_p)),
+                self.epsilon_p,
+                self.error_p
+            )
         # end if
 
         if isinstance(write, str):
             self.write_to_disk(fname=write, overwrite=overwrite)
         # end if
+        print('Optimization successful!')
     # end def
 
     def _print_optimization(self, label, i_list, epsilon, error):
@@ -555,16 +579,16 @@ class Surrogate(ParallelLineSearch):
         if epsilon is None:
             return
         # end if
-        print(('    ' + FIS + FFS + FFS + FPS).format(label, 'target', 'error', 'rel. '))
+        self.logger.log(('    ' + FIS + FFS + FFS + FPS).format(label, 'target', 'error', 'rel. '), level=2)
         for i, eps, err in zip(i_list, epsilon, error):
             rel_err = err / eps
-            print(('    ' + FI + FF + FF + FP).format(i, eps, err, rel_err * 100))
+            self.logger.log(('    ' + FI + FF + FF + FP).format(i, eps, err, rel_err * 100), level=2)
         # end for
     # end def
 
-    def _print_epsilon(self, epsilon, label='p'):
+    def _print_epsilon(self, epsilon, label='p', level=1):
         for p, eps in enumerate(epsilon):
-            print(('  {}=' + FI + FF).format(label, p, eps))
+            self.logger.log(('  {}=' + FI + FF).format(label, p, eps), level=level)
         # end for
     # end def
 
@@ -654,7 +678,7 @@ class Surrogate(ParallelLineSearch):
         **kwargs  # max_rounds=10
     ):
         for epsilon, tls, in zip(epsilon_d, self.ls_list):
-            tls.optimize(epsilon, skip_setup=True, **kwargs)
+            tls.optimize(epsilon, skip_setup=True, logger=self.logger, **kwargs)
         # end for
         return self._resample_errors()[1]
     # end def

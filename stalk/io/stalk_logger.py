@@ -11,16 +11,23 @@ class StalkLogger:
     log_level: int
     filename: str
 
-    def __init__(self, log_level=1, filename=None):
+    def __init__(
+        self,
+        log_level=1,
+        filename=None,
+        append=False,
+    ):
         self.log_level = log_level
         self.filename = filename
 
         if filename is not None:
             p = Path(filename)
             p.parent.mkdir(parents=True, exist_ok=True)
-            with open(filename, 'w') as f:
-                f.write('')  # Clear the file
-            # end with
+            if not append:
+                with open(filename, 'w') as f:
+                    f.write('')  # Clear the file
+                # end with
+            # end if
         # end if
     # end def
 
@@ -34,6 +41,16 @@ class StalkLogger:
                 print(message)
             # end if
         # end if
+    # end def
+
+    def log_and_raise(
+        self,
+        message: str,
+        exception: Exception = AssertionError,
+        level: int = 1
+    ):
+        self.log(message, level)
+        raise exception(message)
     # end def
 
 # end class

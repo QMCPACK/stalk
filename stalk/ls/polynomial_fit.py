@@ -5,7 +5,6 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-import warnings
 from numpy import argmin, polyder, polyfit, polyval, roots, where
 from stalk.ls import FittingFunction
 from stalk.ls.polynomial_result import PolynomialResult
@@ -52,11 +51,9 @@ class PolynomialFit(FittingFunction):
         if len(x_mins) > 0:
             y_mins = polyval(pf, x_mins)
             imin = argmin(abs(x_mins))
+            boundary = False
         else:
-            if abs(offsets).max() > 1e-4:
-                # Only warn if using nonzero grid
-                warnings.warn('The fit minimum not found inside grid but at the boundary!')
-            # end if
+            boundary = True
             x_mins = [min(offsets), max(offsets)]
             y_mins = polyval(pf, x_mins)
             imin = argmin(y_mins)  # pick the lowest/highest energy
@@ -64,6 +61,7 @@ class PolynomialFit(FittingFunction):
         y0 = y_mins[imin]
         x0 = x_mins[imin]
         res = PolynomialResult(x0, y0, fit=pf)
+        res.boundary = boundary
         return res
     # end def
 

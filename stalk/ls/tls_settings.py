@@ -8,6 +8,7 @@ __license__ = "BSD-3-Clause"
 import warnings
 from numpy import isscalar, ndarray, random, where
 from scipy.interpolate import CubicHermiteSpline, PchipInterpolator
+from stalk.io.stalk_logger import StalkLogger
 from stalk.ls.fitting_result import FittingResult
 from stalk.ls.ls_settings import LsSettings
 
@@ -18,6 +19,7 @@ class TlsSettings(LsSettings):
     _bias_order: int
     _target: FittingResult
     _interp = CubicHermiteSpline  # Interpolant
+    logger: StalkLogger = None
 
     def __init__(
         self,
@@ -28,6 +30,7 @@ class TlsSettings(LsSettings):
         bias_mix=0.0,
         target_x0=0.0,
         target_y0=0.0,
+        logger=StalkLogger(log_level=1),
         **ls_args
         # fraction=0.025, sgn=1, fit_kind=None, fit_func=None, fit_args={},
     ):
@@ -35,6 +38,7 @@ class TlsSettings(LsSettings):
         self.regenerate_Gs(M, N, Gs)
         self.bias_order = bias_order
         self.bias_mix = bias_mix
+        self.logger = logger
         self._target = FittingResult(target_x0, target_y0)
         self._interp = None
     # end def
@@ -173,6 +177,7 @@ class TlsSettings(LsSettings):
             'bias_mix': self.bias_mix,
             'bias_order': self.bias_order,
             'Gs': Gs,
+            'logger': self.logger,
         }
         M = M if M is not None else self.M
         N = N if N is not None else self.N
@@ -201,18 +206,30 @@ class TlsSettings(LsSettings):
         for i_offset in where(offsets < x_min)[0]:
             offset = offsets[i_offset]
             if self.interp.extrapolate:
-                warnings.warn(f'Extrapolating for offset={offset} < R_min={x_min}')
+                self.logger.log(
+                    f'Extrapolating for offset={offset} < R_min={x_min}',
+                    level=3
+                )
             else:
-                warnings.warn(f'Reset offset={offset} to R_min={x_min}')
+                self.logger.log(
+                    f'Reset offset={offset} to R_min={x_min}',
+                    level=3
+                )
                 offsets[i_offset] = x_min
             # end if
         # end for
         for i_offset in where(offsets > x_max)[0]:
             offset = offsets[i_offset]
             if self.interp.extrapolate:
-                warnings.warn(f'Extrapolating for offset={offset} < R_max={x_max}')
+                self.logger.log(
+                    f'Extrapolating for offset={offset} < R_max={x_max}',
+                    level=3
+                )
             else:
-                warnings.warn(f'Reset offset={offset} to R_max={x_max}')
+                self.logger.log(
+                    f'Reset offset={offset} to R_max={x_max}',
+                    level=3
+                )
                 offsets[i_offset] = x_max
             # end if
         # end for

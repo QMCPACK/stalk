@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 from numpy import array, isscalar, linspace, nan
 from numpy import ndarray
 
+from stalk.io.stalk_logger import StalkLogger
 from stalk.ls.error_surface import ErrorSurface
 from stalk.ls.linesearch_grid import LineSearchGrid
 from stalk.ls.tls_settings import TlsSettings
@@ -246,26 +247,36 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
         epsilon,
         max_rounds=10,  # maximum number of rounds
         skip_setup=False,  # If confident
+        logger=StalkLogger(log_level=2),
         **kwargs
-        # W_resolution=0.1, S_resolution=0.1, verbosity=1
+        # W_resolution=0.1, S_resolution=0.1
         # fit_kind=None, fit_func=None, fit_args={}, fraction=None,
         # generate_args: W_num, W_max, sigma_num, sigma_max, noise_frac, M, N, Gs
         # bias_mix, bias_order
     ):
         """Optimize W and sigma to a given target error epsilon > 0."""
         if not self.valid_target:
-            raise AssertionError("Must have valid target data before optimization.")
+            logger.log_and_raise(
+                "Must have valid target data before optimization.",
+                AssertionError
+            )
         # end if
         if not isscalar(epsilon) or epsilon <= 0.0:
-            raise ValueError("Must provide epsilon > 0.")
+            logger.log_and_raise(
+                "Must provide epsilon > 0.",
+                ValueError
+            )
         # end if
         if max_rounds <= 0:
-            raise ValueError('Must provide max_rounds > 0')
+            logger.log_and_raise(
+                "Must provide max_rounds > 0.",
+                ValueError
+            )
         # end if
 
         # Skip if already optimized and allowed to skip setup (overlooks all overrides)
         if not self.optimized or not skip_setup:
-            self.setup_optimization(**kwargs)
+            self.setup_optimization(logger=logger, **kwargs)
         # end if
         # Find W and sigma that maximize sigma
         for round in range(max_rounds):
@@ -277,10 +288,10 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
             else:
                 # Insert x-cols and y-rows
                 for W_val in W_vals:
-                    self.insert_W_data(W_val)
+                    self.insert_W_data(W_val, logger=logger)
                 # end for
                 for sigma_val in sigma_vals:
-                    self.insert_sigma_data(sigma_val)
+                    self.insert_sigma_data(sigma_val, logger=logger)
                 # end for
             # end if
         # end while
@@ -290,7 +301,7 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
             msg = f"Warning! Optimization to epsilon={epsilon} resulted in "
             msg += f"W_opt={W_opt} and sigma_opt={sigma_opt} which is numerically "
             msg += "unfeasible. Check the error surface or epsilon!"
-            print(msg)
+            logger.log(msg, level=1)
             self.W_opt = None
             self.sigma_opt = None
             self.epsilon = None
@@ -310,13 +321,13 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
         noise_frac=0.05,
         W_resolution=0.1,
         S_resolution=0.1,
-        verbosity=1,
+        logger=StalkLogger(log_level=2),
         **ls_overrides
         # fit_kind=None, fit_func=None, fit_args={}, fraction=0.025, Gs=None,
         # M=None, N=None, bias_mix=0.0, bias_order=1
     ):
         if not self.valid_target:
-            raise AssertionError("Must have valid target data before setup.")
+            logger.log("Must have valid target data before setup.", level=1)
         # end if
         # Create new settings. If they do not match the previous ones (checked in setter):
         # -> clear E_mat and regenerate Gs and regenerate the error surface
@@ -334,7 +345,7 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
                 noise_frac=noise_frac,
                 W_resolution=W_resolution,
                 S_resolution=S_resolution,
-                verbosity=verbosity
+                logger=logger,
             )
         # end if
     # end def
@@ -350,62 +361,83 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
         noise_frac=0.05,
         W_resolution=0.1,
         S_resolution=0.1,
-        verbosity=1
+        logger=StalkLogger(log_level=2),
     ):
         if not self.valid_target:
-            raise AssertionError("Must have valid target data before generating error.")
+            logger.log_and_raise("Must have valid target data before generating error.")
         elif not self.setup:
-            raise AssertionError("Must setup target line-search with M > 2")
+            logger.log_and_raise("Must setup target line-search before generating error.")
         # end if
         if W_resolution >= 0.5 or W_resolution <= 0.0:
-            raise ValueError('W resolution must be 0.0 < W_resolution < 0.5')
+            logger.log_and_raise(
+                'W resolution must be 0.0 < W_resolution < 0.5',
+                ValueError
+            )
         # end if
         if S_resolution >= 0.5 or S_resolution <= 0.0:
-            raise ValueError('S resolution must be 0.0 < S_resolution < 0.5')
+            logger.log_and_raise(
+                'S resolution must be 0.0 < S_resolution < 0.5',
+                ValueError
+            )
         # end if
 
         W_max = W_max if W_max is not None else self.W_max
         sigma_max = sigma_max if sigma_max is not None else W_max * noise_frac
 
         if W_max <= 0.0:
-            raise ValueError('Must provide W_max > 0')
+            logger.log_and_raise('Must provide W_max > 0', ValueError)
         # end if
         if sigma_max <= 0.0:
-            raise ValueError('Must provide sigma_max > 0')
+            logger.log_and_raise('Must provide sigma_max > 0', ValueError)
         # end if
 
         # Initial W and sigma grids
         self._error_surface = ErrorSurface(
+            label=f'tls{self.d}',
             X_res=W_resolution,
             Y_res=S_resolution,
-            verbosity=verbosity
+            logger=logger,
         )
         # Start from adding the first row: sigma=0 -> plain bias
         Ws = linspace(0.0, W_max, W_num)
         for W in Ws:
             if W > 0.0:
-                self.insert_W_data(W)
+                self.insert_W_data(W, logger=logger)
             # end if
         # end for
 
         # Then, append the noisy rows
         sigmas = linspace(0.0, sigma_max, sigma_num)
         for sigma in sigmas[1:]:
-            self.insert_sigma_data(sigma)
+            self.insert_sigma_data(sigma, logger=logger)
         # end for
     # end def
 
-    def insert_sigma_data(self, sigma):
+    def insert_sigma_data(
+        self,
+        sigma,
+        logger=StalkLogger(log_level=2)
+    ):
         if not (self.resampled and isscalar(sigma) and sigma > 0):
-            raise AssertionError('Must have resampled data and scalar sigma > 0')
+            logger.log_and_raise(
+                'Must have resampled data and scalar sigma > 0',
+                AssertionError
+            )
         # end if
         E_row = [self._compute_target_error(W, sigma) for W in self.error_surface.Xs]
         self.error_surface.insert_row(sigma, E_row)
     # end def
 
-    def insert_W_data(self, W):
+    def insert_W_data(
+        self,
+        W,
+        logger=StalkLogger(log_level=2)
+    ):
         if not (self.resampled and isscalar(W) and W > 0 and W <= self.W_max):
-            raise AssertionError(f'Must have resampled data and scalar 0 < W <= W_max, W_max={self.W_max}')
+            logger.log_and_raise(
+                f'Must have resampled data and scalar 0 < W <= W_max, W_max={self.W_max}',
+                AssertionError
+            )
         # end if
         E_col = [self._compute_target_error(W, sigma) for sigma in self.error_surface.Ys]
         self.error_surface.insert_col(W, E_col)
