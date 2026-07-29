@@ -24,13 +24,12 @@ for xc_srg, pes_srg in pes_dict.items():
             surrogate=surrogates[xc_srg],
             structure=structure,
             path=path,
-            pes=pes_ls,
         )
         for i in range(4):
-            lsi.propagate(i, add_sigma=True)
+            lsi.propagate(pes_ls, i, add_sigma=True)
         # end for
         # Evaluate the latest eqm structure
-        lsi.pls().evaluate_eqm(add_sigma=True)
+        lsi[-1].evaluate_eqm(pes_ls, add_sigma=True)
         print(f'Line-search ({xc_ls} + noise) on {xc_srg} surrogate:')
         print(lsi)
         print(surrogates[xc_ls].structure.params)

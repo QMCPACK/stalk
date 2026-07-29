@@ -4,21 +4,21 @@ from numpy import array, ndarray, sin, cos, pi, diag
 
 from nexus import generate_pyscf, generate_qmcpack, job, obj
 from nexus import generate_physical_system, generate_pw2qmcpack, generate_pwscf
-from nexus import Structure
+
 
 from stalk.util import Bohr
+from stalk import NexusStructure
 from stalk import PesLoader
 from stalk import XyzGeometry
 from stalk import NexusGeometry
 from stalk import NexusPes
 from stalk import QmcPes
 from stalk import PesFunction
-from stalk import EffectiveVariance
 from stalk import BondLength
 
 # This requires the following job arguments to be defined in local nxs.py
 # Copy examples/nexus/nxs_template.py to ./nxs.py and edit accordingly
-from nxs import pyscfjob, optjob, dmcjob, pwscfjob, p2qjob
+from nxs import pyscfjob, optjob, dmcjob, pwscfjob, p2qjob  # type: ignore
 
 # Pseudos (execute download_pseudos.sh in the working directory)
 qmcpseudos = ['C.ccECP.xml', 'H.ccECP.xml']
@@ -87,9 +87,9 @@ def backward(params: ndarray):
 
 
 # return a 1-item list of Nexus jobs: SCF relaxation
-def scf_relax_job(structure: Structure, path, xc='pbe', **kwargs):
+def scf_relax_job(structure: NexusStructure, xc='pbe', **kwargs):
     system = generate_physical_system(
-        structure=structure,
+        structure=structure.get_nexus_structure(),
         C=4,
         H=1
     )
@@ -98,7 +98,7 @@ def scf_relax_job(structure: Structure, path, xc='pbe', **kwargs):
         system=system,
         identifier='relax',
         job=job(**pyscfjob),
-        path=path,
+        path=structure.path,
         mole=obj(
             verbose=4,
             ecp='ccecp',
@@ -125,9 +125,9 @@ relax_pyscf = NexusGeometry(
 
 
 # Let us define an SCF PES job that is consistent with the earlier relaxation
-def scf_pes_job(structure: Structure, path, xc='pbe', **kwargs):
+def scf_pes_job(structure: NexusStructure, xc='pbe', **kwargs):
     system = generate_physical_system(
-        structure=structure,
+        structure=structure.get_nexus_structure(),
         C=4,
         H=1,
     )
@@ -136,7 +136,7 @@ def scf_pes_job(structure: Structure, path, xc='pbe', **kwargs):
         system=system,
         identifier='scf',
         job=job(**pyscfjob),
-        path=path,
+        path=structure.path,
         mole=obj(
             verbose=4,
             ecp='ccecp',
@@ -168,30 +168,21 @@ pes_pyscf = NexusPes(
 #   4: Run DMC with enough steps/block to meet the target errorbar sigma
 #     it is important to first characterize the DMC run into var_eff
 def dmc_pes_job(
-    structure: Structure,
-    path,
-    sigma=None,
-    samples=10,
-    var_eff=None,
+    structure: NexusStructure,
     dep_jobs=[],
     **kwargs
 ):
-    # Estimate the relative number of samples needed
-    if hasattr(structure, 'samples'):
-        dmcsteps = structure.samples
-    elif isinstance(var_eff, EffectiveVariance):
-        dmcsteps = var_eff.get_samples(sigma)
-    else:
-        dmcsteps = samples
-    # end if
+    path = structure.path
+    dmcsteps = structure.samples if structure.samples is not None else 10
 
     # For QMCPACK, use plane-waves for better performance
+    structure_nx = structure.get_nexus_structure()
     axes = array([20., 20., 10.])
-    structure.set_axes(diag(axes))
-    structure.pos += axes / 2
-    structure.kpoints = array([[0, 0, 0]])
+    structure_nx.set_axes(diag(axes))
+    structure_nx.pos += axes / 2
+    structure_nx.kpoints = array([[0, 0, 0]])
     system = generate_physical_system(
-        structure=structure,
+        structure=structure_nx,
         C=4,
         H=1,
     )
@@ -272,8 +263,6 @@ def dmc_pes_job(
         timestep=0.01,
         ntimesteps=1,
     )
-    # Store the relative samples for printout
-    dmc.samples = dmcsteps
     return [scf, p2q, opt, dmc]
 # end def
 
@@ -283,5 +272,5 @@ def dmc_pes_job(
 # -the qmc_idx points to the correct QMC series (0: VMC; 1: DMC)
 pes_dmc = NexusPes(
     dmc_pes_job,
-    loader=QmcPes(suffix='/dmc/dmc.in.xml', qmc_idx=1)
+    loader=QmcPes(suffix='dmc/dmc.in.xml', qmc_idx=1)
 )

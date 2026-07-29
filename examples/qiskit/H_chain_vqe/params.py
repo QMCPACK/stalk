@@ -54,8 +54,6 @@ def kernel_vqe(
 
 def pes_vqe(
     structure: ParameterStructure,
-    sigma=0.0,
-    path='',
     kernel_args={},  # dict to hold ansatz, operator, estimator
     **kwargs  # charge=0, spin=0, basis="sto3g"
 ):
@@ -76,6 +74,7 @@ def pes_vqe(
     # end if
 
     estimator = StatevectorEstimator()
+    sigma = structure.sigma
 
     # Evaluate VQE with given parameters
     params = structure.params.reshape(-1, len(structure.params))
@@ -104,8 +103,6 @@ def pes_vqe(
 # This is a PES that solves the exact ground state numerically, provided an atomic structure
 def pes_exact(
     structure: ParameterStructure,
-    sigma=0.0,
-    path='',
     **kwargs  # charge=0, spin=0, basis="sto3g", callback=None, exact=False
 ):
     ansatz, mapper, q_hamiltonian = kernel_vqe(structure, **kwargs)
@@ -114,16 +111,16 @@ def pes_exact(
     energy = result.eigenvalue.real
 
     printout = 'Run NumpyMinimumSolver:'
-    printout += f" E = {'%+5.4f' % energy} +/- {'%+5.4f' % sigma}"
+    printout += f" E = {'%+5.4f' % energy}"
     print(printout)
-    return energy, sigma
+    return energy, 0.0
 # end def
 
 
 # VQE surrogate PES
-vqe_pes = PesFunction(func=pes_vqe, kernel_args={})
+vqe_pes = PesFunction(func=pes_vqe, create_files=True, kernel_args={})
 # Exact PES
-exact_pes = PesFunction(func=pes_exact, kernel_args={})
+exact_pes = PesFunction(func=pes_exact, create_files=True, kernel_args={})
 # Create another instance to allow (optionally) a different PES and to reset eval count
 #   NB: Using here the same PES, only this time it is noisy
-vqe_pes_noisy = PesFunction(func=pes_vqe, kernel_args={})
+vqe_pes_noisy = PesFunction(func=pes_vqe, create_files=True, kernel_args={})

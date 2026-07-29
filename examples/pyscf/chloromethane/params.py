@@ -15,7 +15,7 @@ from stalk import Parameter
 
 
 # Natural forward mapping using bond lengths and angles
-def forward_natural(pos: ndarray):
+def forward_natural(pos: ndarray) -> ndarray:
     pos = pos.reshape(-1, 3)  # make sure of the shape
     # for easier comprehension, list particular atoms
     C = pos[0]
@@ -41,7 +41,7 @@ def forward_natural(pos: ndarray):
 
 
 # Auxiliary parameter mapping using z, xy distances to set H atoms
-def forward(pos: ndarray):
+def forward(pos: ndarray) -> ndarray:
     pos = pos.reshape(-1, 3)  # make sure of the shape
     # for easier comprehension, list particular atoms
     C = pos[0]
@@ -67,7 +67,7 @@ def forward(pos: ndarray):
 
 
 # Backward mapping: produce array of atomic positions from parameters
-def backward(params: ndarray):
+def backward(params: ndarray) -> ndarray:
     r_CCl = params[0]
     z = params[1]
     xy = params[2]
@@ -124,5 +124,5 @@ def pes_pyscf(structure: ParameterStructure, xc='pbe', **kwargs):
 # end def
 
 
-pes_pbe = PesFunction(pes_pyscf, {'xc': 'pbe'})
-pes_b3lyp = PesFunction(pes_pyscf, {'xc': 'b3lyp'})
+pes_pbe = PesFunction(pes_pyscf, {'xc': 'pbe'}, create_files=True)
+pes_b3lyp = PesFunction(pes_pyscf, {'xc': 'b3lyp'}, create_files=True)

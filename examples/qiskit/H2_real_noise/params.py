@@ -59,8 +59,6 @@ def kernel_vqe(
 # Idealized VQE PES that only considers phenomenological precision
 def pes_ideal(
     structure: ParameterStructure,
-    sigma=0.0,
-    path='',
     kernel_args={},  # dict to hold ansatz, operator, estimator
     **kwargs  # charge=0, spin=0, basis="sto3g"
 ):
@@ -81,6 +79,7 @@ def pes_ideal(
     # end if
 
     estimator = StatevectorEstimator()
+    sigma = structure.sigma
 
     # Evaluate VQE with given parameters
     params = structure.params.reshape(-1, len(structure.params))
@@ -128,8 +127,6 @@ def get_backend(backend, q_hamiltonian):
 #  NB: cannot handle zero noise (sigma=0)
 def pes_backend(
     structure: ParameterStructure,
-    sigma=0.0,
-    path='',
     backend=None,
     kernel_args={},  # dict to hold ansatz, operator, estimator
     **kwargs  # charge=0, spin=0, basis="sto3g"
@@ -160,10 +157,14 @@ def pes_backend(
     transpiled_hamiltonian = q_hamiltonian.apply_layout(transpiled_ansatz.layout)
 
     estimator = BackendEstimatorV2(backend=backend)
+    sigma = structure.sigma
 
     # Evaluate VQE with given parameters
     params = structure.params.reshape(-1, len(structure.params))
-    job = estimator.run([(transpiled_ansatz, transpiled_hamiltonian, params)], precision=sigma)
+    job = estimator.run(
+        [(transpiled_ansatz, transpiled_hamiltonian, params)],
+        precision=sigma
+    )
     energy = job.result()[0].data.evs[0]
     kernel_args['evals'] += 1
 
@@ -181,8 +182,6 @@ def pes_backend(
 # This is a PES that solves the exact ground state numerically, provided an atomic structure
 def pes_exact(
     structure: ParameterStructure,
-    sigma=0.0,
-    path='',
     **kwargs  # charge=0, spin=0, basis="sto3g", callback=None, exact=False
 ):
     ansatz, mapper, q_hamiltonian = kernel_vqe(structure, **kwargs)
@@ -191,22 +190,24 @@ def pes_exact(
     energy = result.eigenvalue.real
 
     printout = 'Run NumpyMinimumSolver:'
-    printout += f" E = {'%+5.4f' % energy} +/- {'%+5.4f' % sigma}"
+    printout += f" E = {'%+5.4f' % energy}"
     print(printout)
-    return energy, sigma
+    return energy, 0.0
 # end def
 
 
 # Ideal VQE PES
-vqe_pes = PesFunction(func=pes_ideal, kernel_args={})
+vqe_pes = PesFunction(func=pes_ideal, create_files=True, kernel_args={})
 # Generic face backend PES
 backend_pes = PesFunction(
     func=pes_backend,
+    create_files=True,
     kernel_args={},
     backend='generic',
 )
 aphrodite_pes = PesFunction(
     func=pes_backend,
+    create_files=True,
     kernel_args={},
     backend='fake_aphrodite',
 )

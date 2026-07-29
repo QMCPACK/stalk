@@ -4,15 +4,14 @@ from numpy import array
 
 from nexus import generate_pyscf, generate_qmcpack, job, obj
 from nexus import generate_physical_system, generate_convert4qmc
-from nexus import Structure
 
 from stalk import XyzGeometry
-from stalk import EffectiveVariance
 from stalk import PesLoader
 from stalk import BondLength
 from stalk.nexus import NexusGeometry
 from stalk.nexus import NexusPes
 from stalk.nexus import QmcPes
+from stalk.nexus.nexus_structure import NexusStructure
 
 # This requires the following job arguments to be defined in local nxs.py
 # Copy examples/nexus/nxs_template.py to ./nxs.py and edit accordingly
@@ -54,9 +53,9 @@ scf_mole_args = obj(
 
 
 # Nexus generator for SCF relaxation workflow
-def scf_relax_job(structure: Structure, path, **kwargs):
+def scf_relax_job(structure: NexusStructure, **kwargs):
     system = generate_physical_system(
-        structure=structure,
+        structure=structure.get_nexus_structure(),
         C=4
     )
     relax = generate_pyscf(
@@ -64,7 +63,7 @@ def scf_relax_job(structure: Structure, path, **kwargs):
         system=system,
         identifier='relax',
         job=job(**pyscfjob),
-        path=path,
+        path=structure.path,
         mole=scf_mole_args,
         calculation=obj(
             method='RKS',
@@ -76,9 +75,9 @@ def scf_relax_job(structure: Structure, path, **kwargs):
 
 
 # Nexus generator for SCF PES workflow
-def scf_pes_job(structure: Structure, path, **kwargs):
+def scf_pes_job(structure: NexusStructure, **kwargs):
     system = generate_physical_system(
-        structure=structure,
+        structure=structure.get_nexus_structure(),
         C=4,
     )
     scf = generate_pyscf(
@@ -86,7 +85,7 @@ def scf_pes_job(structure: Structure, path, **kwargs):
         system=system,
         identifier='scf',
         job=job(**pyscfjob),
-        path=path,
+        path=structure.path,
         mole=scf_mole_args,
         calculation=obj(
             method='RKS',
@@ -99,22 +98,13 @@ def scf_pes_job(structure: Structure, path, **kwargs):
 
 # Nexus generator for DMC PES workflow
 def dmc_pes_job(
-    structure: Structure,
-    path,
-    sigma=None,
-    samples=10,
-    var_eff=None,
+    structure: NexusStructure,
     dep_jobs=[],
     xc='pbe',
     **kwargs
 ):
-    # Estimate the relative number of samples needed
-    if hasattr(structure, 'samples'):
-        dmcsteps = structure.samples
-    elif isinstance(var_eff, EffectiveVariance):
-        dmcsteps = var_eff.get_samples(sigma)
-    else:
-        dmcsteps = samples
+    path = structure.path
+    dmcsteps = structure.samples if structure.samples is not None else 10
     # end if
 
     # Check if reusing Jastrows
@@ -129,7 +119,7 @@ def dmc_pes_job(
 
     # Center the structure for QMCPACK
     system = generate_physical_system(
-        structure=structure,
+        structure=structure.get_nexus_structure(),
         C=4,
         net_spin=4,
     )
@@ -198,8 +188,6 @@ def dmc_pes_job(
         timestep=0.01,
         ntimesteps=1,
     )
-    # Store the relative samples for printout
-    dmc.samples = dmcsteps
     return [scf, c4q, opt, dmc]
 # end def
 

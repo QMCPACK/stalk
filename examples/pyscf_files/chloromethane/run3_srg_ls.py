@@ -20,10 +20,10 @@ srg_ls = LineSearchIteration(
 # Propagate the parallel line-search (compute values, analyze, then move on) 4 times
 #   add_sigma = True means that target errorbars are used to simulate random noise
 for i in range(4):
-    srg_ls.propagate(i, add_sigma=True)
+    srg_ls.propagate(pes_xyz, i=i, add_sigma=True)
 # end for
 # Evaluate the latest eqm structure
-srg_ls.pls().evaluate_eqm(add_sigma=True)
+srg_ls[-1].evaluate_eqm(pes_xyz, add_sigma=True)
 
 if __name__ == "__main__":
     # Print the line-search performance

@@ -6,16 +6,16 @@ from params import pes_pwscf
 from run0_relax import structure_relax
 
 interactive = __name__ == "__main__"
-
+hessian_dir = 'hessian/'
 hessian = ParameterHessian(structure=structure_relax)
-hessian.compute_fdiff(
-    path='fdiff',
-    pes=pes_pwscf,
-    dp=0.001,  # Finite displacements along each parameter
-    interactive=interactive,
-)
-
+if not hessian.load_hessian(hessian_dir):
+    hessian.compute_fdiff(
+        pes=pes_pwscf,
+        path=hessian_dir,
+        dp=0.001,
+        interactive=interactive,
+    )
+# end if
 if interactive:
-    print('Hessian:')
     print(hessian)
 # end if

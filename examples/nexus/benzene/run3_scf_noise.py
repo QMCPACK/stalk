@@ -16,12 +16,11 @@ srg_ls = LineSearchIteration(
     surrogate=surrogate,
     structure=shifted_structure,
     path='srg_ls',
-    pes=pes_pyscf,
 )
 # Propagate the parallel line-search (compute values, analyze, then move on) 4 times
 #   add_sigma = True means that target errorbars are used to simulate random noise
 for i in range(4):
-    srg_ls.propagate(i, add_sigma=True, interactive=interactive)
+    srg_ls.propagate(pes_pyscf, i, add_sigma=True, interactive=interactive)
     if interactive:
         print(srg_ls)
         srg_ls.pls(i).plot()

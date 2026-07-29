@@ -15,11 +15,10 @@ surrogate = Surrogate(
     load=surrogate_file,
     structure=hessian.structure,
     hessian=hessian,
-    pes=pes_xyz,
     window_frac=0.2,
     M=15
 )
-surrogate.bracket_target_biases()
+surrogate.evaluate(pes=pes_xyz)
 
 epsilon_p = [0.02, 0.02, 0.02]
 surrogate.optimize(

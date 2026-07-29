@@ -16,12 +16,9 @@ surrogate = TargetLineSearch(
     hessian=hessian,
     R=0.3,
     M=11,
-    pes=pes_pyscf,
-    path='surrogate',
-    interactive=interactive,
+    interpolate_kind='cubic',
 )
-surrogate.bracket_target_bias()
-surrogate.reset_interpolation(interpolate_kind='cubic')
+surrogate.evaluate(pes=pes_pyscf, path='surrogate', interactive=interactive)
 
 # Set target parameter error tolerances (epsilon): 0.01 Angstrom accuracy
 # Then, optimize the surrogate line-search to meet the tolerances given the line-search

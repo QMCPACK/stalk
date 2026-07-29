@@ -14,7 +14,7 @@ from stalk import BondAngle
 
 
 # Natural forward mapping using bond lengths and angles
-def forward(pos: ndarray):
+def forward(pos: ndarray) -> ndarray:
     pos = pos.reshape(-1, 3)  # make sure of the shape
     # for easier comprehension, list particular atoms
     O0 = pos[0]
@@ -33,7 +33,7 @@ def forward(pos: ndarray):
 
 
 # Backward mapping: produce array of atomic positions from parameters
-def backward(params: ndarray):
+def backward(params: ndarray) -> ndarray:
     r = params[0]
     # Transform bond angle to triangular angle
     a = (pi - params[1]) / 2
@@ -95,5 +95,5 @@ pes_dict = {}
 co_dict = {}
 for xc, color in zip(xcs, colors):
     co_dict[xc] = color
-    pes_dict[xc] = PesFunction(pes_pyscf, xc=xc)
+    pes_dict[xc] = PesFunction(pes_pyscf, xc=xc, create_files=True)
 # end for

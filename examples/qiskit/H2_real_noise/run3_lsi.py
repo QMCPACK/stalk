@@ -7,6 +7,7 @@ import numpy as np
 from stalk import LineSearchIteration
 from stalk import Surrogate
 from stalk import PesFunction
+from stalk import ParameterStructure
 
 from params import pes_backend
 from run2_surrogate import surrogate, directory
@@ -32,19 +33,18 @@ def run_stalk_lsi(
         surrogate=surrogate,
         structure=structure,
         path=path,
-        pes=pes,
     )
     # Propagate the parallel line-search (compute values, analyze, then move on) 5 times
     for i in range(niter):
-        lsi.propagate(i)
+        lsi.propagate(pes, i)
     # end for
     # Evaluate the latest eqm structure
-    lsi.pls().evaluate_eqm()
+    lsi.pls().evaluate_eqm(pes)
     return lsi
 # end for
 
 
-def get_structure(structure_orig, directory, n, sigma=0.4):
+def get_structure(structure_orig: ParameterStructure, directory, n, sigma=0.4):
     sfile = f'{directory}{n}_shifts_init.dat'
     if Path(sfile).exists():
         shifts = np.loadtxt(sfile)

@@ -14,6 +14,7 @@ from stalk import PesFunction
 from stalk import ParameterHessian
 from stalk import Surrogate
 from stalk import morse
+from stalk.io.stalk_logger import StalkLogger
 
 base_dir = 'morse_3p/'
 
@@ -72,10 +73,10 @@ surrogate = Surrogate(
     path=base_dir + 'surrogate',
     structure=p_relax,
     hessian=hessian,
-    pes=pes_surrogate,
     M=25,
     window_frac=0.5
 )
+surrogate.evaluate(pes=pes_surrogate)
 
 # Optimize the line-search to tolerances
 surrogate.optimize(
@@ -85,7 +86,8 @@ surrogate.optimize(
     M=7,
     N=500,
     reoptimize=False,
-    write=srg_file
+    write=srg_file,
+    logger=StalkLogger(3, 'optimizer.log')
 )
 
 # Define alternative PES
@@ -100,12 +102,11 @@ print(p_alt.params)
 lsi = LineSearchIteration(
     path=base_dir + 'lsi',
     surrogate=surrogate,
-    pes=pes_alt,
 )
 # Propagate the line-search imax times
 imax = 4
 for i in range(imax):
-    lsi.propagate(i, add_sigma=True)
+    lsi.propagate(pes_alt, i, add_sigma=True)
 # end for
-lsi.pls().evaluate_eqm(add_sigma=True)
+lsi.pls().evaluate_eqm(pes_alt, add_sigma=True)
 print(lsi)

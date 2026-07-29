@@ -19,12 +19,11 @@ surrogate = Surrogate(
     fit_kind='pf3',
     load=surrogate_file,
     hessian=hessian,
-    pes=vqe_pes,
     window_frac=1.0,  # maximum displacement relative to Lambda of each direction
     M=11  # number of points per direction to sample
 )
 # This makes optimization more accurate and stable
-surrogate.bracket_target_biases()
+surrogate.evaluate(vqe_pes, interactive=interactive)
 surrogate.write_to_disk(surrogate_file)
 
 # Optimize the model such that the parameters can be resolved to accuracy
@@ -42,7 +41,6 @@ surrogate.optimize(
 )
 
 if interactive:
-    print(surrogate)
     # Plot the surrogate data of each line-search
     surrogate.plot()
     # Plot the error surface maps, showing the contour of requested tolerance

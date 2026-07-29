@@ -145,7 +145,7 @@ refdata_generic.append(('CG', CG(maxiter=20), [], [], []))
 # POWELL
 refdata_generic.append(('POWELL', POWELL(maxiter=20), [], [], []))
 
-# Calculate data for the classical optimizers with generic backend 
+# Calculate data for the classical optimizers with generic backend
 for label, optimizer, edata, pdata, podata in refdata_generic:
     for precision in precisions:
         edatarow, pdatarow, podatarow = [], [], []

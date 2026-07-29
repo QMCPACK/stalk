@@ -16,12 +16,11 @@ srg_ls = LineSearchIteration(
     surrogate=surrogate,
     structure=shifted_structure,
     path='srg_ls',
-    pes=pes_pwscf,
 )
 # Propagate the parallel line-search (compute values, analyze, then move on) 4 times
 #   add_sigma = True means that target errorbars are used to simulate random noise
 for i in range(4):
-    srg_ls.propagate(i, add_sigma=True, interactive=interactive)
+    srg_ls.propagate(pes_pwscf, i, add_sigma=True, interactive=interactive)
     if interactive:
         print(srg_ls)
         srg_ls.pls(i).plot()
@@ -29,7 +28,7 @@ for i in range(4):
     # end if
 # end for
 # Evaluate the latest eqm structure
-srg_ls.pls().evaluate_eqm(add_sigma=True, interactive=interactive)
+srg_ls.pls().evaluate_eqm(pes_pwscf, add_sigma=True, interactive=interactive)
 
 # Print the line-search performance
 if interactive:

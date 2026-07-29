@@ -32,12 +32,11 @@ for n in range(ntot):
         surrogate=surrogate,
         structure=structure,
         path=f'{directory}STALK/lsi{n}',
-        pes=vqe_pes_noisy,
     )
     lsis.append(lsi)
     # Propagate the parallel line-search (compute values, analyze, then move on) 5 times
     for i in range(5):
-        lsi.propagate(i)
+        lsi.propagate(vqe_pes_noisy, i)
         # Plot each line-search
         if interactive:
             lsi.pls(-2).plot()
@@ -46,7 +45,7 @@ for n in range(ntot):
         # end if
     # end for
     # Evaluate the latest eqm structure
-    lsi.pls().evaluate_eqm()
+    lsi.pls().evaluate_eqm(vqe_pes_noisy)
 
     if interactive:
         print(lsi)

@@ -4,20 +4,19 @@ from numpy import ndarray
 
 from nexus import generate_qmcpack, job, obj
 from nexus import generate_physical_system, generate_pw2qmcpack, generate_pwscf
-from nexus import Structure
 
-from stalk import Parameter
 from stalk.util import Bohr
-from stalk.nexus import PwscfGeometry
-from stalk.nexus import PwscfPes
-from stalk.nexus import NexusGeometry
-from stalk.nexus import NexusPes
-from stalk.nexus import QmcPes
-from stalk import EffectiveVariance
+from stalk import Parameter
+from stalk import PwscfGeometry
+from stalk import PwscfPes
+from stalk import NexusGeometry
+from stalk import NexusPes
+from stalk import QmcPes
+from stalk import NexusStructure
 
 # This requires the following job arguments to be defined in local nxs.py
 # Copy examples/nexus/nxs_template.py to ./nxs.py and edit accordingly
-from nxs import pwscfjob, optjob, dmcjob, p2qjob
+from nxs import pwscfjob, optjob, dmcjob, p2qjob  # type: ignore
 
 # Pseudos (execute download_pseudos.sh in the working directory)
 softpseudos = ['C.pbe_v1.2.uspp.F.upf']
@@ -75,15 +74,15 @@ scf_args = obj(
 
 
 # Nexus generator for PWSCF relaxation workflow
-def scf_vcrelax_job(structure: Structure, path, **kwargs):
+def scf_vcrelax_job(structure: NexusStructure, **kwargs):
     system = generate_physical_system(
-        structure=structure,
+        structure=structure.get_nexus_structure(),
         C=4,
     )
     relax = generate_pwscf(
         system=system,
         job=job(**pwscfjob),
-        path=path,
+        path=structure.path,
         identifier='vcrelax',
         calculation='vc-relax',
         forc_conv_thr=1e-4,
@@ -97,15 +96,15 @@ def scf_vcrelax_job(structure: Structure, path, **kwargs):
 
 
 # Nexus generator for SCF PES workflow
-def scf_pes_job(structure: Structure, path, **kwargs):
+def scf_pes_job(structure: NexusStructure, **kwargs):
     system = generate_physical_system(
-        structure=structure,
+        structure=structure.get_nexus_structure(),
         C=4,
     )
     scf = generate_pwscf(
         system=system,
         job=job(**pwscfjob),
-        path=path,
+        path=structure.path,
         identifier='scf',
         calculation='scf',
         **scf_args
@@ -116,36 +115,28 @@ def scf_pes_job(structure: Structure, path, **kwargs):
 
 # Nexus generator for DMC PES workflow
 def dmc_pes_job(
-    structure: Structure,
-    path,
-    sigma=None,
-    samples=10,
-    var_eff=None,
-    tile_opt=1,
+    structure: NexusStructure,
     dep_jobs=[],
+    tile_opt=1,
     rcut=3.0,
     twist_grid=(1, 1, 1),
     kshift=(0, 0, 0),
     **kwargs
 ):
-    # Estimate the relative number of samples needed
-    if isinstance(var_eff, EffectiveVariance):
-        dmcsteps = var_eff.get_samples(sigma)
-    else:
-        dmcsteps = samples
-    # end if
-
+    path = structure.path
+    dmcsteps = structure.samples if structure.samples is not None else 10
+    structure_nx = structure.get_nexus_structure()
     # The original structure represents the primitive cell
     primcell = generate_physical_system(
-        structure=structure,
+        structure=structure_nx,
         C=4
     )
     # Create spherical tiling to mitigate finite-size effects
-    tiled = structure.tile_opt(tile_opt)
+    tiled = structure_nx.tile_opt(tile_opt)
     tiled.add_symmetrized_kmesh(kgrid=(1, 1, 1), kshift=kshift)
     supercell = generate_physical_system(structure=tiled, C=4)
     # Twisted supercell
-    tiled_twisted = structure.tile_opt(tile_opt)
+    tiled_twisted = structure_nx.tile_opt(tile_opt)
     tiled_twisted.add_symmetrized_kmesh(kgrid=twist_grid, kshift=kshift)
     twisted_supercell = generate_physical_system(structure=tiled_twisted, C=4)
 
@@ -268,8 +259,6 @@ def dmc_pes_job(
         ntimesteps=1,
         nonlocalmoves=True,
     )
-    # Store the relative samples for printout
-    dmc.samples = dmcsteps
     return [scf, nscf, p2q, opt, nscft, p2qt, dmc]
 # end def
 

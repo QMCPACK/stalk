@@ -30,18 +30,18 @@ structure = ParameterStructure(
 
 outfile = 'relax.xyz'
 try:
-    geom = XyzGeometry({'suffix': outfile}).load('./')
+    geom = XyzGeometry().load(outfile)
 except FileNotFoundError:
     mf = kernel_pyscf(structure=structure, xc='pbe')
     mf.kernel()
     mol_eq = optimize(mf, maxsteps=100, constraints='chloromethane_constraints.txt')
     # Write to external file
     tofile(mol_eq, outfile, format='xyz')
-    geom = XyzGeometry({'suffix': outfile}).load('./')
+    geom = XyzGeometry().load(outfile)
 # end try
 new_params = structure.map_forward(geom.get_pos())
 print('Initial params:')
 print(structure.params)
-print('Relaxed params:')
-print(new_params)
+print('Relaxed structure:')
 structure_relax = structure.copy(params=new_params)
+print(structure_relax)

@@ -13,7 +13,7 @@ from stalk import Parameter
 
 
 # Forward mapping: produce parameter values from an array of atomic positions
-def forward(pos: ndarray):
+def forward(pos: ndarray) -> ndarray:
     pos = pos.reshape(-1, 3)  # make sure of the shape
     # for easier comprehension, list particular atoms
     N0 = pos[0]
@@ -79,7 +79,7 @@ def forward(pos: ndarray):
 
 
 # Backward mapping: produce array of atomic positions from parameters
-def backward(params: ndarray):
+def backward(params: ndarray) -> ndarray:
     x_C04, y_C04, x_C13, y_C13, y_C2, x_H04, y_H04, x_H13, y_H13, y_H2 = tuple(params)
     N0 = [0.0, 0.0, 0.0]
     C0 = [x_C04, y_C04, 0.0]
@@ -149,4 +149,4 @@ def pes_pyscf(structure: ParameterStructure, **kwargs):
 # end def
 
 
-pes = PesFunction(pes_pyscf)
+pes = PesFunction(pes_pyscf, create_files=True)

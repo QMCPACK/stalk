@@ -113,4 +113,4 @@ def pes_pyscf(structure: ParameterStructure, **kwargs):
 # end def
 
 
-pes = PesFunction(pes_pyscf)
+pes = PesFunction(pes_pyscf, create_files=True)

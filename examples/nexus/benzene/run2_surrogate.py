@@ -16,11 +16,10 @@ surrogate = Surrogate(
     load=surrogate_file,
     structure=hessian.structure,
     hessian=hessian,
-    pes=pes_pyscf,
     window_frac=0.5,  # maximum displacement relative to Lambda of each direction
     M=15,  # number of points per direction to sample
-    interactive=interactive
 )
+surrogate.evaluate(pes=pes_pyscf, interactive=interactive)
 
 epsilon_p = [0.02, 0.02]
 surrogate.optimize(

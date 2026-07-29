@@ -25,11 +25,10 @@ for xc, pes in pes_dict.items():
         load=surrogate_file,
         structure=hessians[xc].structure,
         hessian=hessians[xc],
-        pes=pes,
         window_frac=0.3,
         M=15
     )
-    surrogate.bracket_target_biases()
+    surrogate.evaluate(pes)
 
     # Optimize to tolerances
     surrogate.optimize(
