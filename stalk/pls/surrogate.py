@@ -10,6 +10,7 @@ __license__ = "BSD-3-Clause"
 
 from numpy import argmin, array, isscalar, mean, linspace, nan
 
+from stalk.io.optimizer_data import OptimizerData
 from stalk.io.stalk_logger import StalkLogger
 from stalk.ls.linesearch_grid import LineSearchGrid
 from stalk.ls.ls_settings import LsSettings
@@ -171,20 +172,22 @@ class Surrogate(ParallelLineSearch):
     # end def
 
     @property
-    def logger(self):
-        if isinstance(self._logger, StalkLogger):
-            return self._logger
-        else:
-            return StalkLogger(1)
-        # end if
+    def logger(self) -> StalkLogger:
+        return self._logger
     # end def
 
     @logger.setter
     def logger(self, logger):
-        if isinstance(logger, StalkLogger) or logger is None:
+        if isinstance(logger, StalkLogger):
             self._logger = logger
+        elif logger is None:
+            self._logger = StalkLogger(1)
+        elif isinstance(logger, int):
+            self._logger = StalkLogger(logger)
+        elif isinstance(logger, str):
+            self._logger = StalkLogger(3, filename=logger)
         else:
-            raise TypeError("Logger must be a StalkLogger instance.")
+            raise TypeError("Logger must be a StalkLogger, int or a str (filename).")
         # end if
     # end def
 
@@ -210,6 +213,17 @@ class Surrogate(ParallelLineSearch):
         if targets is not None:
             self.x_targets = targets
         # end if
+        # Try to load optimized data from disk
+        for tls in self.ls_list:
+            od = OptimizerData(f'ls{tls.d}')
+            tls_load = od.load(self.path)
+            # If the files are not found, the following attributes will be None like they
+            # would be in any case
+            tls.Gs = tls_load.Gs
+            tls.W_opt = tls_load.W_opt
+            tls.sigma_opt = tls_load.sigma_opt
+            tls._error_surface = tls_load.error_surface
+        # end for
     # end def
 
     def optimize(
@@ -223,9 +237,8 @@ class Surrogate(ParallelLineSearch):
         noise_frac=0.1,
         resolution=0.01,
         starting_mix=0.5,
-        write=None,
         overwrite=False,
-        logger=StalkLogger(2, 'optimizer.log', append=True),
+        logger=1,
         **ls_args
         # M=7, fit_kind=None, fit_func=None, fit_args={}, Gs=None, fraction=0.025
         # bias_mix=0.0, bias_order=1, noise_frac=0.05,
@@ -233,12 +246,12 @@ class Surrogate(ParallelLineSearch):
         # W_num=3, W_max=None, sigma_num=3, sigma_max=None
     ):
         self.logger = logger
-        if logger.filename is not None:
-            print(f'Optimizing. Writing optimizer output to {logger.filename}')
-        # end if
         if self.optimized and not reoptimize:
-            self.logger.log('Already optimized, use reoptimize = True to reoptimize.')
+            print('Already optimized, use reoptimize = True to force reoptimization.')
             return
+        # end if
+        if self.logger.filename is not None:
+            print(f'Optimizing. Writing optimizer output to {logger.filename}')
         # end if
         if not self.evaluated:
             self.logger.log_and_raise(
@@ -276,7 +289,7 @@ class Surrogate(ParallelLineSearch):
             self.logger.log_and_raise('Optimizer constraint not identified')
         # end if
         # Finalize and store the result, write to disk if requested
-        self._finalize_optimization(write=write, overwrite=overwrite)
+        self._finalize_optimization(overwrite=overwrite)
     # end def
 
     def optimize_windows_noises(
@@ -542,7 +555,6 @@ class Surrogate(ParallelLineSearch):
             noises=self.sigma_opt,
             M=[tls.M for tls in self.ls_list],
             **kwargs
-            # pes=None, pes_func=None, pes_args={}
         )
         # Copy each optimized line-search settings
         for ls_new, tls in zip(pls.ls_list, self.ls_list):
@@ -552,7 +564,7 @@ class Surrogate(ParallelLineSearch):
     # end def
 
     # Finalize optimization by computing error estimates
-    def _finalize_optimization(self, write=None, overwrite=False) -> None:
+    def _finalize_optimization(self, overwrite=False) -> None:
         # The errors are calculated strictly based on settings stored in line-searches
         errors = self._resample_errors()
         self.error_d, self.error_p = errors
@@ -567,9 +579,9 @@ class Surrogate(ParallelLineSearch):
                 self.error_p
             )
         # end if
-
-        if isinstance(write, str):
-            self.write_to_disk(fname=write, overwrite=overwrite)
+        for tls in self.ls_list:
+            # Write optimization results to disk
+            OptimizerData(f'ls{tls.d}').save(tls, self.path, overwrite=overwrite)
         # end if
         print('Optimization successful!')
     # end def

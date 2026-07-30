@@ -36,6 +36,7 @@ def test_ParallelLineSearch(tmp_path):
     # Add structure
     s = get_structure_H2O()
     pls.structure = s
+    pls.path = str(tmp_path) + '/pls'
     assert not pls.setup
     # Add Hessian
     h = get_hessian_H2O()
@@ -68,12 +69,20 @@ def test_ParallelLineSearch(tmp_path):
 
     # Test propagate and write
     pls.path = str(tmp_path)
-    fname = 'test_fname.p'
-    pls_next = pls.propagate(pes, write=True, fname=fname)
+    pls_next = pls.propagate(pes)
     assert pls_next.path == str(tmp_path) + '_next/'
 
-    # Test loading of pickle
-    pls_load = ParallelLineSearch(path=str(tmp_path), load=fname)
+    # Test loading of the data (requires consistent input parameters)
+    pls_load = ParallelLineSearch(
+        hessian=pls.hessian,
+        structure=pls.structure,
+        path=pls.path,
+        fit_kind=fit_kind,
+        window_frac=0.05,
+        M=M,
+    )
     assert pls_load.evaluated
+    assert match_to_tol(pls_load.structure.value, pls.structure.value)
+    assert match_to_tol(pls_load.structure_next.params, pls.structure_next.params)
 
 # end def

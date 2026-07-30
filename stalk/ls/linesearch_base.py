@@ -50,7 +50,7 @@ class LineSearchBase(LineSearchGrid):
     # end def
 
     @property
-    def settings(self):
+    def settings(self) -> LsSettings:
         return self._settings
     # end def
 

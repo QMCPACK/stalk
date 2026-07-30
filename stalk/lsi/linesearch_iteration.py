@@ -35,8 +35,6 @@ class LineSearchIteration():
         self.path = path
         self._pls_list = []
         self.var_eff_map = var_eff_map
-        # Try to load serialized iterations:
-        self.load_pls()
         # if no iterations loaded, try to initialize
         if len(self) == 0 or not self[0].evaluated:
             # Try to load from surrogate ParallelLineSearch object
@@ -223,32 +221,10 @@ class LineSearchIteration():
         self[-1].evaluate(pes, add_sigma=add_sigma)
     # end def
 
-    def load_pls(self):
-        i = 0
-        while i < 100:
-            path = '{}pls.p'.format(self._get_pls_path(i))
-            try:
-                pls = ParallelLineSearch(load=path)
-                if not pls.setup:
-                    # Means loading failed
-                    break
-                # end if
-                self._pls_list.append(pls)
-                i += 1
-            except TypeError:
-                # This means load has failed
-                break
-            # end try
-        # end while
-    # end def
-
     def propagate(
         self,
         pes: PesFunction,
         i=None,
-        write=True,
-        overwrite=True,
-        fname='pls.p',
         add_sigma=False,
         interactive=False,
         **kwargs  # dep_jobs=[]
@@ -261,10 +237,7 @@ class LineSearchIteration():
         try:
             pls_next = self[-1].propagate(
                 pes=pes,
-                path=self._get_pls_path(i),
-                write=write,
-                overwrite=overwrite,
-                fname=fname,
+                next_path=self._get_pls_path(i),
                 add_sigma=add_sigma,
                 interactive=interactive,
                 var_eff_map=self.var_eff_map,

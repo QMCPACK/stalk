@@ -7,6 +7,7 @@ __license__ = "BSD-3-Clause"
 from stalk.io.txt_data import TxtData
 from stalk.params.geometry_result import GeometryResult
 from stalk.params.parameter_set import ParameterSet
+from stalk.params.pes_function import PesFunction
 from stalk.util.args_container import ArgsContainer
 
 
@@ -41,19 +42,23 @@ class GeometryLoader(ArgsContainer, TxtData):
     def load_or_relax(
         self,
         path,
-        relax_func: callable,
+        relax_func: PesFunction,
         structure: ParameterSet,
         label='relax',
         **kwargs  # relax kwargs
     ) -> ParameterSet:
         try:
             res = self.load(path)
-            if not callable(relax_func):
-                raise TypeError('The relax_func must be callable and write the geometry result file to the same path')
-            # end if
         except FileNotFoundError:
             # Try to relax
-            relax_func(structure.copy(), **kwargs)
+            if isinstance(relax_func, PesFunction):
+                pass
+            elif callable(relax_func):
+                relax_func = PesFunction(relax_func, **kwargs)
+            else:
+                raise TypeError('The relax_func must be PesFunction or callable and write the geometry result file to the same path')
+            # end if
+            relax_func(structure.copy(), path=path, **kwargs)
             # Then, try to load again
             res = self.load(path)
         # end try

@@ -15,12 +15,13 @@ from ..assets.helper import Gs_N200_M7
 
 
 # test Surrogate class
-def test_Surrogate():
+def test_Surrogate(tmp_path):
 
     # test empty init
     structure = get_structure_H2O()
     hessian = get_hessian_H2O()
     srg = Surrogate(
+        path=str(tmp_path) + '/srg',
         fit_kind='pf3',
         structure=structure,
         hessian=hessian,
@@ -134,6 +135,7 @@ def test_Surrogate():
 
     # Test LS optimization to epsilon_p
     srg = Surrogate(
+        path=str(tmp_path) + '/srg2',
         fit_kind='pf3',
         structure=structure,
         hessian=hessian,

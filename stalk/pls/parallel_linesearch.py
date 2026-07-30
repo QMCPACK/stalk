@@ -7,15 +7,13 @@ __license__ = "BSD-3-Clause"
 
 from numpy import ndarray, array
 from textwrap import indent
-from dill import dumps, loads
-from os import makedirs, path
 
+from stalk.io.ls_data import LineSearchData
 from stalk.params.pes_function import NotEvaluatedException, PesFunction
 from stalk.util import get_fraction_error
 from stalk.params import ParameterSet
 from stalk.params import ParameterHessian
 from stalk.ls import LineSearch
-from stalk.util.util import directorize
 
 
 class ParallelLineSearch():
@@ -26,28 +24,6 @@ class ParallelLineSearch():
     _structure_next = None  # next structure
     _path = None
 
-    # Try to load the instance from file before ordinary init
-    def __new__(cls, path='', load=None, *args, **kwargs):
-        if load is None:
-            return super().__new__(cls)
-        else:
-            # Try to load a pickle file from disk.
-            try:
-                fname = directorize(path) + load
-                with open(fname, mode='rb') as f:
-                    data = loads(f.read(), ignore=False)
-                # end with
-                if isinstance(data, cls):
-                    return data
-                else:
-                    raise TypeError("The loaded file is not the same kind!")
-                # end if
-            except FileNotFoundError:
-                return super().__new__(cls)
-            # end try
-        # end if
-    # end def
-
     def __init__(
         self,
         # PLS arguments
@@ -57,15 +33,10 @@ class ParallelLineSearch():
         windows=None,
         window_frac=0.25,
         noises=None,
-        load=None,  # eliminate loading arg
         # LineSearch args
         **ls_args
         # M=7, fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
     ):
-        # Proxies of successful loading from disk
-        if self.path is not None:
-            return
-        # end if
         self.path = path
         if structure is not None:
             self.structure = structure
@@ -80,6 +51,10 @@ class ParallelLineSearch():
                 window_frac,
                 **ls_args
             )
+        # end if
+        # Make sure that LS is solved after successful loading
+        if self.evaluated and self.structure_next is None:
+            self._solve_ls()
         # end if
     # end def
 
@@ -245,6 +220,9 @@ class ParallelLineSearch():
         for d, window, noise in zip(self.D_list, windows, noises):
             # Only add if enabled by the Hessian
             if self.hessian.enabled[d]:
+                # Try to load from disk
+                ls_load = LineSearchData(label=f'ls{d}').load(path=self.path)
+                # Create new line-search object
                 ls = self.ls_type(
                     structure=self.structure,
                     hessian=self.hessian,
@@ -254,6 +232,15 @@ class ParallelLineSearch():
                     M=M[d],
                     **ls_args
                 )
+                if ls_load is not None and len(ls) == len(ls_load):
+                    if not all(ls.offsets == ls_load.offsets):
+                        raise ValueError('Offsets of the loaded line-search do not match the current offsets')
+                    # end if
+                    print(f'{self.path}ls{d}: Line-search data loaded from disk.')
+                    ls.values = ls_load.values
+                    ls.errors = ls_load.errors
+                    ls.fit_res = ls_load.fit_res
+                # end if
                 ls_list.append(ls)
             # end if
         # end for
@@ -268,6 +255,7 @@ class ParallelLineSearch():
         add_sigma=False,
         interactive=False,
         dep_jobs=[],
+        warn_limit=2.0,
         var_eff_map=None,
     ) -> None:
         if not self.shifted:
@@ -282,27 +270,13 @@ class ParallelLineSearch():
             interactive=interactive,
             dep_jobs=dep_jobs,
             var_eff_map=var_eff_map,
+            warn_limit=warn_limit,
         )
         if not all([s.value is not None and s.enabled for s in structures]):
             print('Cannot solve the line-searches, as not all structures were successfully evaluated.')
             return
         # end if
-        # Set the eqm energy
-        for ls in self.ls_list:
-            eqm = ls.get(0.0)
-            if eqm is not None:
-                self.structure.value = eqm.value
-                self.structure.error = eqm.error
-                break
-            # end if
-        # end for
         self._solve_ls()
-        # Calculate next params
-        params_next, params_next_err = self.calculate_next_params()  # **kwargs
-        self._structure_next = self.structure.copy(
-            params=params_next,
-            params_err=params_next_err
-        )
     # end def
 
     def evaluate_eqm(
@@ -342,9 +316,21 @@ class ParallelLineSearch():
     # end def
 
     def _solve_ls(self):
+        # Set the eqm energy and solve the line-searches
         for ls in self.ls_list:
             ls._search_and_store()
+            eqm = ls.get(0.0)
+            if eqm is not None:
+                self.structure.value = eqm.value
+                self.structure.error = eqm.error
+            # end if
         # end for
+        # Calculate next params
+        params_next, params_next_err = self.calculate_next_params()  # **kwargs
+        self._structure_next = self.structure.copy(
+            params=params_next,
+            params_err=params_next_err
+        )
     # end def
 
     @property
@@ -452,11 +438,9 @@ class ParallelLineSearch():
     def propagate(
         self,
         pes: PesFunction,
-        path=None,
-        write=True,
+        next_path=None,
         overwrite=True,
         add_sigma=False,
-        fname='pls.p',
         interactive=False,
         **kwargs  # dep_jobs=[], var_eff_map=None
     ):
@@ -466,29 +450,16 @@ class ParallelLineSearch():
         if not self.evaluated:
             raise NotEvaluatedException("Cannot propagate, as not all line-searches were successfully evaluated.")
         # end if
-        path = path if path is not None else self.path + '_next/'
+        next_path = next_path if next_path is not None else self.path + '_next/'
         # Write to disk
-        if write:
-            self.write_to_disk(fname=fname, overwrite=overwrite)
+        for ls in self.ls_list:
+            LineSearchData(label=f'ls{ls.d}').save(ls, path=self.path, overwrite=overwrite)
         # end if
-        # check if manually providing structure
         pls_next = self.copy(
-            path,
+            next_path,
             structure=self.structure_next
         )
         return pls_next
-    # end def
-
-    def write_to_disk(self, fname='data.p', overwrite=False):
-        fpath = directorize(self.path) + fname
-        if path.exists(fpath) and not overwrite:
-            print(f'File {fpath} exists. To overwrite, run with overwrite = True')
-            return
-        # end if
-        makedirs(self.path, exist_ok=True)
-        with open(fpath, mode='wb') as f:
-            f.write(dumps(self, byref=True))
-        # end with
     # end def
 
     def plot(

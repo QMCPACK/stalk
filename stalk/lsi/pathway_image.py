@@ -107,7 +107,7 @@ class PathwayImage():
             hessian = ParameterHessian(structure=structure_sub)
         # end if
         if not hessian.load_hessian(path):
-            hessian.compute_fdiff(pes=pes, path=path, dp=0.01)
+            hessian.compute_fdiff(pes=pes_comp, path=path, dp=0.01)
         # end if
         self._path = path
         self._subspace = subspace
@@ -118,7 +118,6 @@ class PathwayImage():
     def generate_surrogate(
         self,
         pes: PesFunction = None,
-        overwrite=False,
         **surrogate_args
     ):
         if self._tangent is None:
@@ -128,25 +127,21 @@ class PathwayImage():
             pes_sub = copy(pes)
             pes_sub.func = partial(extended_pes, self.structure, self._subspace, pes)
         # end if
-        path = '{}surrogate'.format(self._path)
+        path = f'{self._path}surrogate'
         surrogate = Surrogate(
-            load='data.p',
             path=path,
             hessian=self.hessian,
             **surrogate_args
         )
         surrogate.evaluate(pes=pes_sub)
-        surrogate.write_to_disk(overwrite=overwrite)
         self._surrogate = surrogate
     # end def
 
     def optimize_surrogate(
         self,
-        overwrite=True,
         **optimize_args
     ):
         self.surrogate.optimize(**optimize_args)
-        self.surrogate.write_to_disk(overwrite=overwrite)
     # end def
 
     def run_linesearch(
@@ -167,11 +162,10 @@ class PathwayImage():
         lsi = LineSearchIteration(
             path=self._path + path,
             surrogate=self.surrogate,
-            pes=pes_comp,
             **lsi_args
         )
         for i in range(num_iter):
-            lsi.propagate(i, add_sigma=add_sigma)
+            lsi.propagate(pes_comp, i, add_sigma=add_sigma)
         # end for
         self._lsi = lsi
     # end def

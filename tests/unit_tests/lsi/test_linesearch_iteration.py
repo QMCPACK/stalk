@@ -38,7 +38,7 @@ def test_linesearchiteration(tmp_path):
     lsi.evaluate(pes)
     assert lsi.evaluated
     # And then propagate
-    # (defaults: fname='pls.p', write=True, overrite=True, add_sigma=False)
+    # (defaults: overwrite=True, add_sigma=False)
     lsi.propagate(pes)
     # Length should now be 2
     assert len(lsi) == 2
@@ -47,20 +47,13 @@ def test_linesearchiteration(tmp_path):
     # We can readily propagate (evaluate is called therein)
     lsi.propagate(pes)
     assert len(lsi) == 3
-    lsi.propagate(pes, add_sigma=True, write=False)
+    lsi.propagate(pes, add_sigma=True)
     assert len(lsi) == 4
-    # Now, let's start by loading
-
-    lsi_load = LineSearchIteration(path=path0)
-    # The last iteration was not written
-    assert len(lsi_load) == 2
-    for i in range(len(lsi_load)):
-        assert match_to_tol(lsi_load[i].structure.params, lsi[i].structure.params)
-    # end for
 
     # Test default init from surrogate
     srg = Surrogate(
         fit_kind='pf3',
+        path=str(tmp_path) + '/srg0',
         hessian=hessian,
         structure=structure,
     )
@@ -78,7 +71,10 @@ def test_linesearchiteration(tmp_path):
         windows=windows,
         noises=noises
     )
-    lsi_srg = LineSearchIteration(surrogate=srg)
+    lsi_srg = LineSearchIteration(
+        path=str(tmp_path) + '/lsi_srg',
+        surrogate=srg
+    )
     # Not the same object but same values
     assert lsi_srg[-1].structure is not srg.structure
     assert match_to_tol(lsi_srg[-1].structure.params, srg.structure.params)

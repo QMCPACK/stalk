@@ -12,6 +12,7 @@ from stalk.ls.polynomial_result import PolynomialResult
 
 class PolynomialFit(FittingFunction):
     _n = None
+    _result_class = PolynomialResult
 
     def __init__(self, n):
         self.n = n
@@ -60,7 +61,7 @@ class PolynomialFit(FittingFunction):
         # end if
         y0 = y_mins[imin]
         x0 = x_mins[imin]
-        res = PolynomialResult(x0, y0, fit=pf)
+        res = self._result_class(x0, y0, fit=pf)
         res.boundary = boundary
         return res
     # end def

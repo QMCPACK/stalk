@@ -15,6 +15,7 @@ from stalk.util import get_fraction_error
 class FittingFunction():
     func = None
     args = {}
+    _result_class = FittingResult
 
     def __init__(
         self,
@@ -125,7 +126,7 @@ class FittingFunction():
 
     def _eval_function(self, offsets, values) -> FittingResult:
         x0, y0, fit = self.func(offsets, values, **self.args)
-        return FittingResult(x0, y0, fit=fit)
+        return self._result_class(x0, y0, fit=fit)
     # end def
 
     def __eq__(self, other):

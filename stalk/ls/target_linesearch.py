@@ -327,16 +327,18 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
         # M=None, N=None, bias_mix=0.0, bias_order=1
     ):
         if not self.valid_target:
-            logger.log("Must have valid target data before setup.", level=1)
+            logger.log(f"tls{self.d}: Must have valid target data before setup.", level=1)
         # end if
         # Create new settings. If they do not match the previous ones (checked in setter):
         # -> clear E_mat and regenerate Gs and regenerate the error surface
         target_settings = self.target_settings.copy(**ls_overrides)
         if target_settings != self.target_settings:
+            logger.log(f"tls{self.d}: Updated target settings", level=2)
             self.target_settings = target_settings
         # end if
         # Make sure error surface is generated
         if not self.resampled:
+            logger.log(f"tls{self.d}: Created new target settings and G-vectors", level=2)
             self.generate_error_surface(
                 W_num=W_num,
                 W_max=W_max,
@@ -364,19 +366,19 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
         logger=StalkLogger(log_level=2),
     ):
         if not self.valid_target:
-            logger.log_and_raise("Must have valid target data before generating error.")
+            logger.log_and_raise(f"tls{self.d}: Must have valid target data before generating error.")
         elif not self.setup:
-            logger.log_and_raise("Must setup target line-search before generating error.")
+            logger.log_and_raise(f"tls{self.d}: Must setup target line-search before generating error.")
         # end if
         if W_resolution >= 0.5 or W_resolution <= 0.0:
             logger.log_and_raise(
-                'W resolution must be 0.0 < W_resolution < 0.5',
+                f'tls{self.d}: W resolution must be 0.0 < W_resolution < 0.5',
                 ValueError
             )
         # end if
         if S_resolution >= 0.5 or S_resolution <= 0.0:
             logger.log_and_raise(
-                'S resolution must be 0.0 < S_resolution < 0.5',
+                f'tls{self.d}: S resolution must be 0.0 < S_resolution < 0.5',
                 ValueError
             )
         # end if
@@ -385,10 +387,10 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
         sigma_max = sigma_max if sigma_max is not None else W_max * noise_frac
 
         if W_max <= 0.0:
-            logger.log_and_raise('Must provide W_max > 0', ValueError)
+            logger.log_and_raise(f'tls{self.d}: Must provide W_max > 0', ValueError)
         # end if
         if sigma_max <= 0.0:
-            logger.log_and_raise('Must provide sigma_max > 0', ValueError)
+            logger.log_and_raise(f'tls{self.d}: Must provide sigma_max > 0', ValueError)
         # end if
 
         # Initial W and sigma grids
@@ -420,7 +422,7 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
     ):
         if not (self.resampled and isscalar(sigma) and sigma > 0):
             logger.log_and_raise(
-                'Must have resampled data and scalar sigma > 0',
+                f'tls{self.d}: Must have resampled data and scalar sigma > 0',
                 AssertionError
             )
         # end if
@@ -435,7 +437,7 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
     ):
         if not (self.resampled and isscalar(W) and W > 0 and W <= self.W_max):
             logger.log_and_raise(
-                f'Must have resampled data and scalar 0 < W <= W_max, W_max={self.W_max}',
+                f'tls{self.d}: Must have resampled data and scalar 0 < W <= W_max, W_max={self.W_max}',
                 AssertionError
             )
         # end if
@@ -543,9 +545,9 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
     def __str__(self):
         string = LineSearch.__str__(self)
         if self.optimized:
-            string += '\n  W_opt: ' + FF.format(self.W_opt)
-            string += '\n  sigma_opt: ' + FF.format(self.sigma_opt)
-            string += '\n  epsilon: ' + FF.format(self.epsilon)
+            string += f'\n  W_opt: {self.W_opt}'
+            string += f'\n  sigma_opt: {self.sigma_opt}'
+            string += f'\n  epsilon: {self.epsilon}'
         return string
     # end def
 

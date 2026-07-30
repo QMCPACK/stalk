@@ -412,6 +412,10 @@ class PesFunction(FunctionCaller):
         return var_eff_map
     # end def
 
+    def __call__(self, structure: ParameterSet, **kwargs) -> None:
+        self.evaluate(structure, **kwargs)
+    # end def
+
 # end class
 
 
