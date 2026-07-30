@@ -70,24 +70,28 @@ class TxtData:
     def load_result(
         self,
         filename: Path | str,
-        default: list | ndarray = None,
+        default: list | ndarray | None | FileNotFoundError = FileNotFoundError(),
         rescale=True,
         **kwargs
     ) -> ndarray:
         filename = self.get_filename(filename)
         if filename.exists():
-            data = loadtxt(filename, ndmin=1, **kwargs)
+            data = loadtxt(filename, **kwargs)
+            if data.ndim == 0:
+                data = float(data)  # convert 0D array to float
+            # end if
             # Normally rescale the data by the scale factor, but if rescale is False, return the raw data
             if rescale:
                 data /= self.scale
             # end if
         else:
-            if default is None:
+            if isinstance(default, FileNotFoundError):
                 # If no default is given, raise an error if the file is missing
                 raise FileNotFoundError(f"Could not find {filename}")
             else:
                 data = default
             # end if
+        # end if
         return data
     # end def
 
