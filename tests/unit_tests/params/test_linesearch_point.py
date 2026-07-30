@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-from pytest import raises
-
-from stalk.params.linesearch_point import LineSearchPoint
-
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
+
+from pytest import raises
+
+from stalk.params.linesearch_point import LineSearchPoint
 
 
 # Test LineSearchPoint class

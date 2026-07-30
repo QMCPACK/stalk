@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 import io
 import sys
 from numpy import inf, pi
@@ -9,10 +13,6 @@ from stalk.params import Parameter
 from stalk.params import BondLength
 from stalk.params.parameter import BondAngle, ParameterLimitException, PhaseAngle
 from stalk.util.util import match_to_tol
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # Test Parameter class

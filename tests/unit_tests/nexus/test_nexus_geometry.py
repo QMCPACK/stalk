@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from pytest import raises, warns
 
 from stalk.nexus.nexus_geometry import NexusGeometry
@@ -9,11 +13,6 @@ from stalk.util.util import match_to_tol
 from ..assets.test_jobs import nxs_generic_pes, TestGeometryLoader
 from ..assets.h2o import pos_H2O, elem_H2O
 from ..assets.diamond import pos_diamond, elem_diamond, axes_diamond
-
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 def test_NexusGeometry(tmp_path):

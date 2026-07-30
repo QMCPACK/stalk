@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-from numpy import array
-from stalk.util import match_to_tol
-
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
+
+from numpy import array
+from stalk.util import match_to_tol
 
 
 def test_parameter_tools():

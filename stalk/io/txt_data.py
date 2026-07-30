@@ -1,11 +1,11 @@
 #!/usr/bin env python3
 
-from pathlib import Path
-from numpy import ndarray, loadtxt, array, isscalar, savetxt, nan
-
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
+
+from pathlib import Path
+from numpy import ndarray, loadtxt, array, isscalar, savetxt, nan
 
 
 # TxtResult is a base class that contains suffix information and loading functionality for

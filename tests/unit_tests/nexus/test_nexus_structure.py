@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from nexus import Structure
 from stalk.nexus.nexus_structure import NexusStructure
 from stalk.params.parameter_structure import ParameterStructure
 
 from ..assets.h2o import backward_H2O, elem_H2O, forward_H2O, pos_H2O
 from ..assets.test_jobs import DummySimulation
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # Test NexusStructure class

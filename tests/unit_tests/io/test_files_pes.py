@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from numpy import savetxt
 
 from stalk.io.files_pes import FilesPes
@@ -8,10 +12,6 @@ from stalk.io.xyz_geometry import XyzGeometry
 from stalk.io.files_pes import write_xyz_sigma
 from stalk.util.util import match_to_tol
 from tests.unit_tests.assets.h2o import get_structure_H2O
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 def test_FilesPes(tmp_path):

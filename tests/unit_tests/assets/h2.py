@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from numpy import array
 from stalk import ParameterStructure
 from stalk import ParameterHessian
@@ -14,13 +18,13 @@ pos_H2 = array('''
 elem_H2 = 'H H'.split()
 
 
-def forward_H2(pos, fwd = None):
+def forward_H2(pos, fwd=None):
     r = distance(pos[0], pos[1])
     return [r]
 # end def
 
 
-def backward_H2(params, bck = None):
+def backward_H2(params, bck=None):
     H1 = params[0] * array([0.0, 0.0, 0.5])
     H2 = params[0] * array([0.0, 0.0, -0.5])
     return array([H1, H2])

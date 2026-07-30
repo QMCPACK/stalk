@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 import warnings
 from numpy import array, isnan, linspace, where
 from pytest import raises
@@ -11,10 +15,6 @@ from stalk import TargetLineSearch
 
 from ..assets.h2o import get_structure_H2O, get_hessian_H2O, pes_H2O
 from ..assets.helper import Gs_N200_M7
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # test TargetLineSearch class

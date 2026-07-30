@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from numpy import abs
 
 from pytest import raises
 from stalk.ls.error_surface import ErrorSurface
 from stalk.util.util import match_to_tol
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # test ErrorSurface class

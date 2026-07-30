@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from pytest import raises
 
 from stalk.params.pes_function import NotEvaluatedException
 from stalk.params.pes_result import PesResult
 from stalk.io.pes_loader import PesLoader
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # Test PesLoader class

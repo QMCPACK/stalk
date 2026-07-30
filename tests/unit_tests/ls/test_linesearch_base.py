@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from stalk.ls import PolynomialFit
 from stalk.ls.fitting_result import FittingResult
 from stalk.ls.linesearch_base import LineSearchBase
 from stalk.util.util import match_to_tol
 
 from ..assets.fitting_pf2 import generate_exact_pf2
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # Test LineSearchBase class

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from pytest import raises
 
 from stalk.params.pes_function import NotEvaluatedException
@@ -10,10 +14,6 @@ from stalk import EffectiveVarianceMap
 
 from ..assets.test_jobs import nxs_generic_pes, TestLoader
 from ..assets.h2o import pes_H2O, pos_H2O, elem_H2O, forward_H2O
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 def test_NexusPes(tmp_path):

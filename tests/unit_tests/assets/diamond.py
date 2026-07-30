@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-from numpy import array
-
-from .helper import morse
-
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
+
+from numpy import array
+
+from .helper import morse
 
 
 # test diamond

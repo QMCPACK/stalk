@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from stalk.util import match_to_tol
 from stalk.params import ParameterMapping
 
 from ..assets.h2 import pos_H2, forward_H2, backward_H2
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # Test ParameterMapping class

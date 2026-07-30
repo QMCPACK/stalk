@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 # Manual test to inspect printing of object properties
 
 from matplotlib import pyplot as plt

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-from pytest import raises
-from stalk.params.pes_result import PesResult
-
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
+
+from pytest import raises
+from stalk.params.pes_result import PesResult
 
 
 def test_PesResult():

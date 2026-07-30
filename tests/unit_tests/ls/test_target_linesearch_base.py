@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from numpy import isnan, linspace, random
 from scipy.interpolate import PchipInterpolator
 from pytest import raises
@@ -11,10 +15,6 @@ from stalk.util import match_to_tol
 from stalk.ls import TargetLineSearchBase
 
 from ..assets.fitting_pf2 import generate_exact_pf2, generate_exact_pf3
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # test TargetLineSearchBase class

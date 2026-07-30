@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from numpy import array, ones, random
 from pytest import raises
 
 from stalk.util import match_to_tol, get_fraction_error
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 def test_units():

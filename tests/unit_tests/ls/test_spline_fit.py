@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from pytest import raises
 
 from stalk.ls.spline_fit import SplineFit
@@ -7,10 +11,6 @@ from stalk.ls.spline_result import SplineResult
 from stalk.util.util import match_to_tol
 
 from ..assets.fitting_pf2 import generate_exact_pf2
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # Test SplineFit class

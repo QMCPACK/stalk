@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from numpy import linspace
 from scipy.interpolate import CubicSpline
 
 from stalk.ls.spline_result import SplineResult
 from stalk.util.util import match_to_tol
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # Test PolynomialResult class

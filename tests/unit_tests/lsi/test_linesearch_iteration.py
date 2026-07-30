@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from pytest import raises
 from stalk.params.pes_function import PesFunction
 from stalk.pls.surrogate import Surrogate
@@ -8,10 +12,6 @@ from stalk.util import match_to_tol
 from stalk.lsi import LineSearchIteration
 
 from ..assets.h2o import get_structure_H2O, get_hessian_H2O, pes_H2O
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # test LineSearchIteration class

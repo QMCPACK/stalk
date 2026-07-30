@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from pytest import raises, warns
 from numpy import linalg, where
 
@@ -8,10 +12,6 @@ from stalk.params.parameter_hessian import ParameterHessian
 
 from stalk.util.util import match_to_tol
 from unit_tests.assets.h2o import hessian_H2O, get_structure_H2O, pes_H2O
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 def test_ParameterHessian():

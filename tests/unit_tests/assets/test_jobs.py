@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 import os
 import numpy as np
 from pathlib import Path

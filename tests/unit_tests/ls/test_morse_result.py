@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-from numpy import linspace
-from stalk.ls.morse_result import MorseResult
-from stalk.util.util import match_to_tol, morse
-
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
+
+from numpy import linspace
+from stalk.ls.morse_result import MorseResult
+from stalk.util.util import match_to_tol, morse
 
 
 # Test MorseResult class

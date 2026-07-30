@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from pytest import raises
 
 from stalk.ls.polynomial_fit import PolynomialFit
 from stalk.ls.fitting_function import FittingFunction
 from stalk.ls.ls_settings import LsSettings
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # Test LsSettings class

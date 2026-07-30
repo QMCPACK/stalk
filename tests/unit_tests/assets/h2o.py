@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from numpy import array, sin, cos, pi
 from numpy.random import randn
 
@@ -11,10 +15,6 @@ from stalk.nexus.nexus_structure import NexusStructure
 from stalk.params import PesFunction
 from stalk.params.pes_result import PesResult
 from .helper import harmonic_a, morse, mean_distances, bond_angle
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # test H2O molecule

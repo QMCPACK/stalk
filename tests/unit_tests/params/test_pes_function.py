@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-from stalk.params.parameter_set import ParameterSet
-from stalk.params.pes_function import PesFunction
-from stalk.util.util import match_to_tol
-
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
+
+from stalk.params.parameter_set import ParameterSet
+from stalk.params.pes_function import PesFunction
+from stalk.util.util import match_to_tol
 
 
 def test_PesFunction():

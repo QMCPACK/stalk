@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 
-from numpy import array, pi, exp, linalg, dot, arccos
-
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
+
+from numpy import array, pi, exp, linalg, dot, arccos
 
 
 def harmonic_a(p, a):

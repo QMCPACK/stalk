@@ -1,10 +1,10 @@
 #!/usr/bin env python3
 
-from pathlib import Path
-
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
+
+from pathlib import Path
 
 
 class StalkLogger:

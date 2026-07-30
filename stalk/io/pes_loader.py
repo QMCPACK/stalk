@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from stalk.io.txt_data import TxtData
 from stalk.params.pes_function import NotEvaluatedException
 from stalk.params.pes_result import PesResult
 from stalk.util.args_container import ArgsContainer
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 class PesLoader(ArgsContainer, TxtData):

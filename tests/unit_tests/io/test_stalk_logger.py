@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-from stalk.io.stalk_logger import StalkLogger
-
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
+
+from stalk.io.stalk_logger import StalkLogger
 
 
 def test_StalkLogger(tmp_path):

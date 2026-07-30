@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from numpy import array
 from pytest import raises
 
@@ -9,10 +13,6 @@ from stalk.nexus.nexus_structure import NexusStructure
 from stalk.params.parameter_structure import ParameterStructure
 from stalk.util.util import match_to_tol
 from ..assets.gese import pos_GeSe, axes_GeSe, elem_GeSe
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 def test_XsfGeometry(tmp_path):

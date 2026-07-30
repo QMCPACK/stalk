@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-from pytest import raises
-from stalk.ls.fitting_result import FittingResult
-
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
+
+from pytest import raises
+from stalk.ls.fitting_result import FittingResult
 
 
 # Test FittingResult class

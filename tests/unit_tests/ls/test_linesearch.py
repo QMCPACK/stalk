@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from pytest import raises
 from numpy import linspace
 
@@ -8,10 +12,6 @@ from stalk.params.linesearch_point import LineSearchPoint
 from stalk.params.parameter_structure import ParameterStructure
 from stalk.util import match_to_tol
 from ..assets.h2o import get_structure_H2O, get_hessian_H2O
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # test LineSearch class

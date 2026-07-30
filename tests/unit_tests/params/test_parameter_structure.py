@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from pytest import raises
 from numpy import array
 
@@ -10,10 +14,6 @@ from stalk.util.function_caller import FunctionCaller
 
 from ..assets.h2 import backward_H2_alt, forward_H2_alt, pos_H2, forward_H2, backward_H2, elem_H2
 from ..assets.gese import params_GeSe, forward_GeSe, backward_GeSe, elem_GeSe, pos_GeSe, axes_GeSe
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # Test ParameterStructure class

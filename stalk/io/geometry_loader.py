@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from stalk.io.txt_data import TxtData
 from stalk.params.geometry_result import GeometryResult
 from stalk.params.parameter_set import ParameterSet
 from stalk.util.args_container import ArgsContainer
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 class GeometryLoader(ArgsContainer, TxtData):

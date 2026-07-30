@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from numpy import loadtxt, array
 from pytest import raises
 from stalk.io.xyz_geometry import XyzGeometry
@@ -8,10 +12,6 @@ from stalk.params.parameter_structure import ParameterStructure
 from stalk.util.util import match_to_tol
 from stalk.util import Bohr
 from ..assets.h2o import pos_H2O, elem_H2O
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 def test_XyzGeometry(tmp_path):

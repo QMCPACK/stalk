@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 import sys
 import numpy as np
 
@@ -9,10 +13,6 @@ from stalk import ParameterStructure
 from unit_tests.assets.test_jobs import efilename, xyzfilename, axesfilename
 from unit_tests.assets.h2o import pes_H2O, pos_H2O, elem_H2O
 from unit_tests.assets.diamond import pos_diamond, axes_diamond, elem_diamond, pes_diamond
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 if __name__ == '__main__':

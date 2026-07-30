@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+__author__ = "Juha Tiihonen"
+__email__ = "tiihonen@iki.fi"
+__license__ = "BSD-3-Clause"
+
 from pytest import raises, warns
 from numpy import linspace
 import warnings
@@ -9,10 +13,6 @@ from stalk.ls import PolynomialFit
 from stalk.ls.fitting_function import FittingFunction
 from stalk.ls.tls_settings import TlsSettings
 from stalk.util.util import match_to_tol
-
-__author__ = "Juha Tiihonen"
-__email__ = "tiihonen@iki.fi"
-__license__ = "BSD-3-Clause"
 
 
 # Test TlsSettings class
