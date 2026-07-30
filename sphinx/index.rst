@@ -16,7 +16,9 @@ Surrogate Hessian accelerated parallel line-search method.
    theory.rst
    tutorial/index.rst
    examples/index.rst
-   api/index.rst
+   api.rst
+   stalk_overview.rst
+   developer_guide.rst
 
 Indices and tables
 ==================
