@@ -59,8 +59,14 @@ class GeometryLoader(ArgsContainer, TxtData):
                 raise TypeError('The relax_func must be PesFunction or callable and write the geometry result file to the same path')
             # end if
             relax_func(structure.copy(), path=path, **kwargs)
-            # Then, try to load again
-            res = self.load(path)
+            try:
+                # Then, try to load again
+                res = self.load(path)
+            except FileNotFoundError:
+                msg = f'Failed to load or relax geometry at {path}.'
+                msg += ' Ensure that the relax_func writes the geometry result file to the same path.'
+                raise FileNotFoundError(msg)
+            # end try
         # end try
         return structure.copy(pos=res.pos, axes=res.axes, label=label)
     # end def

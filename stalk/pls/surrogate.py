@@ -177,7 +177,7 @@ class Surrogate(ParallelLineSearch):
     # end def
 
     @logger.setter
-    def logger(self, logger):
+    def logger(self, logger) -> None:
         if isinstance(logger, StalkLogger):
             self._logger = logger
         elif logger is None:
@@ -198,6 +198,7 @@ class Surrogate(ParallelLineSearch):
         hessian=None,
         targets=None,
         interpolate_kind='cubic',
+        logger=None,
         **pls_args
         # windows=None, window_frac=0.25, noises=None,
         # M=7, fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
@@ -210,6 +211,7 @@ class Surrogate(ParallelLineSearch):
             interpolate_kind=interpolate_kind,
             **pls_args
         )
+        self.logger = logger
         if targets is not None:
             self.x_targets = targets
         # end if

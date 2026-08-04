@@ -106,7 +106,9 @@ class FilesPes(PesFunction):
             # Nothing to do here but update the var_eff_map if needed
             self._update_var_eff_map(structure, var_eff_map=var_eff_map)
         except NotEvaluatedException:
-            print(f'Structure {structure.label} has not been evaluated. Supply output file to disk to continue.')
+            msg = f'Structure {structure.path}/{structure.label} has not been evaluated. '
+            msg += 'Supply output file to disk to continue.'
+            print(msg)
         # end try
     # end def
 

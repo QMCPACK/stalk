@@ -366,6 +366,7 @@ class PesFunction(FunctionCaller):
         p0 = structure.params
         res = minimize(relax_aux, p0, **kwargs)
         structure.params = res.x
+        structure.value = relax_aux(res.x)
         self.create_files = create_files  # Restore the original setting
     # end def
 
