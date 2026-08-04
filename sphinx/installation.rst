@@ -9,11 +9,10 @@ First, install the following requirements
 - NumPy (2.0.1)
 - SciPy (1.14.1)
 - Matplotlib (3.9.2)
-- dill (0.3.9)
 
 ::
 
-    pip install numpy scipy matploblit dill
+    pip install numpy scipy matploblit
 
 Optional
 ~~~~~~~~
