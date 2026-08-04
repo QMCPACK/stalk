@@ -224,6 +224,7 @@ class Surrogate(ParallelLineSearch):
             tls.Gs = tls_load.Gs
             tls.W_opt = tls_load.W_opt
             tls.sigma_opt = tls_load.sigma_opt
+            tls.epsilon = tls_load.epsilon
             tls._error_surface = tls_load.error_surface
         # end for
     # end def
@@ -250,6 +251,9 @@ class Surrogate(ParallelLineSearch):
         self.logger = logger
         if self.optimized and not reoptimize:
             print('Already optimized, use reoptimize = True to force reoptimization.')
+            # Reconstruct epsilon/error data
+            self.epsilon_p = epsilon_p
+            self._finalize_optimization(overwrite=False)
             return
         # end if
         if self.logger.filename is not None:

@@ -23,6 +23,8 @@ class OptimizerData():
     W_opt_file: TxtData = None
     # Data file for the optimal target errorbar
     sigma_opt_file: TxtData = None
+    # Data file for the epsilon_d
+    epsilon_file: TxtData = None
 
     def __init__(
         self,
@@ -35,6 +37,7 @@ class OptimizerData():
         self.es_ymesh_file = TxtData(f'{label}_es_Y.dat')
         self.W_opt_file = TxtData(f'{label}_W_opt.dat')
         self.sigma_opt_file = TxtData(f'{label}_sigma_opt.dat')
+        self.epsilon_file = TxtData(f'{label}_epsilon.dat')
     # end def
 
     def save(
@@ -50,6 +53,9 @@ class OptimizerData():
         if tls.W_opt is not None and tls.sigma_opt is not None:
             self.W_opt_file.save_result(path, tls.W_opt, overwrite=overwrite)
             self.sigma_opt_file.save_result(path, tls.sigma_opt, overwrite=overwrite)
+            if tls.epsilon is not None:
+                self.epsilon_file.save_result(path, tls.epsilon, overwrite=overwrite)
+            # end if
         # end if
     # end def
 
@@ -68,6 +74,7 @@ class OptimizerData():
             error_surface._X_mat = self.es_xmesh_file.load_result(path)
             error_surface._Y_mat = self.es_ymesh_file.load_result(path)
             result._error_surface = error_surface
+            result.epsilon = self.epsilon_file.load_result(path, None)
         except FileNotFoundError:
             pass
         # end try

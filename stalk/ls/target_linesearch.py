@@ -13,7 +13,6 @@ from stalk.io.stalk_logger import StalkLogger
 from stalk.ls.error_surface import ErrorSurface
 from stalk.ls.linesearch_grid import LineSearchGrid
 from stalk.ls.tls_settings import TlsSettings
-from stalk.util.util import FF
 from .linesearch import LineSearch
 from .target_linesearch_base import TargetLineSearchBase
 
@@ -517,7 +516,7 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
         # end if
         if ax is None:
             f, ax = self._create_plot(xlabel='Grid extent W', ylabel='Input noise')
-            ax.set_title(f'Error surface: {repr(self)}, epsilon={FF.format(self.epsilon)}')
+            ax.set_title(f'Error surface: {repr(self)}, epsilon={self.epsilon:.3e}')
         # end if
         T = self.error_surface.T_mat
         X = self.error_surface.X_mat
@@ -545,9 +544,9 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
     def __str__(self):
         string = LineSearch.__str__(self)
         if self.optimized:
-            string += f'\n  W_opt: {self.W_opt}'
-            string += f'\n  sigma_opt: {self.sigma_opt}'
-            string += f'\n  epsilon: {self.epsilon}'
+            string += f'\n  W_opt: {self.W_opt:.4e}'
+            string += f'\n  sigma_opt: {self.sigma_opt:.4e}'
+            string += f'\n  epsilon: {self.epsilon:.4e}'
         return string
     # end def
 
