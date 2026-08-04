@@ -80,10 +80,10 @@ class Surrogate(ParallelLineSearch):
 
     @epsilon_p.setter
     def epsilon_p(self, epsilon_p):
-        if epsilon_p is None or len(epsilon_p) == len(self):
+        if epsilon_p is None or len(epsilon_p) == len(self.hessian):
             self._epsilon_p = epsilon_p
         else:
-            raise TypeError(f'epsilon_p must be None or len(self) sized array, provided {epsilon_p}')
+            raise TypeError(f'epsilon_p must be None or len(self.hessian) sized array, provided {epsilon_p}')
         # end if
     # end def
 
@@ -98,10 +98,10 @@ class Surrogate(ParallelLineSearch):
 
     @error_p.setter
     def error_p(self, error_p):
-        if error_p is None or len(error_p) == len(self):
+        if error_p is None or len(error_p) == len(self.hessian):
             self._error_p = error_p
         else:
-            raise TypeError(f'error_p must be None or len(self) sized array, provided {error_p}')
+            raise TypeError(f'error_p must be None or len(self.hessian) sized array, provided {error_p}')
         # end if
     # end def
 

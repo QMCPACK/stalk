@@ -199,9 +199,7 @@ class ParallelLineSearch():
         if windows is None:
             windows = abs(self.Lambdas)**0.5 * window_frac
         # end if
-        if noises is None:
-            noises = self.D * [0.0]
-        # end if
+        noises = self._for_all_ls(noises, default=0.0)
         self._reset_ls_list(windows, noises, **ls_args)
     # end def
 
@@ -213,9 +211,7 @@ class ParallelLineSearch():
         **ls_args,
         # fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
     ) -> None:
-        if isinstance(M, int):
-            M = len(self.hessian) * [M]
-        # end if
+        M = self._for_all_ls(M)
         ls_list = []
         for d, window, noise in zip(self.D_list, windows, noises):
             # Only add if enabled by the Hessian
@@ -469,6 +465,30 @@ class ParallelLineSearch():
         for ls in self.ls_list:
             ls.plot(**kwargs)
         # end for
+    # end def
+
+    def _for_all_ls(self, data, default=None):
+        if isinstance(data, list):
+            if len(data) == len(self.hessian):
+                return data
+            elif len(data) == len(self.D_list):
+                result = []
+                for d in range(len(self.hessian)):
+                    if d in self.D_list:
+                        result.append(data.pop(0))
+                    else:
+                        result.append(default)
+                    # end if
+                # end for
+                return result
+            else:
+                raise ValueError("Data must be a list of length equal to the number of line-searches or enabled directions")
+            # end if
+        elif data is None:
+            return len(self.hessian) * [default]
+        else:
+            return len(self.hessian) * [data]
+        # end if
     # end def
 
     def __str__(self):
