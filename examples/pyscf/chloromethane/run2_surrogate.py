@@ -8,11 +8,9 @@ from params import pes_pbe
 from run1_hessian import hessian
 
 
-surrogate_file = 'surrogate.p'
 surrogate = Surrogate(
     path='surrogate/',
     fit_kind='pf3',
-    load=surrogate_file,
     structure=hessian.structure,
     hessian=hessian,
     pes=pes_pbe,
@@ -28,11 +26,9 @@ surrogate.optimize(
     M=7,
     N=400,
     reoptimize=False,
-    write=surrogate_file,
 )
 
 if __name__ == "__main__":
-    print(surrogate)
     surrogate.plot()
     plt.legend()
     plt.show()

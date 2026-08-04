@@ -30,7 +30,7 @@ var_eff_map = EffectiveVarianceMap(structure_qmc, var_eff5 + var_eff10)
 dmc_ls = LineSearch(**surrogate.to_settings())
 dmc_ls.evaluate(
     pes_dmc,
-    path='dmc_ls',
+    path='dmc/lsi',
     dep_jobs=structure_qmc.jobs,
     interactive=interactive,
     var_eff_map=var_eff_map,

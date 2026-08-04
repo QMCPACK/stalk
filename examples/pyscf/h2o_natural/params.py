@@ -79,7 +79,6 @@ def relax_pyscf(structure: ParameterStructure, outfile='relax.xyz', xc='pbe'):
 
 
 def pes_pyscf(structure: ParameterStructure, xc='pbe', **kwargs):
-    print(f'Computing: {structure.label} ({xc})')
     mf = kernel_pyscf(structure=structure)
     mf.xc = xc
     e_scf = mf.kernel()

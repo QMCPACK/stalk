@@ -25,7 +25,7 @@ structure_init = ParameterStructure(
 
 xyz = XyzGeometry(suffix='relax.xyz', scale=Bohr)
 structure_relax = xyz.load_or_relax(
-    path='./',
+    path='relax',
     relax_func=relax_pyscf,
     structure=structure_init
 )

@@ -8,8 +8,7 @@ from ase import io
 
 from stalk import interpolate_params
 from params import neb_image, pes_pbe
-from run0_relax_a import structure_relax as structure_a
-from run0_relax_b import structure_relax as structure_b
+from run0_relax import structure_a, structure_b
 
 
 # Generate base directory for NEB

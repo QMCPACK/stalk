@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from numpy import sin, cos, ndarray
+from os import makedirs
 
 from pyscf import dft
 from pyscf import gto
@@ -96,7 +97,6 @@ def kernel_pyscf(
 
 def relax_pyscf(
     structure: ParameterStructure,
-    outfile='relax.xyz',
     xc='pbe',
     basis='ccecpccpvdz',
     ecp='ccecp',
@@ -112,7 +112,10 @@ def relax_pyscf(
     mf.kernel()
     mol_eq = optimize(mf, maxsteps=100, constraints='nh3_constraints.txt')
     # Write to external file
-    tofile(mol_eq, outfile, format='xyz')
+    makedirs(structure.path, exist_ok=True)
+    tofile(mol_eq, f'{structure.path}/relax.xyz', format='xyz')
+    e_scf = mf.e_tot
+    return e_scf, 0.0
 # end def
 
 
@@ -123,7 +126,6 @@ def pes_pyscf(
     ecp='ccecp',
     **kwargs
 ):
-    print(f'Computing: {structure.label} xc={xc} @ {basis}-{ecp}')
     mf = kernel_pyscf(
         structure.pos,
         structure.elem,
@@ -136,10 +138,16 @@ def pes_pyscf(
 # end def
 
 
-pes_pbe = PesFunction(pes_pyscf, xc='pbe', basis='ccecpccpvdz', ecp='ccecp')
-pes_lda = PesFunction(pes_pyscf, xc='lda', basis='ccecpccpvdz', ecp='ccecp')
+# PBE PES
+pes_pbe = PesFunction(pes_pyscf, create_files=True, xc='pbe', basis='ccecpccpvdz', ecp='ccecp')
+relax_pbe = PesFunction(relax_pyscf, create_files=True, xc='pbe', basis='ccecpccpvdz', ecp='ccecp')
+# LDA PES
+pes_lda = PesFunction(pes_pyscf, create_files=True, xc='lda', basis='ccecpccpvdz', ecp='ccecp')
+relax_lda = PesFunction(relax_pyscf, create_files=True, xc='lda', basis='ccecpccpvdz', ecp='ccecp')
 
 
+# To run a NEB calculation with ASE, we need to define a calculator that can compute
+# energies and forces. Here we define a simple wrapper around the PySCF calculations.
 class PySCF(Calculator):
     implemented_properties = ['energy', 'forces']
     pes_args = {}

@@ -14,13 +14,12 @@ shifted_structure.shift_params([0.1, -0.1, 0.1])
 srg_ls = LineSearchIteration(
     surrogate=surrogate,
     structure=shifted_structure,
-    path='srg_ls',
-    pes=pes_pbe,
+    path='lsi',
 )
 # Propagate the parallel line-search (compute values, analyze, then move on) 4 times
 #   add_sigma = True means that target errorbars are used to simulate random noise
 for i in range(4):
-    srg_ls.propagate(i, add_sigma=True)
+    srg_ls.propagate(pes_pbe, i, add_sigma=True)
 # end for
 # Evaluate the latest eqm structure
 srg_ls.pls().evaluate_eqm(add_sigma=True)

@@ -8,11 +8,9 @@ from params import pes_xyz
 from run1_hessian import hessian
 
 
-surrogate_file = 'surrogate.p'
 surrogate = Surrogate(
     path='surrogate/',
     fit_kind='pf3',
-    load=surrogate_file,
     structure=hessian.structure,
     hessian=hessian,
     window_frac=0.2,
@@ -27,7 +25,6 @@ surrogate.optimize(
     M=7,
     N=400,
     reoptimize=False,
-    write=surrogate_file,
 )
 
 if __name__ == "__main__":

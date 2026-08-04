@@ -9,11 +9,9 @@ from run1_hessian import hessian
 
 interactive = __name__ == "__main__"
 
-surrogate_file = 'surrogate.p'
 surrogate = Surrogate(
     path='surrogate/',
     fit_kind='pf3',
-    load=surrogate_file,
     structure=hessian.structure,
     hessian=hessian,
     window_frac=0.3,  # maximum displacement relative to Lambda of each direction
@@ -28,7 +26,6 @@ surrogate.optimize(
     M=7,
     N=500,
     reoptimize=False,
-    write=surrogate_file,
 )
 
 if interactive:

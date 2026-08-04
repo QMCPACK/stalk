@@ -65,10 +65,8 @@ print('Hessian:')
 print(hessian)
 
 
-# Create, or try to load from disk, a Surrogate object
-srg_file = 'surrogate.p'
+# Create a surrogate
 surrogate = Surrogate(
-    load=srg_file,
     fit_kind='pf3',
     path=base_dir + 'surrogate',
     structure=p_relax,
@@ -86,7 +84,6 @@ surrogate.optimize(
     M=7,
     N=500,
     reoptimize=False,
-    write=srg_file,
     logger=StalkLogger(3, 'optimizer.log')
 )
 

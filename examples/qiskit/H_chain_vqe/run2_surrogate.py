@@ -13,17 +13,14 @@ interactive = __name__ == '__main__'
 # Step 2: generate a surrogate model of the parallel line-search by
 # supplying the relaxed structure and its Hessian, and characterizing the
 # PES along the conjugate directions
-surrogate_file = 'surrogate.p'
 surrogate = Surrogate(
     path=f'{directory}surrogate/',
     fit_kind='pf3',
-    load=surrogate_file,
     hessian=hessian,
     window_frac=1.0,  # maximum displacement relative to Lambda of each direction
     M=11  # number of points per direction to sample
 )
 surrogate.evaluate(vqe_pes, interactive=interactive)
-surrogate.write_to_disk(surrogate_file)
 
 # Optimize the model such that the parameters can be resolved to accuracy
 #   epsilon_p < |bias| + uncertainty
@@ -35,7 +32,6 @@ surrogate.optimize(
     N=200,  # correlated error resampling population
     bias_order=1,  # treat "bias-induced" bias
     reoptimize=False,
-    write=surrogate_file,  # Write to disk after optimization
     overwrite=True,
 )
 

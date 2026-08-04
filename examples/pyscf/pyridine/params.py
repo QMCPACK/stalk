@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from numpy import array, ndarray
+from os import makedirs
 
 from pyscf import dft
 from pyscf import gto
@@ -109,7 +110,7 @@ def backward(params: ndarray) -> ndarray:
 # end def
 
 
-def kernel_pyscf(structure: ParameterStructure):
+def kernel_pyscf(structure: ParameterStructure, **kwargs):
     atom = []
     for el, pos in zip(structure.elem, structure.pos):
         atom.append([el, tuple(pos)])
@@ -132,18 +133,19 @@ def kernel_pyscf(structure: ParameterStructure):
 # end def
 
 
-def relax_pyscf(structure: ParameterStructure, outfile='relax.xyz'):
-    mf = kernel_pyscf(structure=structure)
+def relax_pyscf(structure: ParameterStructure, **kwargs):
+    mf = kernel_pyscf(structure=structure, **kwargs)
     mf.kernel()
     mol_eq = optimize(mf, maxsteps=100)
     # Write to external file
-    tofile(mol_eq, outfile, format='xyz')
+    makedirs(structure.path, exist_ok=True)
+    tofile(mol_eq, f'{structure.path}/relax.xyz', format='xyz')
+    return mf.e_tot, 0.0
 # end def
 
 
 def pes_pyscf(structure: ParameterStructure, **kwargs):
-    print(f'Computing: {structure.label}')
-    mf = kernel_pyscf(structure=structure)
+    mf = kernel_pyscf(structure=structure, **kwargs)
     e_scf = mf.kernel()
     return e_scf, 0.0
 # end def
