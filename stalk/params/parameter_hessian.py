@@ -299,7 +299,7 @@ class ParameterHessian():
         return dp_list, structure_list
     # end def
 
-    def load_hessian(self, path: str) -> bool:
+    def load(self, path: str) -> bool:
         params = self.params_file.load_result(path, False)
         hessian = self.hessian_file.load_result(path, False)
         if isinstance(params, ndarray) and isinstance(self.structure, ParameterSet):

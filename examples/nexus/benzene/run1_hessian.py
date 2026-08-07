@@ -8,7 +8,7 @@ from run0_relax import structure_relax
 interactive = __name__ == "__main__"
 hessian_dir = 'hessian/'
 hessian = ParameterHessian(structure=structure_relax)
-if not hessian.load_hessian(hessian_dir):
+if not hessian.load(hessian_dir):
     hessian.compute_fdiff(
         pes=pes_pyscf,
         path=hessian_dir,

@@ -106,7 +106,7 @@ class PathwayImage():
             structure_sub = ParameterSet(zeros(len(subspace)))
             hessian = ParameterHessian(structure=structure_sub)
         # end if
-        if not hessian.load_hessian(path):
+        if not hessian.load(path):
             hessian.compute_fdiff(pes=pes_comp, path=path, dp=0.01)
         # end if
         self._path = path
