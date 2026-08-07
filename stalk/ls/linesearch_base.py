@@ -6,7 +6,7 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 import warnings
-from numpy import linspace
+from numpy import linspace, isscalar
 from matplotlib import pyplot as plt
 from stalk.ls.fitting_result import FittingResult
 from stalk.ls.linesearch_grid import LineSearchGrid
@@ -17,6 +17,7 @@ from stalk.util.util import FF, FU
 
 class LineSearchBase(LineSearchGrid):
     _settings: LsSettings
+    _sigma = 0.0  # Target errorbar
     fit_res: FittingResult
 
     def __init__(
@@ -73,6 +74,20 @@ class LineSearchBase(LineSearchGrid):
     @property
     def y0_err(self):
         return None if self.fit_res is None else self.fit_res.y0_err
+    # end def
+
+    @property
+    def sigma(self):
+        return self._sigma
+    # end def
+
+    @sigma.setter
+    def sigma(self, sigma):
+        if isscalar(sigma) and sigma >= 0.0:
+            self._sigma = sigma
+        else:
+            raise ValueError("Sigma must be >= 0.0")
+        # end if
     # end def
 
     def evaluate(

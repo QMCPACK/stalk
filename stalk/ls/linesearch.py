@@ -7,7 +7,7 @@ __license__ = "BSD-3-Clause"
 
 import warnings
 from matplotlib import pyplot as plt
-from numpy import array, polyval, sign, isscalar
+from numpy import array, polyval, sign
 
 from stalk.ls.fitting_result import FittingResult
 from stalk.params.parameter_hessian import ParameterHessian
@@ -19,7 +19,6 @@ from stalk.util.util import FF, SL
 class LineSearch(LineSearchBase):
     _structure: ParameterSet = None  # The equilibrium structure
     _hessian: ParameterHessian = None  # The equilibrium full Hessian
-    _sigma = 0.0  # Target errorbar
     _d: int = None  # direction count
 
     def __init__(
@@ -73,20 +72,6 @@ class LineSearch(LineSearchBase):
             # end if
         else:
             raise ValueError('Provided structure is not a ParameterSet object')
-        # end if
-    # end def
-
-    @property
-    def sigma(self):
-        return self._sigma
-    # end def
-
-    @sigma.setter
-    def sigma(self, sigma):
-        if isscalar(sigma) and sigma >= 0.0:
-            self._sigma = sigma
-        else:
-            raise ValueError("Sigma must be >= 0.0")
         # end if
     # end def
 
