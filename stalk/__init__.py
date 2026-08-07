@@ -4,7 +4,7 @@
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
-__version__ = "0.2.2dev2"
+__version__ = "0.2.2dev3"
 
 # io module
 from stalk.io import FilesPes
