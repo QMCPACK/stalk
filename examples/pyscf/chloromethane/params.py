@@ -124,5 +124,5 @@ def pes_pyscf(structure: ParameterStructure, xc='pbe', **kwargs):
 # end def
 
 
-pes_pbe = PesFunction(pes_pyscf, {'xc': 'pbe'}, create_files=True)
-pes_b3lyp = PesFunction(pes_pyscf, {'xc': 'b3lyp'}, create_files=True)
+pes_pbe = PesFunction(pes_pyscf, {'xc': 'pbe'})
+pes_b3lyp = PesFunction(pes_pyscf, {'xc': 'b3lyp'})

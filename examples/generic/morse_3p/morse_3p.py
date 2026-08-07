@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from numpy import array
+
 # Morse 3p: line-search example
 #   3-parameter problem in the abstract parameter space
 #
@@ -16,15 +18,12 @@ from stalk import Surrogate
 from stalk import morse
 from stalk.io.stalk_logger import StalkLogger
 
-base_dir = 'morse_3p/'
-
 
 # takes: a structure object with an attribute 3x1 array params
 #   c: coupling constant of parameters through auxiliary morse potentials
 #   d: eqm displacements
 # returns: energy value, error (= sigma)
 def pes(structure: ParameterSet, c=1.0, d=0.0, **kwargs):
-    from numpy import array
 
     p0, p1, p2 = structure.params
     # define Morse potentials for each individual parameter
@@ -60,7 +59,7 @@ print(p_relax.params)
 
 # Compute the numerical Hessian at the minimum parameters using a finite difference method
 hessian = ParameterHessian(structure=p_relax)
-hessian.compute_fdiff(pes=pes_surrogate)
+hessian.compute_fdiff(path='relax', pes=pes_surrogate)
 print('Hessian:')
 print(hessian)
 
@@ -68,7 +67,7 @@ print(hessian)
 # Create a surrogate
 surrogate = Surrogate(
     fit_kind='pf3',
-    path=base_dir + 'surrogate',
+    path='surrogate',
     structure=p_relax,
     hessian=hessian,
     M=25,
@@ -97,7 +96,7 @@ print(p_alt.params)
 
 # Run line-search iteration with the alternative PES
 lsi = LineSearchIteration(
-    path=base_dir + 'lsi',
+    path='lsi',
     surrogate=surrogate,
 )
 # Propagate the line-search imax times

@@ -59,7 +59,7 @@ def test_ParameterHessian():
     h3_ref = [[4.0, 0.0], [0.0, 1.0]]  # see def pes_H2O()
     E3_ref = -0.5  # see def pes_H2O()
     h3 = ParameterHessian()
-    pes = PesFunction(pes_H2O)
+    pes = PesFunction(pes_H2O, create_files=False)
     assert h3.hessian is None
     h3.compute_fdiff(
         structure=s1.copy(),

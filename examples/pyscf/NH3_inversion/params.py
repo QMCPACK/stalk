@@ -139,11 +139,11 @@ def pes_pyscf(
 
 
 # PBE PES
-pes_pbe = PesFunction(pes_pyscf, create_files=True, xc='pbe', basis='ccecpccpvdz', ecp='ccecp')
-relax_pbe = PesFunction(relax_pyscf, create_files=True, xc='pbe', basis='ccecpccpvdz', ecp='ccecp')
+pes_pbe = PesFunction(pes_pyscf, xc='pbe', basis='ccecpccpvdz', ecp='ccecp')
+relax_pbe = PesFunction(relax_pyscf, xc='pbe', basis='ccecpccpvdz', ecp='ccecp')
 # LDA PES
-pes_lda = PesFunction(pes_pyscf, create_files=True, xc='lda', basis='ccecpccpvdz', ecp='ccecp')
-relax_lda = PesFunction(relax_pyscf, create_files=True, xc='lda', basis='ccecpccpvdz', ecp='ccecp')
+pes_lda = PesFunction(pes_pyscf, xc='lda', basis='ccecpccpvdz', ecp='ccecp')
+relax_lda = PesFunction(relax_pyscf, xc='lda', basis='ccecpccpvdz', ecp='ccecp')
 
 
 # To run a NEB calculation with ASE, we need to define a calculator that can compute

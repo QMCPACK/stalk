@@ -118,9 +118,9 @@ def pes_exact(
 
 
 # VQE surrogate PES
-vqe_pes = PesFunction(func=pes_vqe, create_files=True, kernel_args={})
+vqe_pes = PesFunction(func=pes_vqe, kernel_args={})
 # Exact PES
-exact_pes = PesFunction(func=pes_exact, create_files=True, kernel_args={})
+exact_pes = PesFunction(func=pes_exact, kernel_args={})
 # Create another instance to allow (optionally) a different PES and to reset eval count
 #   NB: Using here the same PES, only this time it is noisy
-vqe_pes_noisy = PesFunction(func=pes_vqe, create_files=True, kernel_args={})
+vqe_pes_noisy = PesFunction(func=pes_vqe, kernel_args={})

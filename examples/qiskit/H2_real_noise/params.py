@@ -197,17 +197,15 @@ def pes_exact(
 
 
 # Ideal VQE PES
-vqe_pes = PesFunction(func=pes_ideal, create_files=True, kernel_args={})
+vqe_pes = PesFunction(func=pes_ideal, kernel_args={})
 # Generic face backend PES
 backend_pes = PesFunction(
     func=pes_backend,
-    create_files=True,
     kernel_args={},
     backend='generic',
 )
 aphrodite_pes = PesFunction(
     func=pes_backend,
-    create_files=True,
     kernel_args={},
     backend='fake_aphrodite',
 )

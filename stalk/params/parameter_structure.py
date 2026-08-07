@@ -329,6 +329,7 @@ class ParameterStructure(ParameterSet):
         if label is not None:
             structure.label = label
         # end if
+        structure.reset_value()
         return structure
     # end def
 

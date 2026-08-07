@@ -115,5 +115,5 @@ def pes_pyscf(structure: ParameterStructure, **kwargs):
 # end def
 
 
-pes = PesFunction(pes_pyscf, create_files=True)
-relax_pes = PesFunction(relax_pyscf, create_files=True)
+pes = PesFunction(pes_pyscf)
+relax_pes = PesFunction(relax_pyscf)

@@ -18,7 +18,7 @@ def test_PesFunction():
 
     # Test nominal
     args = {"arg": 5.0}
-    pf = PesFunction(func=pes_func, args=args)
+    pf = PesFunction(func=pes_func, args=args, create_files=False)
 
     # Test evaluation add_sigma=False
     params = [1.0, 2.0, 3.0]

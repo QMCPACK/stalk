@@ -32,7 +32,7 @@ class PesFunction(FunctionCaller):
         func,
         args: dict = {},  # Keep 'args' for backward compatibility
         disable_failed=False,
-        create_files=False,
+        create_files=True,
         **kwargs,
     ):
         # Init the function caller
@@ -144,8 +144,10 @@ class PesFunction(FunctionCaller):
         )
     # end def
 
-    def _get_path(self, structure: ParameterSet, path: str) -> str:
-        return f'{directorize(path)}{structure.label}/'
+    def _get_path(self, structure: ParameterSet, path: str) -> str | None:
+        if isinstance(structure, ParameterSet):
+            return f'{directorize(path)}{structure.label}/'
+        # end if
     # end def
 
     def _generate_structure(
@@ -165,10 +167,8 @@ class PesFunction(FunctionCaller):
         structure.sigma = sigma
         self._set_samples(structure, var_eff_map=var_eff_map, samples=samples)
         # Use params.dat to determine if the files have been already generated
-        if self.create_files:
-            if not self.params_file.exists(structure.path):
-                self._create_files(structure)
-            # end if
+        if not self.params_file.exists(structure.path):
+            self._create_files(structure)
         # end if
         # Try to load from disk
         self._try_load_value(structure)
@@ -176,12 +176,14 @@ class PesFunction(FunctionCaller):
 
     def _create_files(self, structure: ParameterSet):
         '''Check if the files for the structure have been already generated, and if not, create them.'''
-        makedirs(structure.path, exist_ok=True)
-        # Write the parameters to disk in a simple format (e.g., params.dat)
-        self.params_file.save_result(structure.path, structure.params)
-        # If the sigma is meaningful, write it to disk as well
-        if structure.sigma is not None and structure.sigma > 0.0:
-            self.sigma_file.save_result(structure.path, [structure.sigma])
+        if self.create_files and structure.path is not None:
+            makedirs(structure.path, exist_ok=True)
+            # Write the parameters to disk in a simple format (e.g., params.dat)
+            self.params_file.save_result(structure.path, structure.params)
+            # If the sigma is meaningful, write it to disk as well
+            if structure.sigma is not None and structure.sigma > 0.0:
+                self.sigma_file.save_result(structure.path, [structure.sigma])
+            # end if
         # end if
     # end def
 
@@ -195,9 +197,31 @@ class PesFunction(FunctionCaller):
         # end if
     # end def
 
+    def _try_load_params(self, structure: ParameterSet):
+        '''Try to load the relaxed parameters from disk, and if they exist, set them to the structure.'''
+        if self.params_file.exists(structure.path):
+            print(f'{structure.path} loaded parameters from disk.')
+            params = self.params_file.load_result(structure.path, None, ndmin=1)
+            if params is not None and len(params) == len(structure.params):
+                structure.params = params
+                return True
+            # end if
+        # end if
+        return False
+    # end def
+
     def _save_value(self, structure: ParameterSet):
         '''Save the value+error of the structure to disk.'''
-        self.value_file.save_result(structure.path, [structure.value, structure.error])
+        if self.create_files:
+            self.value_file.save_result(structure.path, [structure.value, structure.error])
+        # end if
+    # end def
+
+    def _save_params(self, structure: ParameterSet):
+        '''Save the parameters of the structure to disk.'''
+        if self.create_files:
+            self.params_file.save_result(structure.path, structure.params)
+        # end if
     # end def
 
     def _generate_structure_all(
@@ -241,15 +265,20 @@ class PesFunction(FunctionCaller):
             return
         # end if
         try:
-            value, error = self.func(structure, **self.args)
+            raw_result = self.func(structure, **self.args)
+            if isinstance(raw_result, tuple) and len(raw_result) == 2:
+                value, error = raw_result
+            elif isscalar(raw_result):
+                value, error = float(raw_result), 0.0
+            else:
+                raise ValueError("The PES function must return a scalar or a tuple of (value, error).")
+            # end if
             print(f'{structure.path} evaluated to {value} +/- {error}.')
             # Unlike elsewhere, the value and error can be set here directly and bypass
             # using loaders. The data is transferred via the structure
             structure.value = value
             structure.error = error
-            if self.create_files:
-                self._save_value(structure)
-            # end if
+            self._save_value(structure)
         except NotEvaluatedException:
             print(f'{structure.label} could not be evaluated.')
         # end try
@@ -352,10 +381,16 @@ class PesFunction(FunctionCaller):
     def relax(
         self,
         structure: ParameterSet,
+        path='relax/',
         **kwargs
     ):
         create_files = self.create_files
         self.create_files = False  # Disable file creation during relaxation
+        structure.path = path
+        if self._try_load_params(structure):
+            self._try_load_value(structure)  # Load the corresponding value as well
+            return
+        # end if
 
         # Relax numerically using a wrapper around SciPy minimize
         def relax_aux(p):
@@ -368,6 +403,9 @@ class PesFunction(FunctionCaller):
         structure.params = res.x
         structure.value = relax_aux(res.x)
         self.create_files = create_files  # Restore the original setting
+        # Save relaxed parameters and value to disk if file creation is enabled
+        self._save_value(structure)
+        self._save_params(structure)
     # end def
 
     def _warn_energy(self, structure: ParameterSet, warn_limit=2.0):

@@ -24,11 +24,12 @@ class NexusPes(PesFunction):
         func,
         args: dict = {},  # Keep 'args' for backward compatibility
         loader: PesLoader = None,
+        create_files=True,  # NexusPes must create files
         bundle_jobs=False,
         **kwargs,  # disable_failed=False, ...
     ):
         # Init the function caller
-        super().__init__(func, args=args, **kwargs)
+        super().__init__(func, args=args, create_files=True, **kwargs)
         self.bundle_jobs = bundle_jobs
         self.loader = loader
     # end def
