@@ -11,6 +11,7 @@ from matplotlib import pyplot as plt
 from stalk.ls.fitting_result import FittingResult
 from stalk.ls.linesearch_grid import LineSearchGrid
 from stalk.ls.ls_settings import LsSettings
+from stalk.params.pes_function import PesFunction
 from stalk.util.util import FF, FU
 
 
@@ -72,6 +73,48 @@ class LineSearchBase(LineSearchGrid):
     @property
     def y0_err(self):
         return None if self.fit_res is None else self.fit_res.y0_err
+    # end def
+
+    def evaluate(
+        self,
+        pes: PesFunction,
+        path='',
+        var_eff_map=None,
+        interactive=False,
+        dep_jobs=[],
+        add_sigma=False,
+        warn_limit=2.0,
+        **kwargs,  # etc.
+    ):
+        '''Evaluate the PES on the line-search grid using an evaluation function.'''
+        if not self.shifted:
+            raise AssertionError('The line-search grid must be generated before evaluation!')
+        # end if
+        structures = self._grid
+        sigmas = len(structures) * [self.sigma]
+        pes.evaluate_all(
+            structures,
+            sigmas=sigmas,
+            path=path,
+            var_eff_map=var_eff_map,
+            interactive=interactive,
+            dep_jobs=dep_jobs,
+            add_sigma=add_sigma,
+            warn_limit=warn_limit,
+            **kwargs
+        )
+        if self.evaluated:
+            self._search_and_store()
+        else:
+            print(f'{repr(self)} missing results for the following structures:')
+            for point in self.grid:
+                if point.valid:
+                    continue
+                else:
+                    print(f'  {point.offset}')
+                # end if
+            # end for
+        # end if
     # end def
 
     def search_with_error(

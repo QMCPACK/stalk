@@ -11,7 +11,6 @@ from numpy import array, polyval, sign, isscalar
 
 from stalk.ls.fitting_result import FittingResult
 from stalk.params.parameter_hessian import ParameterHessian
-from stalk.params.pes_function import PesFunction
 from stalk.params.parameter_set import ParameterSet
 from stalk.ls.linesearch_base import LineSearchBase
 from stalk.util.util import FF, SL
@@ -245,48 +244,6 @@ class LineSearch(LineSearchBase):
             structure.shift_params(shift * self.direction)
         # end if
         return structure
-    # end def
-
-    def evaluate(
-        self,
-        pes: PesFunction,
-        path='',
-        var_eff_map=None,
-        interactive=False,
-        dep_jobs=[],
-        add_sigma=False,
-        warn_limit=2.0,
-        **kwargs,  # etc.
-    ):
-        '''Evaluate the PES on the line-search grid using an evaluation function.'''
-        if not self.shifted:
-            raise AssertionError('The line-search grid must be generated before evaluation!')
-        # end if
-        structures = self._grid
-        sigmas = len(structures) * [self.sigma]
-        pes.evaluate_all(
-            structures,
-            sigmas=sigmas,
-            path=path,
-            var_eff_map=var_eff_map,
-            interactive=interactive,
-            dep_jobs=dep_jobs,
-            add_sigma=add_sigma,
-            warn_limit=warn_limit,
-            **kwargs
-        )
-        if self.evaluated:
-            self._search_and_store()
-        else:
-            print(f'{repr(self)} missing results for the following structures:')
-            for point in self.grid:
-                if point.valid:
-                    continue
-                else:
-                    print(f'  {point.offset}')
-                # end if
-            # end for
-        # end if
     # end def
 
     @property
