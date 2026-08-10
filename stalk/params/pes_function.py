@@ -78,6 +78,7 @@ class PesFunction(FunctionCaller):
         interactive=False,
         warn_limit=2.0,
         dep_jobs=[],
+        reset_value=False,
         **kwargs  # etc.
     ) -> None:
         # Generate hook creates the structure file and sigma
@@ -96,6 +97,7 @@ class PesFunction(FunctionCaller):
             structure,
             interactive=interactive,
             dep_jobs=dep_jobs,
+            reset_value=reset_value,
         )
         # Finalization hook where the values are loaded and can be used to update the process
         self._finalize_structure(
@@ -117,6 +119,7 @@ class PesFunction(FunctionCaller):
         interactive=False,
         warn_limit=2.0,
         dep_jobs=[],
+        reset_value=False,
         **kwargs
     ) -> None:
         # Generate hook creates the structure file and sigma
@@ -133,6 +136,7 @@ class PesFunction(FunctionCaller):
             structures,
             interactive=interactive,
             dep_jobs=dep_jobs,
+            reset_value=reset_value,
         )
         # Finalization hook where the values are loaded and can be used to update the process
         self._finalize_structure_all(
@@ -255,12 +259,16 @@ class PesFunction(FunctionCaller):
         self,
         structure: ParameterSet,
         interactive: bool = False,
+        reset_value=False,
         dep_jobs=[],
     ) -> None:
         if interactive:
             self._prompt([structure])
         # end if
-        if structure.evaluated:
+        if reset_value:
+            structure.reset_value()
+        # end if
+        if structure.evaluated and not reset_value:
             print(f'{structure.path} is already evaluated.')
             return
         # end if
@@ -273,7 +281,6 @@ class PesFunction(FunctionCaller):
             else:
                 raise ValueError("The PES function must return a scalar or a tuple of (value, error).")
             # end if
-            print(f'{structure.path} evaluated to {value} +/- {error}.')
             # Unlike elsewhere, the value and error can be set here directly and bypass
             # using loaders. The data is transferred via the structure
             structure.value = value
@@ -289,13 +296,14 @@ class PesFunction(FunctionCaller):
         structures: ParameterSet,
         interactive: bool = False,
         dep_jobs=[],
+        reset_value=False,
     ) -> None:
         if interactive:
             self._prompt(structures)
         # end if
         # In the default implementation, just call the single structure version for each structure
         for structure in structures:
-            self._evaluate_structure(structure)
+            self._evaluate_structure(structure, reset_value=reset_value)
         # end for
     # end def
 
@@ -314,6 +322,7 @@ class PesFunction(FunctionCaller):
         # end if
         structure.value = result.value
         structure.error = result.error
+        print(f'{structure.path} evaluated to {structure.value:.6f} +/- {structure.error:.6f}.')
         # TODO: write to disk
         # TODO: interactively discard bad data?
         self._warn_energy(structure, warn_limit=warn_limit)
@@ -451,8 +460,19 @@ class PesFunction(FunctionCaller):
         return var_eff_map
     # end def
 
-    def __call__(self, structure: ParameterSet, **kwargs) -> None:
-        self.evaluate(structure, **kwargs)
+    def __call__(
+        self,
+        structure: ParameterSet | list[ParameterSet],
+        **kwargs
+    ) -> PesResult | list[PesResult]:
+        if isinstance(structure, list):
+            self.evaluate_all(structure, **kwargs)
+            result = [PesResult(s.value, s.error) for s in structure]
+        else:
+            self.evaluate(structure, **kwargs)
+            result = PesResult(structure.value, structure.error)
+        # end if
+        return result
     # end def
 
 # end class

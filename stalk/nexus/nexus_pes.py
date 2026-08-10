@@ -99,6 +99,7 @@ class NexusPes(PesFunction):
         structure: NexusStructure,
         interactive: bool = False,
         dep_jobs=[],
+        reset_value=True,
     ) -> None:
         if interactive:
             self._prompt([structure])
@@ -118,6 +119,7 @@ class NexusPes(PesFunction):
         structures: list[NexusStructure],
         interactive: bool = False,
         dep_jobs=[],
+        reset_value=True,
     ) -> None:
         if interactive:
             self._prompt(structures)

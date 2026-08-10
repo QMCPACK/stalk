@@ -76,6 +76,7 @@ class FilesPes(PesFunction):
         structure: ParameterSet,
         interactive: bool = False,
         dep_jobs=[],
+        reset_value: bool = False,
     ) -> None:
         # Nothing to be done here
         pass
