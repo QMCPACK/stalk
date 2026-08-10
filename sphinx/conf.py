@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath('../'))
 
 import stalk   # noqa: E402
 project = 'STALK'
-copyright = '2025, Juha Tiihonen'
+copyright = '2026, Juha Tiihonen'
 author = 'Juha Tiihonen'
 release = stalk.__version__
 
