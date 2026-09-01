@@ -1,0 +1,7 @@
+/* To make math equations numbered in a nice way */
+.math {
+    text-align: left;
+}
+.eqno {
+    float: right;
+}

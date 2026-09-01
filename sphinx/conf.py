@@ -23,6 +23,8 @@ release = stalk.__version__
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = ['sphinx.ext.autodoc']
+# Mock heavy optional imports to allow building docs without installing them
+autodoc_mock_imports = ['matplotlib']
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
@@ -31,3 +33,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
+
+
+def setup(app):
+    app.add_css_file('css/custom.css')
