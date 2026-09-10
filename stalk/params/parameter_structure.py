@@ -38,10 +38,22 @@ class ParameterStructure(ParameterSet):
         dim=3,
         value=None,
         error=0.0,
+        sigma=0.0,
+        label=None,
         units='B',
         tol=1e-7,
         require_consistent=True,
     ):
+        # At first, initialize ParameterSet without params as they will be set later and
+        # possibly trigger a mapping
+        super().__init__(
+            params=None,
+            params_err=None,
+            value=None,
+            error=None,
+            sigma=sigma,
+            label=label,
+        )
         self.tol = tol
         self.units = units
         self.require_consistent = require_consistent

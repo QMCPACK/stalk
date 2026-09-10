@@ -6,21 +6,25 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from pathlib import Path
-
 from numpy import ndarray, array
 from textwrap import indent
+from typing import Generic, TypeVar, Type
 
 from stalk.io.ls_data import LineSearchData
 from stalk.params.pes_function import NotEvaluatedException, PesFunction
+from stalk.params.structure_collection import StructureCollection
 from stalk.util import get_fraction_error
 from stalk.params import ParameterSet
 from stalk.params import ParameterHessian
 from stalk.ls import LineSearch
 
+# Line-search type
+T = TypeVar('T', bound=LineSearch)
 
-class ParallelLineSearch():
-    ls_type = LineSearch
-    _ls_list: list[LineSearch] = []  # list of line-search objects
+
+class ParallelLineSearch(StructureCollection[ParameterSet], Generic[T]):
+    _ls_class: Type[T] = LineSearch
+    _ls_list: list[T] = []  # list of line-search objects
     _hessian = None  # hessian object
     _structure = None  # eqm structure
     _structure_next = None  # next structure
@@ -56,7 +60,7 @@ class ParallelLineSearch():
         # end if
         # Make sure that LS is solved after successful loading
         if self.evaluated and self.structure_next is None:
-            self._solve_ls()
+            self.finalize()
         # end if
     # end def
 
@@ -121,7 +125,7 @@ class ParallelLineSearch():
             raise ValueError('Hessian matrix is not supported')
         # end if
         if self._hessian is not None:
-            pass  # TODO: check for constistency
+            pass  # TODO: check for consistency
         # end if
         self._hessian = hessian
         if self.structure is None:
@@ -261,10 +265,9 @@ class ParallelLineSearch():
         if not self.shifted:
             raise AssertionError("Must have shifted structures first!")
         # end if
-        structures, sigmas = self._collect_enabled()
-        pes.evaluate_all(
+        structures = self.collect_enabled()
+        pes(
             structures,
-            sigmas=sigmas,
             path=self.path,
             add_sigma=add_sigma,
             interactive=interactive,
@@ -272,53 +275,18 @@ class ParallelLineSearch():
             var_eff_map=var_eff_map,
             warn_limit=warn_limit,
         )
-        if not all([s.value is not None and s.enabled for s in structures]):
+        self.finalize()
+    # end def
+
+    # Override
+    def finalize(self) -> None:
+        if not self.evaluated:
             print('Cannot solve the line-searches, as not all structures were successfully evaluated.')
             return
         # end if
-        self._solve_ls()
-    # end def
-
-    def evaluate_eqm(
-        self,
-        pes: PesFunction,
-        add_sigma=False,
-        interactive=False,
-        dep_jobs=[],
-        var_eff_map=None,
-    ):
-        pes.evaluate(
-            self.structure,
-            sigma=self.noises_min,
-            path=self.path,
-            add_sigma=add_sigma,
-            interactive=interactive,
-            dep_jobs=dep_jobs,
-            var_eff_map=var_eff_map,
-        )
-    # end def
-
-    def _collect_enabled(self) -> tuple[list[ParameterSet], list[float]]:
-        structures = []
-        sigmas = []
-        sigma_eqm = self.sigmas_min
-        for ls in self.ls_list:
-            for structure in ls.grid:
-                structures += [structure]
-                if structure.is_eqm:
-                    sigmas += [sigma_eqm]
-                else:
-                    sigmas += [ls.sigma]
-                # end if
-            # end for
-        # end for
-        return structures, sigmas
-    # end def
-
-    def _solve_ls(self):
         # Set the eqm energy and solve the line-searches
         for ls in self.ls_list:
-            ls._search_and_store()
+            ls.search(store=True, noisy=True)
             eqm = ls.get(0.0)
             if eqm is not None:
                 self.structure.value = eqm.value
@@ -331,6 +299,42 @@ class ParallelLineSearch():
             params=params_next,
             params_err=params_next_err
         )
+    # end def
+
+    def evaluate_eqm(
+        self,
+        pes: PesFunction,
+        add_sigma=False,
+        interactive=False,
+        dep_jobs=[],
+        var_eff_map=None,
+    ):
+        self.structure.sigma = self.sigmas_min
+        pes(
+            self.structure,
+            path=self.path,
+            add_sigma=add_sigma,
+            interactive=interactive,
+            dep_jobs=dep_jobs,
+            var_eff_map=var_eff_map,
+        )
+    # end def
+
+    # Override: collect points from all line-searches, possibly with a common eqm
+    def collect_enabled(self) -> list[ParameterSet]:
+        structures = []
+        sigma_eqm = self.sigmas_min
+        for ls in self.ls_list:
+            for structure in ls.collect_enabled():
+                structures += [structure]
+                if structure.is_eqm:
+                    structure.sigma = sigma_eqm
+                else:
+                    structure.sigma = ls.sigma
+                # end if
+            # end for
+        # end for
+        return structures
     # end def
 
     @property

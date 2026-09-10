@@ -514,9 +514,10 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
             print('Must optimize before plotting error surface')
             return
         # end if
+        epsilon_str = '' if self.epsilon is None else f', epsilon={self.epsilon:.3e}'
         if ax is None:
             f, ax = self._create_plot(xlabel='Grid extent W', ylabel='Input noise')
-            ax.set_title(f'Error surface: {repr(self)}, epsilon={self.epsilon:.3e}')
+            ax.set_title(f'Error surface: {repr(self)}{epsilon_str}')
         # end if
         T = self.error_surface.T_mat
         X = self.error_surface.X_mat
@@ -531,10 +532,12 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
     # end def
 
     # Override LineSearchBase method to perform the line-search and store the result to self.fit_res
-    def _search_and_store(self):
-        self.fit_res = self.search_with_error()
-        self.reset_interpolation()
-        self.bracket_target_bias()
+    def search(self, store=True, **kwargs):
+        super().search(store=store, **kwargs)
+        if store:
+            self.reset_interpolation()
+            self.bracket_target_bias()
+        # end if
     # end def
 
     def _reset_resampling(self):

@@ -88,7 +88,7 @@ class PathwayImage():
         self,
         tangent,
         pes: PesFunction,
-        path='',
+        path=None,
         **hessian_args  # dp=0.01, dpos_mode=False, structure=None
     ):
         if tangent is None:
@@ -106,9 +106,11 @@ class PathwayImage():
             structure_sub = ParameterSet(zeros(len(subspace)))
             hessian = ParameterHessian(structure=structure_sub)
         # end if
-        if not hessian.load(path):
-            hessian.compute_fdiff(pes=pes_comp, path=path, dp=0.01)
-        # end if
+        hessian.compute_fdiff(
+            pes=pes_comp,
+            path=path,
+            dp=0.01
+        )
         self._path = path
         self._subspace = subspace
         self._tangent = tangent

@@ -5,11 +5,13 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from pathlib import Path
+from numpy import nan
 
 from stalk.io.xyz_geometry import XyzGeometry
 from stalk.params.effective_variance_map import EffectiveVarianceMap
 from stalk.params.parameter_set import ParameterSet
 from stalk.params.pes_function import NotEvaluatedException, PesFunction
+from stalk.params.pes_loader import PesLoader
 
 
 def write_xyz_sigma(
@@ -30,10 +32,11 @@ class FilesPes(PesFunction):
         func=write_xyz_sigma,
         args={},
         create_files=True,  # FilesPes must create files
-        **kwargs  # loader=PesLoader(), disable_failed=False, ...
+        loader: PesLoader = PesLoader(),
+        **kwargs  # disable_failed=False, ...
     ):
         # Init the function caller
-        super().__init__(func=func, args=args, create_files=True, **kwargs)
+        super().__init__(func=func, args=args, create_files=True, loader=loader, **kwargs)
     # end def
 
     def _generate_structure(
@@ -105,6 +108,7 @@ class FilesPes(PesFunction):
             # Nothing to do here but update the var_eff_map if needed
             self._update_var_eff_map(structure, var_eff_map=var_eff_map)
         except NotEvaluatedException:
+            structure.value = nan
             msg = f'{structure.path} has not been evaluated. '
             msg += 'Supply output file to disk to continue.'
             print(msg)

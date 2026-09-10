@@ -20,9 +20,8 @@ from stalk.pls import ParallelLineSearch
 from stalk.util.util import FF, FFS, FI, FIS, FP, FPS
 
 
-class Surrogate(ParallelLineSearch):
-    ls_type = TargetLineSearch
-    _ls_list: list[TargetLineSearch] = []
+class Surrogate(ParallelLineSearch[TargetLineSearch]):
+    _ls_class = TargetLineSearch
     _temperature = None
     # User-defined parameter tolerances
     _epsilon_p = None

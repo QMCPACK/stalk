@@ -5,17 +5,20 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from typing import TypeVar
 import warnings
 from matplotlib import pyplot as plt
 from numpy import array, all, ndarray, searchsorted
 
 from stalk.params.linesearch_point import LineSearchPoint
+from stalk.params.structure_collection import StructureCollection
 from stalk.util.util import FFS
 
+# Passing on the generic type
+T = TypeVar('T', bound=LineSearchPoint)
 
-class LineSearchGrid():
-    # List of LineSearchPoint instances
-    _grid: list[LineSearchPoint] = []
+
+class LineSearchGrid[T](StructureCollection[T]):
 
     def __init__(
         self,
@@ -23,7 +26,7 @@ class LineSearchGrid():
         values=None,
         errors=None
     ):
-        self._grid = []
+        StructureCollection.__init__(self)
         if offsets is not None:
             if values is None:
                 values = len(offsets) * [None]
@@ -54,20 +57,6 @@ class LineSearchGrid():
     def valid_grid(self) -> ndarray:
         '''Return offset array of valid points'''
         return array([point for point in self._grid if point.valid])
-    # end def
-
-    @property
-    def grid(self) -> list[LineSearchPoint]:
-        '''Return list of points'''
-        return [point for point in self._grid]
-    # end def
-
-    @grid.setter
-    def grid(self, grid: list[LineSearchPoint | float]) -> None:
-        self._grid = []
-        for point in grid:
-            self.add_point(point)
-        # end for
     # end def
 
     @property
@@ -158,18 +147,6 @@ class LineSearchGrid():
         return len(self.valid_grid) > 2
     # end def
 
-    def add_point(self, point: LineSearchPoint | int | float) -> None:
-        '''Add a point to the grid if not already present. Point can be given as a LineSearchPoint or a scalar offset.'''
-        if not isinstance(point, LineSearchPoint):
-            point = LineSearchPoint(point)
-        # end if
-        if point not in self:
-            self._grid.append(point)
-            # Keep the grid sorted
-            self._grid.sort()
-        # end if
-    # end def
-
     def get(self, point: float | int | LineSearchPoint, default=None) -> LineSearchPoint | None:
         '''Get a requested point by the offset. Returns default if not found.'''
         # Find the first occurrence of the point in the grid, or return default if not found
@@ -234,19 +211,6 @@ class LineSearchGrid():
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         return f, ax
-    # end def
-
-    def __contains__(self, point: LineSearchPoint | float) -> bool:
-        if isinstance(point, LineSearchPoint):
-            offset = point.offset
-        else:
-            offset = point
-        # end if
-        return offset in self.offsets
-    # end def
-
-    def __len__(self):
-        return len(self.grid)
     # end def
 
     def __str__(self):

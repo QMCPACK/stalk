@@ -11,11 +11,12 @@ from matplotlib import pyplot as plt
 from stalk.ls.fitting_result import FittingResult
 from stalk.ls.linesearch_grid import LineSearchGrid
 from stalk.ls.ls_settings import LsSettings
+from stalk.params.parameter_set import ParameterSet
 from stalk.params.pes_function import PesFunction
 from stalk.util.util import FF, FU
 
 
-class LineSearchBase(LineSearchGrid):
+class LineSearchBase(LineSearchGrid[ParameterSet]):
     _settings: LsSettings
     _sigma = 0.0  # Target errorbar
     fit_res: FittingResult
@@ -31,7 +32,9 @@ class LineSearchBase(LineSearchGrid):
         fit_kind='pf3',
         fit_func=None,
         fit_args={},
-        N=200
+        N=200,
+        store=True,
+        noisy=True,
     ):
         LineSearchGrid.__init__(self, offsets)
         self.sigma = sigma
@@ -49,7 +52,7 @@ class LineSearchBase(LineSearchGrid):
             if errors is not None:
                 self.errors = errors
             # end if
-            self._search_and_store()
+            self.search(store=store, noisy=noisy)
         # end if
     # end def
 
@@ -107,10 +110,8 @@ class LineSearchBase(LineSearchGrid):
         if not self.shifted:
             raise AssertionError('The line-search grid must be generated before evaluation!')
         # end if
-
-        for structure in structures:
-            structure.sigma = self.sigma
-        # end for
+        # Collect enabled structures, assign sigmas
+        structures = self.collect_enabled()
         pes.evaluate_all(
             structures,
             path=path,
@@ -122,7 +123,7 @@ class LineSearchBase(LineSearchGrid):
             **kwargs
         )
         if self.evaluated:
-            self._search_and_store()
+            self.search()
         else:
             print(f'{repr(self)} missing results for the following structures:')
             for point in self.grid:
@@ -135,46 +136,45 @@ class LineSearchBase(LineSearchGrid):
         # end if
     # end def
 
-    def search_with_error(
-        self,
-        **ls_overrides
-    ):
-        settings = self.settings.copy(**ls_overrides)
-        res = settings.fit_func.find_noisy_minimum(
-            self,
-            sgn=settings.sgn,
-            fraction=settings.fraction,
-            N=settings.N
-        )
-        return res
-    # end def
-
     def search(
         self,
+        store=True,
+        noisy=True,
         **ls_overrides
     ):
         settings = self.settings.copy(**ls_overrides)
-        res = settings.fit_func.find_minimum(
-            self,
-            sgn=settings.sgn
-        )
+        if noisy:
+            res = settings.fit_func.find_noisy_minimum(
+                self,
+                sgn=settings.sgn,
+                fraction=settings.fraction,
+                N=settings.N
+            )
+        else:
+            res = settings.fit_func.find_minimum(
+                self,
+                sgn=settings.sgn
+            )
+        # end if
+        if store:
+            self.fit_res = res
+        # end if
         return res
     # end def
 
-    def _search_and_store(self):
-        """Perform line-search with the preset values and settings, saving the result to self."""
-        self.fit_res = self.search_with_error()
+    def reset_search(self, fit_res: FittingResult = None) -> None:
+        self.fit_res = fit_res
     # end def
 
-    def reset_search(self, x0=0.0, y0=0.0):
-        self.fit_res.x0 = x0
-        self.fit_res.x0_err = 0.0
-        self.fit_res.y0 = y0
-        self.fit_res.y0_err = 0.0
-        return self
+    def finalize(self) -> None:
+        if self.evaluated:
+            self.search(store=True, noisy=True)
+        else:
+            warnings.warn("Cannot finalize without valid data.")
+        # end if
     # end def
 
-    def _make_offsets_R(self, R, M):
+    def _make_offsets_R(self, R: float, M: int):
         if R < 1e-6:
             raise ValueError("R must be larger than 1e-6")
         # end if
@@ -228,6 +228,15 @@ class LineSearchBase(LineSearchGrid):
         w = (self.offsets.max() - self.offsets.min()) * fraction
         grid = linspace(self.offsets.min() - w, self.offsets.max() + w, 201)
         return grid
+    # end def
+
+    # Override to associate sigma with the structures before evaluation
+    def collect_enabled(self) -> list[ParameterSet]:
+        structures = super().collect_enabled()
+        for structure in structures:
+            structure.sigma = self.sigma
+        # end for
+        return structures
     # end def
 
     def __str__(self):

@@ -18,6 +18,7 @@ from stalk.params.effective_variance import EffectiveVariance
 from stalk.params.effective_variance_map import EffectiveVarianceMap
 from stalk.params.parameter_set import ParameterSet
 from stalk.params.pes_result import PesResult
+from stalk.params.structure_collection import StructureCollection
 from stalk.params.util import NotEvaluatedException
 from stalk.util.function_caller import FunctionCaller
 
@@ -55,7 +56,6 @@ class PesFunction(FunctionCaller):
         self,
         structure: ParameterSet,
         path: Path | str | None = None,
-        sigma=0.0,
         samples=None,
         var_eff_map: EffectiveVarianceMap = None,
         interactive=False,
@@ -65,7 +65,6 @@ class PesFunction(FunctionCaller):
         self._generate_structure(
             structure,
             path=path,
-            sigma=sigma,
             samples=samples,
             var_eff_map=var_eff_map,
             interactive=interactive,
@@ -78,7 +77,6 @@ class PesFunction(FunctionCaller):
         self,
         structure: ParameterSet,
         path: Path | str | None = None,
-        sigma=0.0,
         samples=None,
         add_sigma=False,
         var_eff_map: EffectiveVarianceMap = None,
@@ -92,7 +90,6 @@ class PesFunction(FunctionCaller):
         self._generate_structure(
             structure,
             path=path,
-            sigma=sigma,
             samples=samples,
             var_eff_map=var_eff_map,
             interactive=interactive,
@@ -222,10 +219,14 @@ class PesFunction(FunctionCaller):
         return False
     # end def
 
-    def _save_value(self, structure: ParameterSet):
+    def _save_value(self, structure: ParameterSet, overwrite=False):
         '''Save the value+error of the structure to disk.'''
         if self.create_files and structure.path is not None:
-            self.value_file.save_result(structure.path, [structure.value, structure.error])
+            self.value_file.save_result(
+                structure.path,
+                [structure.value, structure.error],
+                overwrite=overwrite
+            )
         # end if
     # end def
 
@@ -289,6 +290,7 @@ class PesFunction(FunctionCaller):
             # using loaders. The data is transferred via the structure.
             structure.value = value
             structure.error = error
+            # Write to disk
             self._save_value(structure)
         except NotEvaluatedException:
             print(f'{structure.label} could not be evaluated.')
@@ -397,13 +399,14 @@ class PesFunction(FunctionCaller):
         structure: ParameterSet,
         path=None,
         **kwargs
-    ):
+    ) -> ParameterSet:
         create_files = self.create_files
         self.create_files = False  # Disable file creation during relaxation
-        structure.path = path
+        self._set_path(structure, path, required=False)
         if self._try_load_params(structure):
             self._try_load_value(structure)  # Load the corresponding value as well
-            return
+            self.create_files = create_files  # Restore the original setting
+            return structure
         # end if
 
         # Relax numerically using a wrapper around SciPy minimize
@@ -422,6 +425,7 @@ class PesFunction(FunctionCaller):
             self._save_value(structure)
             self._save_params(structure)
         # end if
+        return structure
     # end def
 
     def _warn_energy(self, structure: ParameterSet, warn_limit=2.0):
@@ -469,15 +473,24 @@ class PesFunction(FunctionCaller):
 
     def __call__(
         self,
-        structure: ParameterSet | list[ParameterSet],
+        structure: ParameterSet | list[ParameterSet] | StructureCollection,
         **kwargs
     ) -> PesResult | list[PesResult]:
         if isinstance(structure, list):
+            # Evaluate a list of structures
             self.evaluate_all(structure, **kwargs)
             result = [PesResult(s.value, s.error) for s in structure]
-        else:
+        elif isinstance(structure, ParameterSet):
+            # Evaluate a single structure
             self.evaluate(structure, **kwargs)
             result = PesResult(structure.value, structure.error)
+        elif isinstance(structure, StructureCollection):
+            # Evaluate a list of structures
+            result = self.evaluate_all(structure.collect_enabled(), **kwargs)
+            # Finalization hook for collective analysis, e.g., line-search
+            structure.finalize()
+        else:
+            raise TypeError("The structure must be a ParameterSet or a list/collection of ParameterSets.")
         # end if
         return result
     # end def
