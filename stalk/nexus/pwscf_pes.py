@@ -4,11 +4,13 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
+
 from nexus import PwscfAnalyzer
 
 from stalk.params.pes_function import NotEvaluatedException
 from stalk.params.pes_result import PesResult
-from stalk.io.pes_loader import PesLoader
+from stalk.params.pes_loader import PesLoader
 
 
 class PwscfPes(PesLoader):
@@ -26,7 +28,7 @@ class PwscfPes(PesLoader):
         PesLoader.__init__(self, suffix=suffix, scale=scale, **args)
     # end def
 
-    def _load(self, path: str, **kwargs) -> PesResult:
+    def _load(self, path: str | Path, **kwargs) -> PesResult:
         p = self.get_filename(path)
         if p.exists():
             ai = PwscfAnalyzer(str(p), **kwargs)

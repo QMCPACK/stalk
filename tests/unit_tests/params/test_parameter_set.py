@@ -58,7 +58,7 @@ def test_ParameterSet():
     assert len(s_copy) == 2
     assert s_copy.value == value
     assert s_copy.error == error
-    assert s_copy.label == label
+    assert s_copy.label is None
     for param, param_ref in zip(s_copy.params_list, params):
         assert isinstance(param, Parameter)
         assert param.value == param_ref

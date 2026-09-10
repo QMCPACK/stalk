@@ -5,6 +5,8 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
+
 from stalk.io.txt_data import TxtData
 from stalk.ls.error_surface import ErrorSurface
 from stalk.ls.target_linesearch import TargetLineSearch
@@ -43,7 +45,7 @@ class OptimizerData():
     def save(
         self,
         tls: TargetLineSearch,
-        path: str,
+        path: str | Path,
         overwrite: bool = True
     ) -> None:
         self.Gs_file.save_result(path, tls.Gs, overwrite=overwrite)
@@ -61,7 +63,7 @@ class OptimizerData():
 
     def load(
         self,
-        path: str,
+        path: str | Path,
     ) -> TargetLineSearch:
         result = TargetLineSearch(fit_kind='pf3')
         result.W_opt = self.W_opt_file.load_result(path, None)

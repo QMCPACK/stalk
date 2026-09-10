@@ -50,7 +50,10 @@ class TxtData:
         # end if
     # end def
 
-    def exists(self, filename: Path | str) -> bool:
+    def exists(self, filename: Path | str | None) -> bool:
+        if filename is None:
+            return False
+        # end if
         filename = self.get_filename(filename)
         return filename.exists()
     # end def

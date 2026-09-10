@@ -4,6 +4,7 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
 import warnings
 from numpy import array
 
@@ -11,7 +12,7 @@ from nexus import QmcpackAnalyzer
 
 from stalk.params.pes_function import NotEvaluatedException
 from stalk.params.pes_result import PesResult
-from stalk.io.pes_loader import PesLoader
+from stalk.params.pes_loader import PesLoader
 
 
 class QmcPes(PesLoader):
@@ -31,7 +32,7 @@ class QmcPes(PesLoader):
 
     def _load(
         self,
-        path: str,
+        path: str | Path,
         qmc_idx=1,
         term='LocalEnergy',
         twist_averaging=False,

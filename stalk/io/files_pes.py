@@ -4,7 +4,8 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from stalk.io.pes_loader import PesLoader
+from pathlib import Path
+
 from stalk.io.xyz_geometry import XyzGeometry
 from stalk.params.effective_variance_map import EffectiveVarianceMap
 from stalk.params.parameter_set import ParameterSet
@@ -28,20 +29,17 @@ class FilesPes(PesFunction):
         self,
         func=write_xyz_sigma,
         args={},
-        loader: PesLoader = PesLoader(),
-        **kwargs  # disable_failed=False, ...
+        create_files=True,  # FilesPes must create files
+        **kwargs  # loader=PesLoader(), disable_failed=False, ...
     ):
         # Init the function caller
-        super().__init__(func=func, args=args, **kwargs)
-        self.loader = loader
-        # Always true for the files PES
-        self.create_files = True
+        super().__init__(func=func, args=args, create_files=True, **kwargs)
     # end def
 
     def _generate_structure(
         self,
         structure: ParameterSet,
-        path='',
+        path: str | Path,
         sigma=0.0,
         samples=None,
         var_eff_map: EffectiveVarianceMap = None,
@@ -50,7 +48,7 @@ class FilesPes(PesFunction):
         **kwargs
     ):
         # Store the file path to the structure
-        structure.path = self._get_path(structure, path)
+        self._set_path(structure, path, required=True)
         # Associate the sigma with the structure
         structure.sigma = sigma
         # Set the number of samples
@@ -91,7 +89,7 @@ class FilesPes(PesFunction):
         interactive: bool = False,
     ) -> None:
         if structure.valid:
-            print(f'Structure {structure.label} is already valid. Not re-evaluating.')
+            print(f'{structure.path} is already evaluated. Not re-evaluating.')
             return
         # end if
         # Try to load the result from disk
@@ -107,7 +105,7 @@ class FilesPes(PesFunction):
             # Nothing to do here but update the var_eff_map if needed
             self._update_var_eff_map(structure, var_eff_map=var_eff_map)
         except NotEvaluatedException:
-            msg = f'Structure {structure.path}/{structure.label} has not been evaluated. '
+            msg = f'{structure.path} has not been evaluated. '
             msg += 'Supply output file to disk to continue.'
             print(msg)
         # end try

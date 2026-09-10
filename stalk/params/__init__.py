@@ -19,7 +19,9 @@ from .parameter_set import ParameterSet
 from .parameter_set import interpolate_params
 from .parameter_structure import ParameterStructure
 from .pes_function import PesFunction
+from .pes_loader import PesLoader
 from .pes_result import PesResult
+from .relax_function import RelaxFunction
 from .util import angle
 from .util import bond_angle
 from .util import distance
@@ -44,7 +46,9 @@ __all__ = [
     'ParameterSet',
     'ParameterStructure',
     'PesFunction',
+    'PesLoader',
     'PesResult',
+    'RelaxFunction',
     'angle',
     'bond_angle',
     'distance',

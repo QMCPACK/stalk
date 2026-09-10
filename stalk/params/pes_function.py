@@ -5,18 +5,21 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from os import makedirs
+from pathlib import Path
 import warnings
 
 from numpy import isscalar
 from scipy.optimize import minimize
 
+from stalk.params.pes_loader import PesLoader
+from stalk.io.stalk_path import StalkPath
 from stalk.io.txt_data import TxtData
 from stalk.params.effective_variance import EffectiveVariance
 from stalk.params.effective_variance_map import EffectiveVarianceMap
 from stalk.params.parameter_set import ParameterSet
 from stalk.params.pes_result import PesResult
+from stalk.params.util import NotEvaluatedException
 from stalk.util.function_caller import FunctionCaller
-from stalk.util.util import directorize
 
 
 class PesFunction(FunctionCaller):
@@ -26,11 +29,14 @@ class PesFunction(FunctionCaller):
     disable_failed = False
     # If True, direct PES evaluations will be written do disk
     create_files = None
+    # Loader will not be used in the basic implementation
+    loader: PesLoader = None  # Optional loader for loading results from disk
 
     def __init__(
         self,
         func,
         args: dict = {},  # Keep 'args' for backward compatibility
+        loader: PesLoader = None,
         disable_failed=False,
         create_files=True,
         **kwargs,
@@ -39,6 +45,7 @@ class PesFunction(FunctionCaller):
         super().__init__(func, args=args, **kwargs)
         self.disable_failed = disable_failed
         self.create_files = create_files
+        self.loader = loader
         self.sigma_file = TxtData('sigma.dat')  # Initialize the sigma file handler
         self.params_file = TxtData('params.dat')  # Initialize the params file handler
         self.value_file = TxtData('value.dat')  # Initialize the value file handler
@@ -47,7 +54,7 @@ class PesFunction(FunctionCaller):
     def generate(
         self,
         structure: ParameterSet,
-        path='',
+        path: Path | str | None = None,
         sigma=0.0,
         samples=None,
         var_eff_map: EffectiveVarianceMap = None,
@@ -70,7 +77,7 @@ class PesFunction(FunctionCaller):
     def evaluate(
         self,
         structure: ParameterSet,
-        path='',
+        path: Path | str | None = None,
         sigma=0.0,
         samples=None,
         add_sigma=False,
@@ -113,7 +120,7 @@ class PesFunction(FunctionCaller):
         self,
         structures: list[ParameterSet],
         sigmas=None,
-        path='',
+        path: Path | str | None = None,
         add_sigma=False,
         var_eff_map=None,
         interactive=False,
@@ -148,16 +155,22 @@ class PesFunction(FunctionCaller):
         )
     # end def
 
-    def _get_path(self, structure: ParameterSet, path: str) -> str | None:
-        if isinstance(structure, ParameterSet):
-            return f'{directorize(path)}{structure.label}/'
+    def _set_path(
+        self,
+        structure: ParameterSet,
+        path: str | Path | None,
+        required: bool = False
+    ) -> None:
+        structure.path = StalkPath(path) / structure.label
+        if structure.path is None and required:
+            raise ValueError('The path must be specified for the structure.')
         # end if
     # end def
 
     def _generate_structure(
         self,
         structure: ParameterSet,
-        path: str,
+        path: Path | str | None,
         sigma=0.0,
         samples=None,
         var_eff_map: EffectiveVarianceMap = None,
@@ -165,9 +178,9 @@ class PesFunction(FunctionCaller):
         dep_jobs=[],
         **kwargs
     ) -> None:
-        # Store the file path to the structure
-        structure.path = self._get_path(structure, path)
-        # Associate the sigma with the structure
+        # Set path for the structure
+        self._set_path(structure, path, required=False)
+        # Associate sigma with the structure
         structure.sigma = sigma
         self._set_samples(structure, var_eff_map=var_eff_map, samples=samples)
         # Use params.dat to determine if the files have been already generated
@@ -216,22 +229,22 @@ class PesFunction(FunctionCaller):
 
     def _save_value(self, structure: ParameterSet):
         '''Save the value+error of the structure to disk.'''
-        if self.create_files:
+        if self.create_files and structure.path is not None:
             self.value_file.save_result(structure.path, [structure.value, structure.error])
         # end if
     # end def
 
     def _save_params(self, structure: ParameterSet):
         '''Save the parameters of the structure to disk.'''
-        if self.create_files:
+        if self.create_files and structure.path is not None:
             self.params_file.save_result(structure.path, structure.params)
         # end if
     # end def
 
     def _generate_structure_all(
         self,
-        structures: ParameterSet,
-        path,
+        structures: list[ParameterSet],
+        path: Path | str | None,
         sigmas=None,
         var_eff_map=None,
         interactive=False,
@@ -268,11 +281,12 @@ class PesFunction(FunctionCaller):
         if reset_value:
             structure.reset_value()
         # end if
-        if structure.evaluated and not reset_value:
+        if structure.evaluated and not reset_value and structure.path is not None:
             print(f'{structure.path} is already evaluated.')
             return
         # end if
         try:
+            # The raw PES function is expected to return either a scalar or a tuple of (value, error)
             raw_result = self.func(structure, **self.args)
             if isinstance(raw_result, tuple) and len(raw_result) == 2:
                 value, error = raw_result
@@ -282,7 +296,7 @@ class PesFunction(FunctionCaller):
                 raise ValueError("The PES function must return a scalar or a tuple of (value, error).")
             # end if
             # Unlike elsewhere, the value and error can be set here directly and bypass
-            # using loaders. The data is transferred via the structure
+            # using loaders. The data is transferred via the structure.
             structure.value = value
             structure.error = error
             self._save_value(structure)
@@ -293,7 +307,7 @@ class PesFunction(FunctionCaller):
 
     def _evaluate_structure_all(
         self,
-        structures: ParameterSet,
+        structures: list[ParameterSet],
         interactive: bool = False,
         dep_jobs=[],
         reset_value=False,
@@ -322,8 +336,9 @@ class PesFunction(FunctionCaller):
         # end if
         structure.value = result.value
         structure.error = result.error
-        print(f'{structure.path} evaluated to {structure.value:.6f} +/- {structure.error:.6f}.')
-        # TODO: write to disk
+        if structure.path is not None:
+            print(f'{structure.path} evaluated to {structure.value:.6f} +/- {structure.error:.6f}.')
+        # end if
         # TODO: interactively discard bad data?
         self._warn_energy(structure, warn_limit=warn_limit)
         # Nothing to do here but update the var_eff_map if needed
@@ -332,7 +347,7 @@ class PesFunction(FunctionCaller):
 
     def _finalize_structure_all(
         self,
-        structures: ParameterSet,
+        structures: list[ParameterSet],
         add_sigma: bool = False,
         var_eff_map: EffectiveVarianceMap = None,
         warn_limit=2.0,
@@ -390,7 +405,7 @@ class PesFunction(FunctionCaller):
     def relax(
         self,
         structure: ParameterSet,
-        path='relax/',
+        path=None,
         **kwargs
     ):
         create_files = self.create_files
@@ -404,7 +419,7 @@ class PesFunction(FunctionCaller):
         # Relax numerically using a wrapper around SciPy minimize
         def relax_aux(p):
             s = structure.copy(params=p)
-            self.evaluate(s)
+            self.evaluate(s, reset_value=True)
             return s.value
         # end def
         p0 = structure.params
@@ -412,9 +427,11 @@ class PesFunction(FunctionCaller):
         structure.params = res.x
         structure.value = relax_aux(res.x)
         self.create_files = create_files  # Restore the original setting
-        # Save relaxed parameters and value to disk if file creation is enabled
-        self._save_value(structure)
-        self._save_params(structure)
+        if structure.path is not None:
+            # Save relaxed parameters and value to disk if file creation is enabled
+            self._save_value(structure)
+            self._save_params(structure)
+        # end if
     # end def
 
     def _warn_energy(self, structure: ParameterSet, warn_limit=2.0):
@@ -429,7 +446,7 @@ class PesFunction(FunctionCaller):
     def get_var_eff(
         self,
         structure: ParameterSet,
-        path='path',
+        path=None,
         samples: float | int = 10,
         interactive: bool = False,
     ) -> EffectiveVariance:
@@ -446,7 +463,7 @@ class PesFunction(FunctionCaller):
     def get_var_eff_map(
         self,
         structure: ParameterSet,
-        path='path',
+        path=None,
         samples=10,
         interactive=False,
     ) -> EffectiveVarianceMap:
@@ -473,16 +490,6 @@ class PesFunction(FunctionCaller):
             result = PesResult(structure.value, structure.error)
         # end if
         return result
-    # end def
-
-# end class
-
-
-# Exception used to indicate that the energy of a structure has not been evaluated yet.
-class NotEvaluatedException(Exception):
-
-    def __init__(self, msg):
-        super().__init__(self, msg)
     # end def
 
 # end class

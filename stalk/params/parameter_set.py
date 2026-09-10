@@ -8,16 +8,16 @@ __license__ = "BSD-3-Clause"
 from numpy import array, isscalar, random, ndarray, linspace
 from copy import deepcopy
 
+from stalk.io.stalk_path import StalkPath
 from stalk.params.linesearch_point import LineSearchPoint
 from stalk.params.parameter import Parameter
 
 
-class ParameterSet(LineSearchPoint):
+class ParameterSet(LineSearchPoint, StalkPath):
     _param_list: list[Parameter] = []
-    _samples = None  # samples for effective variance estimation
-    _sigma = None  # target uncertainty for noisy simulations; sigma=0.0 means no noise
-    label = ''  # label for identification
-    path = None  # field to be used in file I/O mode
+    _samples: float = None  # samples for effective variance estimation
+    _sigma: float = None  # target uncertainty for noisy simulations; sigma=0.0 means no noise
+    _label: None | str = None  # optional label for the parameter set; used for path generation
 
     def __init__(
         self,
@@ -36,6 +36,8 @@ class ParameterSet(LineSearchPoint):
             self.value = value
             self.error = error
         # end if
+        # Path is always initialized to None, and only set later if needed.
+        StalkPath.__init__(self, path=None)
     # end def
 
     @property
@@ -53,8 +55,7 @@ class ParameterSet(LineSearchPoint):
             if isinstance(param, Parameter):
                 parameter = param
             elif isscalar(param):
-                label = f'p{p}'
-                parameter = Parameter(param, 0.0, unit=None, label=label)
+                parameter = Parameter(param, 0.0, unit=None, label=f'p{p}')
             else:
                 raise ValueError('Parameter is unsupported type: ' + str(param))
             # end if
@@ -125,6 +126,27 @@ class ParameterSet(LineSearchPoint):
     # end def
 
     @property
+    def label(self) -> str:
+        # If no custom label is provided, fall back to the hash of the parameter set.
+        if self._label is None:
+            return 'p' + str(hash(self))[:8]
+        else:
+            return self._label
+        # end if
+    # end def
+
+    @label.setter
+    def label(self, label: str | None) -> None:
+        if label is None:
+            self._label = None
+        elif isinstance(label, str):
+            self._label = label
+        else:
+            raise ValueError(f'Label must be str or None, provided: {label}')
+        # end if
+    # end def
+
+    @property
     def sigma(self) -> None:
         return self._sigma
     # end def
@@ -152,8 +174,8 @@ class ParameterSet(LineSearchPoint):
         self,
         params=None,
         params_err=None,
+        offset=None,
         label=None,
-        offset=None
     ):
         paramset = deepcopy(self)
         if offset is not None:
@@ -179,16 +201,6 @@ class ParameterSet(LineSearchPoint):
         return True
     # end def
 
-    def __sub__(self, other):
-        if isinstance(other, ParameterSet) and len(self) > 0 and len(other) == len(self):
-            result = self.copy()
-            result.shift_params(-other.params)
-            return result
-        else:
-            raise ValueError(f'Cannot subtract {repr(other)} from {repr(self)}')
-        # end if
-    # end def
-
     # Mean squared distance between this and other ParameterSet
     def distance2(self, other):
         if isinstance(other, ParameterSet):
@@ -204,11 +216,19 @@ class ParameterSet(LineSearchPoint):
         return self.distance2(other)**0.5
     # end def
 
+    def __sub__(self, other):
+        if isinstance(other, ParameterSet) and len(self) > 0 and len(other) == len(self):
+            result = self.copy()
+            result.shift_params(-other.params)
+            return result
+        else:
+            raise ValueError(f'Cannot subtract {repr(other)} from {repr(self)}')
+        # end if
+    # end def
+
     def __str__(self):
         string = self.__class__.__name__
-        if self.label is not None and self.label != '':
-            string += ' ({})'.format(self.label)
-        # end if
+        string += f' ({self.label})'
         if self.params is None:
             string += '\n  params: not set'
         else:
@@ -228,6 +248,14 @@ class ParameterSet(LineSearchPoint):
 
     def __len__(self):
         return len(self.params_list)
+    # end def
+
+    def __getitem__(self, index) -> float:
+        return self.params_list[index].value
+    # end def
+
+    def __hash__(self):
+        return hash(str(self.params))
     # end def
 
 # end class

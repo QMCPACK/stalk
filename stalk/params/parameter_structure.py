@@ -6,7 +6,6 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from numpy import array
-from copy import deepcopy
 
 from stalk.params.parameter_mapping import ParameterMapping
 from stalk.util import get_fraction_error
@@ -39,12 +38,10 @@ class ParameterStructure(ParameterSet):
         dim=3,
         value=None,
         error=0.0,
-        label='',
         units='B',
         tol=1e-7,
         require_consistent=True,
     ):
-        self.label = label
         self.tol = tol
         self.units = units
         self.require_consistent = require_consistent
@@ -304,30 +301,22 @@ class ParameterStructure(ParameterSet):
         self,
         params=None,
         params_err=None,
-        label=None,
         pos=None,
         axes=None,
         offset=None,
-        **kwargs,
+        label=None,
     ):
-        structure = deepcopy(self)
-        if offset is not None:
-            structure.offset = offset
-        # end if
-        if params is not None:
-            structure.params = params
-        # end if
-        if params_err is not None:
-            structure.params_err = params_err
-        # end if
+        structure = super().copy(
+            params=params,
+            params_err=params_err,
+            offset=offset,
+            label=label,
+        )
         if pos is not None:
             structure.pos = pos
         # end if
         if axes is not None:
             structure.axes = axes
-        # end if
-        if label is not None:
-            structure.label = label
         # end if
         structure.reset_value()
         return structure

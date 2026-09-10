@@ -144,3 +144,13 @@ def rotate_2d(arr_2d, ang, units='ang'):
     ])
     return R @ arr_2d
 # end def
+
+
+# Exception used to indicate that the energy of a structure has not been evaluated yet.
+class NotEvaluatedException(Exception):
+
+    def __init__(self, msg):
+        super().__init__(self, msg)
+    # end def
+
+# end class

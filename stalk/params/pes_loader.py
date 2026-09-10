@@ -4,8 +4,10 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
+
 from stalk.io.txt_data import TxtData
-from stalk.params.pes_function import NotEvaluatedException
+from stalk.params.util import NotEvaluatedException
 from stalk.params.pes_result import PesResult
 from stalk.util.args_container import ArgsContainer
 
@@ -26,7 +28,7 @@ class PesLoader(ArgsContainer, TxtData):
         ArgsContainer.__init__(self, **args)
     # end def
 
-    def load(self, path: str) -> PesResult:
+    def load(self, path: str | Path) -> PesResult:
         # Loading hook
         res = self._load(path, **self.args)
         print(f'Loaded energy from {path}: {res.value} ± {res.error}')
@@ -34,7 +36,7 @@ class PesLoader(ArgsContainer, TxtData):
     # end def
 
     # Loading hook that can be overridden in derived classes for custom loading behavior
-    def _load(self, path: str, **kwargs) -> PesResult:
+    def _load(self, path: str | Path, **kwargs) -> PesResult:
         try:
             # PesLoader will not tolerate missing files unless default=nan is in kwargs
             data = self.load_result(path, **kwargs)

@@ -8,7 +8,7 @@ from pytest import raises
 
 from stalk.params.pes_function import NotEvaluatedException
 from stalk.params.pes_result import PesResult
-from stalk.io.pes_loader import PesLoader
+from stalk.params.pes_loader import PesLoader
 
 
 # Test PesLoader class

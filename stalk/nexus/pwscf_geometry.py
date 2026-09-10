@@ -4,6 +4,8 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
+
 from nexus import PwscfAnalyzer
 
 from stalk.io.geometry_loader import GeometryLoader
@@ -24,7 +26,7 @@ class PwscfGeometry(GeometryLoader):
         GeometryLoader.__init__(self, args=args, scale=scale, c_pos=c_pos, **kwargs)
     # end def
 
-    def _load(self, path: str, **kwargs):
+    def _load(self, path: str | Path, **kwargs):
         p = self.get_filename(path)
         if p.exists():
             ai = PwscfAnalyzer(str(p), **kwargs)

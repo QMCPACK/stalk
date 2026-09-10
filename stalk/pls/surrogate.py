@@ -193,7 +193,7 @@ class Surrogate(ParallelLineSearch):
 
     def __init__(
         self,
-        path='surrogate',
+        path=None,
         structure=None,
         hessian=None,
         targets=None,
@@ -546,16 +546,14 @@ class Surrogate(ParallelLineSearch):
 
     def copy(
         self,
-        path='',
         **kwargs
-        # pes=None, pes_func=None, pes_args={}
+        # path=None, pes=None, pes_func=None, pes_args={}
     ):
         if not self.optimized:
             self.logger.log_and_raise("Must optimize surrogate before copying")
         # end if
         pls = ParallelLineSearch.copy(
             self,
-            path=path,
             # Copy optimized windows, noises
             windows=self.W_opt,
             noises=self.sigma_opt,

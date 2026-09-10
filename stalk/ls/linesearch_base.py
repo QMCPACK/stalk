@@ -93,7 +93,7 @@ class LineSearchBase(LineSearchGrid):
     def evaluate(
         self,
         pes: PesFunction,
-        path='',
+        path=None,
         var_eff_map=None,
         interactive=False,
         dep_jobs=[],

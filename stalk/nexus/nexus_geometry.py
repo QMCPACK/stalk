@@ -5,6 +5,7 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
 import warnings
 
 from nexus import run_project
@@ -12,7 +13,6 @@ from nexus import run_project
 from stalk.io.geometry_loader import GeometryLoader
 from stalk.nexus.nexus_structure import NexusStructure
 from stalk.util.function_caller import FunctionCaller
-from stalk.util.util import directorize
 
 
 class NexusGeometry(FunctionCaller):
@@ -33,12 +33,12 @@ class NexusGeometry(FunctionCaller):
     def relax(
         self,
         structure: NexusStructure,
-        path='relax',
+        path: str | Path,
         **kwargs,
     ):
         eval_args = self.get_updated(kwargs)
         # Generate relaxation jobs
-        structure.path = f'{directorize(path)}{structure.label}/'
+        structure.path = path / structure.path
         jobs = self.func(structure, **eval_args)
         structure.jobs = jobs
         # Run project

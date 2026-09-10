@@ -179,7 +179,7 @@ class PathwayImage():
 
 
 def extend_structure(structure0: ParameterSet, structure_sub: ParameterSet, subspace):
-    structure = structure0.copy(label=structure_sub.label)
+    structure = structure0.copy(path=structure_sub.path)
     structure.shift_params(structure_sub.params @ subspace)
     return structure
 # end def
@@ -199,7 +199,7 @@ def extend_structure_errors(
     # end for
     ps = array(ps).T
     params_err = [get_fraction_error(p, fraction=fraction)[1] for p in ps]
-    structure = structure0.copy(label=structure_sub.label)
+    structure = structure0.copy(path=structure_sub.path)
     structure.params = structure0.params + structure_sub.params @ subspace
     structure.params_err = params_err
     structure.value = structure_sub.value

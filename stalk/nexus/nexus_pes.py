@@ -5,12 +5,13 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
 from numpy import isscalar
 from pickle import load
 
 from nexus import run_project, bundle
 
-from stalk.io.pes_loader import PesLoader
+from stalk.params.pes_loader import PesLoader
 from stalk.nexus.nexus_structure import NexusStructure
 from stalk.params.pes_function import NotEvaluatedException, PesFunction
 from stalk.params.effective_variance_map import EffectiveVarianceMap
@@ -23,22 +24,21 @@ class NexusPes(PesFunction):
         self,
         func,
         args: dict = {},  # Keep 'args' for backward compatibility
-        loader: PesLoader = None,
+        loader: PesLoader = PesLoader(),
         create_files=True,  # NexusPes must create files
         bundle_jobs=False,
         **kwargs,  # disable_failed=False, ...
     ):
         # Init the function caller
-        super().__init__(func, args=args, create_files=True, **kwargs)
+        super().__init__(func, args=args, create_files=True, loader=loader, **kwargs)
         self.bundle_jobs = bundle_jobs
-        self.loader = loader
     # end def
 
     # Override generation function to support Nexus job generation
     def _generate_structure(
         self,
         structure: NexusStructure,
-        path='',
+        path: str | Path,
         sigma=0.0,
         samples=None,
         var_eff_map: EffectiveVarianceMap = None,
@@ -47,7 +47,7 @@ class NexusPes(PesFunction):
         **kwargs
     ) -> None:
         # Store the file path to the structure
-        structure.path = self._get_path(structure, path)
+        structure.path = self._set_path(structure, path, required=True)
         # Associate the sigma with the structure
         structure.sigma = sigma
         # Set the number of samples

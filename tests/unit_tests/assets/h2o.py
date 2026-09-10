@@ -8,7 +8,7 @@ __license__ = "BSD-3-Clause"
 from numpy import array, sin, cos, pi
 from numpy.random import randn
 
-from stalk.io.pes_loader import PesLoader
+from stalk import PesLoader
 from stalk import ParameterHessian
 from stalk import ParameterStructure
 from stalk.nexus.nexus_structure import NexusStructure

@@ -74,7 +74,7 @@ class NexusStructure(ParameterStructure):
     def copy(
         self,
         **kwargs
-        # params=None, params_err=None, label=None, pos=None, axes=None, offset=None
+        # params=None, params_err=None, path=None, pos=None, axes=None, offset=None
     ):
         tmp_jobs = self._jobs
         # Put jobs lists aside during copy

@@ -5,6 +5,7 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
 from numpy import array, isscalar, mean
 from matplotlib import pyplot as plt
 
@@ -19,13 +20,13 @@ from stalk.util.util import FF, FFS, FI, FIS, FU
 
 class LineSearchIteration():
     _pls_list: list[ParallelLineSearch]  # list of ParallelLineSearch objects
-    _path = ''  # base path
+    _path: Path | None = None
     _transient = 0
     _var_eff_map = None
 
     def __init__(
         self,
-        path='',
+        path: str | Path | None = None,
         surrogate=None,
         structure=None,
         hessian=None,

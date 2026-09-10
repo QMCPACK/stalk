@@ -5,6 +5,7 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
 from numpy import array
 
 from stalk.io.txt_data import TxtData
@@ -33,7 +34,7 @@ class LineSearchData():
     def save(
         self,
         grid: LineSearchBase,
-        path: str,
+        path: str | Path,
         overwrite: bool = True
     ) -> None:
         data = array([grid.offsets, grid.values, grid.errors]).T
@@ -49,7 +50,7 @@ class LineSearchData():
 
     def load(
         self,
-        path: str,
+        path: str | Path,
     ) -> LineSearchBase:
         '''Load line-search data from file and return a LineSearchBase instance of desired type.'''
         data = self.ls_file.load_result(path, None)

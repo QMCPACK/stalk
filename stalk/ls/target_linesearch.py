@@ -544,9 +544,21 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
     def __str__(self):
         string = LineSearch.__str__(self)
         if self.optimized:
-            string += f'\n  W_opt: {self.W_opt:.4e}'
-            string += f'\n  sigma_opt: {self.sigma_opt:.4e}'
-            string += f'\n  epsilon: {self.epsilon:.4e}'
+            if self.W_opt is None:
+                string += '\n  W_opt: None'
+            else:
+                string += f'\n  W_opt: {self.W_opt:.4e}'
+            # end if
+            if self.sigma_opt is None:
+                string += '\n  sigma_opt: None'
+            else:
+                string += f'\n  sigma_opt: {self.sigma_opt:.4e}'
+            # end if
+            if self.epsilon is None:
+                string += '\n  epsilon: None'
+            else:
+                string += f'\n  epsilon: {self.epsilon:.4e}'
+            # end if
         return string
     # end def
 

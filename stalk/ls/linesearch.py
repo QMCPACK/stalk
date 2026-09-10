@@ -224,8 +224,7 @@ class LineSearch(LineSearchBase):
             # i.e. abs(offset) < threshold
             structure.label = 'eqm'
         else:
-            label = SL.format(self.d, shift)
-            structure.label = label
+            structure.label = SL.format(self.d, shift)
             structure.shift_params(shift * self.direction)
         # end if
         return structure

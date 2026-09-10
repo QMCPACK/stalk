@@ -10,7 +10,7 @@ from pathlib import Path
 from nexus import obj, job, settings, generate_physical_system, input_template
 from nexus.simulation import GenericSimulation, SimulationAnalyzer, Simulation
 from stalk.io.geometry_loader import GeometryLoader
-from stalk.io.pes_loader import PesLoader
+from stalk.params.pes_loader import PesLoader
 from stalk.io.xyz_geometry import XyzGeometry
 from stalk.nexus.nexus_structure import NexusStructure
 from stalk.params.geometry_result import GeometryResult

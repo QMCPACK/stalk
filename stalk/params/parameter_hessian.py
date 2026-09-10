@@ -5,6 +5,7 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
 import warnings
 from numpy import array, linalg, diag, isscalar, ndarray, zeros, ones, where, mean, polyfit
 
@@ -171,14 +172,13 @@ class ParameterHessian():
     def compute_fdiff(
         self,
         pes: PesFunction,
-        path='fdiff',
-        structure=None,
+        path: Path | str | None = None,
         dp=0.01,
         dpos_mode=False,
         **kwargs,
     ):
-        if structure is not None:
-            self.structure = structure
+        if self.load(path):
+            return
         # end if
         P = len(self)
 
@@ -267,11 +267,11 @@ class ParameterHessian():
             label = 'eqm'
             for p, dp in zip(id_ls, dp_ls):
                 dparams[p] += dp
-                label += '_p{}'.format(p)
+                label += f'_{self.structure.params_list[p].label}'
                 if dp > 0:
                     label += '+'
                 # end if
-                label += '{}'.format(dp)
+                label += f'{dp}'
             # end for
             structure_new = self.structure.copy(label=label)
             if isinstance(structure_new, ParameterStructure):
@@ -314,7 +314,7 @@ class ParameterHessian():
         return False
     # end def
 
-    def save_hessian(self, path: str) -> None:
+    def save_hessian(self, path: Path | str) -> None:
         if self.hessian is not None:
             self.hessian_file.save_result(path, self.hessian)
             print(f'Saved Hessian to {path}.')

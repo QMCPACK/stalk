@@ -5,6 +5,8 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
+
 from numpy import ndarray, array
 from textwrap import indent
 
@@ -27,7 +29,7 @@ class ParallelLineSearch():
     def __init__(
         self,
         # PLS arguments
-        path='pls',
+        path: str | Path | None = None,
         hessian=None,
         structure=None,
         windows=None,
@@ -64,9 +66,11 @@ class ParallelLineSearch():
     # end def
 
     @path.setter
-    def path(self, path):
-        if isinstance(path, str):
-            self._path = path
+    def path(self, path: str | Path | None):
+        if path is None:
+            self._path = None
+        elif isinstance(path, (str, Path)):
+            self._path = Path(path)
         else:
             raise ValueError('path must be str')
         # end if
@@ -134,7 +138,7 @@ class ParallelLineSearch():
     @structure.setter
     def structure(self, structure):
         if not isinstance(structure, ParameterSet):
-            raise TypeError("Structure must be inherited from ParameterSet clas")
+            raise TypeError("Structure must be inherited from ParameterSet class")
         # end if
         self._structure = structure.copy(label='eqm')
         # Upon change, reset line-searches according to old windows/noises, if present
@@ -232,7 +236,7 @@ class ParallelLineSearch():
                     if not all(ls.offsets == ls_load.offsets):
                         raise ValueError('Offsets of the loaded line-search do not match the current offsets')
                     # end if
-                    print(f'{self.path}ls{d}: Line-search data loaded from disk.')
+                    print(f'{self.path}/ls{d}: Line-search data loaded from disk.')
                     ls.values = ls_load.values
                     ls.errors = ls_load.errors
                     ls.fit_res = ls_load.fit_res
@@ -402,7 +406,7 @@ class ParallelLineSearch():
 
     def copy(
         self,
-        path,
+        path=None,
         structure=None,
         hessian=None,
         windows=None,
@@ -446,13 +450,12 @@ class ParallelLineSearch():
         if not self.evaluated:
             raise NotEvaluatedException("Cannot propagate, as not all line-searches were successfully evaluated.")
         # end if
-        next_path = next_path if next_path is not None else self.path + '_next/'
         # Write to disk
         for ls in self.ls_list:
             LineSearchData(label=f'ls{ls.d}').save(ls, path=self.path, overwrite=overwrite)
         # end if
         pls_next = self.copy(
-            next_path,
+            path=next_path,
             structure=self.structure_next
         )
         return pls_next

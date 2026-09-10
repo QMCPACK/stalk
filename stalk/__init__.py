@@ -10,7 +10,6 @@ __version__ = "0.2.2dev3"
 from stalk.io import FilesPes
 from stalk.io import GeometryLoader
 from stalk.io import GeometryWriter
-from stalk.io import PesLoader
 from stalk.io import XyzGeometry
 from stalk.io import TxtData
 from stalk.io import write_xyz_sigma
@@ -59,7 +58,9 @@ from stalk.params import ParameterMapping
 from stalk.params import ParameterSet
 from stalk.params import ParameterStructure
 from stalk.params import PesFunction
+from stalk.params import PesLoader
 from stalk.params import PesResult
+from stalk.params import RelaxFunction
 from stalk.params import angle
 from stalk.params import bond_angle
 from stalk.params import distance
@@ -86,7 +87,6 @@ __all__ = [
     'FilesPes',
     'GeometryLoader',
     'GeometryWriter',
-    'PesLoader',
     'XyzGeometry',
     'TxtData',
     'write_xyz_sigma',
@@ -132,6 +132,8 @@ __all__ = [
     'ParameterSet',
     'ParameterStructure',
     'PesFunction',
+    'PesLoader',
+    'RelaxFunction',
     'PesResult',
     'angle',
     'bond_angle',
