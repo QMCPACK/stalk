@@ -119,7 +119,6 @@ class PesFunction(FunctionCaller):
     def evaluate_all(
         self,
         structures: list[ParameterSet],
-        sigmas=None,
         path: Path | str | None = None,
         add_sigma=False,
         var_eff_map=None,
@@ -133,7 +132,6 @@ class PesFunction(FunctionCaller):
         self._generate_structure_all(
             structures,
             path=path,
-            sigmas=sigmas,
             var_eff_map=var_eff_map,
             dep_jobs=dep_jobs,
             **kwargs
@@ -171,7 +169,6 @@ class PesFunction(FunctionCaller):
         self,
         structure: ParameterSet,
         path: Path | str | None,
-        sigma=0.0,
         samples=None,
         var_eff_map: EffectiveVarianceMap = None,
         interactive=False,
@@ -180,8 +177,6 @@ class PesFunction(FunctionCaller):
     ) -> None:
         # Set path for the structure
         self._set_path(structure, path, required=False)
-        # Associate sigma with the structure
-        structure.sigma = sigma
         self._set_samples(structure, var_eff_map=var_eff_map, samples=samples)
         # Use params.dat to determine if the files have been already generated
         if not self.params_file.exists(structure.path):
@@ -245,21 +240,16 @@ class PesFunction(FunctionCaller):
         self,
         structures: list[ParameterSet],
         path: Path | str | None,
-        sigmas=None,
         var_eff_map=None,
         interactive=False,
         dep_jobs=[],
         **kwargs
     ) -> None:
-        if sigmas is None:
-            sigmas = [0.0] * len(structures)
-        # end if
         # In the default implementation, just call the single structure version for each structure
-        for structure, sigma in zip(structures, sigmas):
+        for structure in structures:
             self._generate_structure(
                 structure,
                 path=path,
-                sigma=sigma,
                 var_eff_map=var_eff_map,
                 interactive=interactive,
                 dep_jobs=dep_jobs,

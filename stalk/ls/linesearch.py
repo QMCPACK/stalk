@@ -26,17 +26,15 @@ class LineSearch(LineSearchBase):
         structure=None,
         hessian=None,
         d=None,
-        sigma=0.0,
         offsets=None,
         M=7,
         W=None,
         R=None,
         **ls_args
-        # values=None, errors=None, fraction=0.025, sgn=1
+        # values=None, errors=None, fraction=0.025, sgn=1, sigma=0
         # fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None
     ):
         LineSearchBase.__init__(self, offsets=None, **ls_args)
-        self.sigma = sigma
         if d is not None:
             self.d = d
         # end if

@@ -63,13 +63,13 @@ def test_linesearchiteration(tmp_path):
         lsi_srg = LineSearchIteration(surrogate=srg)
     # end with
     windows = [0.1, 0.2]
-    noises = [0.03, 0.04]
+    sigmas = [0.03, 0.04]
     M = 9
-    srg.optimize_windows_noises(
+    srg.optimize_windows_sigmas(
         fit_kind='pf4',
         M=M,
         windows=windows,
-        noises=noises
+        sigmas=sigmas
     )
     lsi_srg = LineSearchIteration(
         path=str(tmp_path) + '/lsi_srg',
@@ -80,7 +80,7 @@ def test_linesearchiteration(tmp_path):
     assert match_to_tol(lsi_srg[-1].structure.params, srg.structure.params)
     assert match_to_tol(lsi_srg[-1].hessian.hessian, srg.hessian.hessian)
     assert match_to_tol(lsi_srg[-1].windows, windows)
-    assert match_to_tol(lsi_srg[-1].noises, noises)
+    assert match_to_tol(lsi_srg[-1].sigmas, sigmas)
     assert len(lsi_srg[-1].ls(0)) == M
     assert len(lsi_srg[-1].ls(1)) == M
 

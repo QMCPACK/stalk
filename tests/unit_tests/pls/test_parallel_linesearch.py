@@ -27,7 +27,7 @@ def test_ParallelLineSearch(tmp_path):
     assert pls.hessian is None
     assert len(pls.ls_list) == 0
     assert len(pls.Lambdas) == 0
-    assert len(pls.noises) == 0
+    assert len(pls.sigmas) == 0
     assert len(pls.windows) == 0
     assert not pls.noisy
     assert pls.params is None
@@ -47,7 +47,7 @@ def test_ParallelLineSearch(tmp_path):
     with raises(AssertionError):
         pls.evaluate(pes=pes)
     # end with
-    # To shift structures and generate ls_list, provide windows, noises etc
+    # To shift structures and generate ls_list, provide windows, sigmas etc
     M = 5
     fit_kind = 'pf2'
     N = 100

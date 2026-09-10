@@ -200,7 +200,7 @@ class Surrogate(ParallelLineSearch):
         interpolate_kind='cubic',
         logger=None,
         **pls_args
-        # windows=None, window_frac=0.25, noises=None,
+        # windows=None, window_frac=0.25, sigmas=None,
         # M=7, fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
     ):
         ParallelLineSearch.__init__(
@@ -233,7 +233,7 @@ class Surrogate(ParallelLineSearch):
         self,
         reoptimize=True,
         windows=None,
-        noises=None,
+        sigmas=None,
         epsilon_p=None,
         epsilon_d=None,
         temperature=None,
@@ -265,10 +265,10 @@ class Surrogate(ParallelLineSearch):
                 AssertionError
             )
         # end if
-        if windows is not None and noises is not None:
-            self.optimize_windows_noises(
+        if windows is not None and sigmas is not None:
+            self.optimize_windows_sigmas(
                 windows,
-                noises,
+                sigmas,
                 **ls_args
             )
         elif temperature is not None:
@@ -298,10 +298,10 @@ class Surrogate(ParallelLineSearch):
         self._finalize_optimization(overwrite=overwrite)
     # end def
 
-    def optimize_windows_noises(
+    def optimize_windows_sigmas(
         self,
         windows,
-        noises,
+        sigmas,
         Gs=None,
         **ls_args
         # fit_kind=None, fit_func=None, fit_args={},
@@ -311,12 +311,12 @@ class Surrogate(ParallelLineSearch):
         # W_num=3, W_max=None, sigma_num=3, sigma_max=None
     ):
         # If provided, distribute Gs per line-search; if not, provide None
-        self.logger.log("Optimizing to windows, noises:", level=1)
+        self.logger.log("Optimizing to windows, sigmas:", level=1)
         if Gs is None:
             Gs = len(windows) * [None]
         # end if
-        for window, sigma, tls, Gs_this in zip(windows, noises, self.ls_list, Gs):
-            # No optimization necessary if the windows, noises are readily provided but
+        for window, sigma, tls, Gs_this in zip(windows, sigmas, self.ls_list, Gs):
+            # No optimization necessary if the windows, sigmas are readily provided but
             # generating error surface to store all required settings
             self.logger.log(f' tls={tls.d} (window={window}, noise={sigma})', level=1)
             tls.setup_optimization(
@@ -554,9 +554,9 @@ class Surrogate(ParallelLineSearch):
         # end if
         pls = ParallelLineSearch.copy(
             self,
-            # Copy optimized windows, noises
+            # Copy optimized windows, sigmas
             windows=self.W_opt,
-            noises=self.sigma_opt,
+            sigmas=self.sigma_opt,
             M=[tls.M for tls in self.ls_list],
             **kwargs
         )
@@ -630,7 +630,7 @@ class Surrogate(ParallelLineSearch):
         return biases_d, biases_p
     # end def
 
-    # based on windows and noises
+    # based on windows and sigmas
     def _resample_errorbars(self, N=None):
         # provide correlated sampling
         fraction = self.ls_list[0].target_settings.fraction

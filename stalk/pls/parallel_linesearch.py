@@ -34,7 +34,7 @@ class ParallelLineSearch():
         structure=None,
         windows=None,
         window_frac=0.25,
-        noises=None,
+        sigmas=None,
         # LineSearch args
         **ls_args
         # M=7, fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
@@ -49,7 +49,7 @@ class ParallelLineSearch():
         if self.setup:
             self.initialize(
                 windows,
-                noises,
+                sigmas,
                 window_frac,
                 **ls_args
             )
@@ -141,11 +141,11 @@ class ParallelLineSearch():
             raise TypeError("Structure must be inherited from ParameterSet class")
         # end if
         self._structure = structure.copy(label='eqm')
-        # Upon change, reset line-searches according to old windows/noises, if present
+        # Upon change, reset line-searches according to old windows/sigmas, if present
         if self.shifted:
             windows = self.windows
-            noises = self.noises
-            self._reset_ls_list(windows, noises)
+            sigmas = self.sigmas
+            self._reset_ls_list(windows, sigmas, cls=type(self.ls_list[0]))
         # end if
     # end def
 
@@ -178,12 +178,12 @@ class ParallelLineSearch():
     # end def
 
     @property
-    def noises(self) -> list[float]:
+    def sigmas(self) -> list[float]:
         return [ls.sigma for ls in self.ls_list]
     # end def
 
     @property
-    def noises_min(self) -> float:
+    def sigmas_min(self) -> float:
         return array([ls.sigma for ls in self.ls_list]).min()
     # end def
 
@@ -195,7 +195,7 @@ class ParallelLineSearch():
     def initialize(
         self,
         windows=None,
-        noises=None,
+        sigmas=None,
         window_frac=None,
         **ls_args
         # M=7, fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
@@ -203,31 +203,31 @@ class ParallelLineSearch():
         if windows is None:
             windows = abs(self.Lambdas)**0.5 * window_frac
         # end if
-        noises = self._for_all_ls(noises, default=0.0)
-        self._reset_ls_list(windows, noises, **ls_args)
+        sigmas = self._for_all_ls(sigmas, default=0.0)
+        self._reset_ls_list(windows, sigmas, **ls_args)
     # end def
 
     def _reset_ls_list(
         self,
         windows,
-        noises,
+        sigmas,
         M=7,
         **ls_args,
         # fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
     ) -> None:
         M = self._for_all_ls(M)
         ls_list = []
-        for d, window, noise in zip(self.D_list, windows, noises):
+        for d, window, sigma in zip(self.D_list, windows, sigmas):
             # Only add if enabled by the Hessian
             if self.hessian.enabled[d]:
                 # Try to load from disk
                 ls_load = LineSearchData(label=f'ls{d}').load(path=self.path)
                 # Create new line-search object
-                ls = self.ls_type(
+                ls = self._ls_class(
                     structure=self.structure,
                     hessian=self.hessian,
                     d=d,
-                    sigma=noise,
+                    sigma=sigma,
                     W=window,
                     M=M[d],
                     **ls_args
@@ -301,7 +301,7 @@ class ParallelLineSearch():
     def _collect_enabled(self) -> tuple[list[ParameterSet], list[float]]:
         structures = []
         sigmas = []
-        sigma_eqm = self.noises_min
+        sigma_eqm = self.sigmas_min
         for ls in self.ls_list:
             for structure in ls.grid:
                 structures += [structure]
@@ -410,13 +410,13 @@ class ParallelLineSearch():
         structure=None,
         hessian=None,
         windows=None,
-        noises=None,
+        sigmas=None,
         M=None,
     ):
         structure = structure if structure is not None else self.structure
         hessian = hessian if hessian is not None else self.hessian
         windows = windows if windows is not None else self.windows
-        noises = noises if noises is not None else self.noises
+        sigmas = sigmas if sigmas is not None else self.sigmas
         pls_args = {}
         if M is not None:
             pls_args['M'] = M
@@ -426,7 +426,7 @@ class ParallelLineSearch():
             structure=structure,
             hessian=hessian,
             windows=windows,
-            noises=noises,
+            sigmas=sigmas,
             **pls_args,
         )
         for ls, ls_new in zip(self.ls_list, copy_pls.ls_list):

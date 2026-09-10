@@ -26,6 +26,7 @@ class LineSearchBase(LineSearchGrid):
         values=None,
         errors=None,
         fraction=0.025,
+        sigma=0.0,
         sgn=1,
         fit_kind='pf3',
         fit_func=None,
@@ -33,6 +34,7 @@ class LineSearchBase(LineSearchGrid):
         N=200
     ):
         LineSearchGrid.__init__(self, offsets)
+        self.sigma = sigma
         self._settings = LsSettings(
             fraction=fraction,
             sgn=sgn,
@@ -105,11 +107,12 @@ class LineSearchBase(LineSearchGrid):
         if not self.shifted:
             raise AssertionError('The line-search grid must be generated before evaluation!')
         # end if
-        structures = self._grid
-        sigmas = len(structures) * [self.sigma]
+
+        for structure in structures:
+            structure.sigma = self.sigma
+        # end for
         pes.evaluate_all(
             structures,
-            sigmas=sigmas,
             path=path,
             var_eff_map=var_eff_map,
             interactive=interactive,
