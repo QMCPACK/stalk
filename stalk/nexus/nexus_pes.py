@@ -39,7 +39,6 @@ class NexusPes(PesFunction):
         self,
         structure: NexusStructure,
         path: str | Path,
-        sigma=0.0,
         samples=None,
         var_eff_map: EffectiveVarianceMap = None,
         interactive=False,
@@ -47,9 +46,7 @@ class NexusPes(PesFunction):
         **kwargs
     ) -> None:
         # Store the file path to the structure
-        structure.path = self._set_path(structure, path, required=True)
-        # Associate the sigma with the structure
-        structure.sigma = sigma
+        self._set_path(structure, path, required=True)
         # Set the number of samples
         self._set_samples(structure, var_eff_map=var_eff_map, samples=samples)
         # Use params.dat to determine if the jobs have been already generated
@@ -72,20 +69,15 @@ class NexusPes(PesFunction):
         self,
         structures: list[NexusStructure],
         path,
-        sigmas=None,
         var_eff_map=None,
         interactive=False,
         dep_jobs=[],
         **kwargs
     ) -> None:
-        if sigmas is None:
-            sigmas = [0.0] * len(structures)
-        # end if
-        for structure, sigma in zip(structures, sigmas):
+        for structure in structures:
             self._generate_structure(
                 structure,
                 path=path,
-                sigma=sigma,
                 var_eff_map=var_eff_map,
                 interactive=interactive,
                 dep_jobs=dep_jobs,

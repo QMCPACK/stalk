@@ -20,7 +20,7 @@ class RelaxFunction(PesFunction):
         args: dict = {},  # Keep 'args' for backward compatibility
         **kwargs,  # disable_failed=False, create_files=True, custom kwargs
     ):
-        # Init the Pes function
+        # Init the PesFunction
         super().__init__(func, args=args, **kwargs)
         # Initialize the init/relaxed params file handlers
         self.params_file = TxtData('params_init.dat')
