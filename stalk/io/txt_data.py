@@ -7,6 +7,8 @@ __license__ = "BSD-3-Clause"
 from pathlib import Path
 from numpy import ndarray, loadtxt, array, isscalar, savetxt, nan
 
+from stalk.io.stalk_path import StalkPath
+
 
 # TxtResult is a base class that contains suffix information and loading functionality for
 # text-based result files, such as energy.dat
@@ -58,9 +60,11 @@ class TxtData:
         return filename.exists()
     # end def
 
-    def get_filename(self, filename: Path | str) -> Path:
+    def get_filename(self, filename: Path | str | StalkPath) -> Path:
         if isinstance(filename, str):
             filename = Path(filename)
+        elif isinstance(filename, StalkPath):
+            filename = filename.path
         # end if
         if filename.is_file():
             filename = filename
@@ -72,7 +76,7 @@ class TxtData:
 
     def load_result(
         self,
-        filename: Path | str,
+        filename: Path | str | StalkPath,
         default: list | ndarray | None | FileNotFoundError = FileNotFoundError(),
         rescale=True,
         **kwargs

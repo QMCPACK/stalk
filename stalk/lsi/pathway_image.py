@@ -6,10 +6,13 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from copy import copy
+from pathlib import Path
 from numpy import array
 from functools import partial
 
 from numpy import ndarray, zeros
+
+from stalk.io.stalk_path import StalkPath
 from stalk.lsi.linesearch_iteration import LineSearchIteration
 from stalk.params.parameter_hessian import ParameterHessian
 from stalk.params.parameter_set import ParameterSet
@@ -18,8 +21,7 @@ from stalk.pls.surrogate import Surrogate
 from stalk.util.util import get_fraction_error, orthogonal_subspace_basis
 
 
-class PathwayImage():
-    _path = None  # Path is set upon Hessian calculation
+class PathwayImage(StalkPath):
     _lsi: LineSearchIteration = None  # Line-search iteration
     _structure: ParameterSet = None
     _hessian: ParameterHessian = None
@@ -31,8 +33,10 @@ class PathwayImage():
     def __init__(
         self,
         structure: ParameterSet,
-        reaction_coordinate=0
+        path: str | Path | None = None,
+        reaction_coordinate=0,
     ):
+        StalkPath.__init__(self, path)
         self._structure = structure
         self._reaction_coordinate = reaction_coordinate
     # end def
@@ -88,7 +92,6 @@ class PathwayImage():
         self,
         tangent,
         pes: PesFunction,
-        path=None,
         **hessian_args  # dp=0.01, dpos_mode=False, structure=None
     ):
         if tangent is None:
@@ -108,10 +111,9 @@ class PathwayImage():
         # end if
         hessian.compute_fdiff(
             pes=pes_comp,
-            path=path,
+            path=self.path / 'hessian',
             dp=0.01
         )
-        self._path = path
         self._subspace = subspace
         self._tangent = tangent
         self._hessian = hessian
@@ -129,9 +131,8 @@ class PathwayImage():
             pes_sub = copy(pes)
             pes_sub.func = partial(extended_pes, self.structure, self._subspace, pes)
         # end if
-        path = f'{self._path}surrogate'
         surrogate = Surrogate(
-            path=path,
+            path=self.path / 'surrogate',
             hessian=self.hessian,
             **surrogate_args
         )
@@ -149,7 +150,6 @@ class PathwayImage():
     def run_linesearch(
         self,
         num_iter=3,
-        path='lsi',
         pes: PesFunction = None,
         add_sigma=False,
         **lsi_args
@@ -162,7 +162,7 @@ class PathwayImage():
             pes_comp.func = partial(extended_pes, self.structure, self._subspace, pes)
         # end if
         lsi = LineSearchIteration(
-            path=self._path + path,
+            path=self.path / 'lsi',
             surrogate=self.surrogate,
             **lsi_args
         )
@@ -173,15 +173,18 @@ class PathwayImage():
     # end def
 
     def __lt__(self, other):
-        return (hasattr(other, 'reaction_coordinate') and
-                self.reaction_coordinate > other.reaction_coordinate)
+        if hasattr(other, 'reaction_coordinate'):
+            return self.reaction_coordinate < other.reaction_coordinate
+        else:
+            return False
+        # end if
     # end def
 
 # end class
 
 
 def extend_structure(structure0: ParameterSet, structure_sub: ParameterSet, subspace):
-    structure = structure0.copy(path=structure_sub.path)
+    structure = structure0.copy(label=structure_sub.label)
     structure.shift_params(structure_sub.params @ subspace)
     return structure
 # end def
@@ -201,7 +204,7 @@ def extend_structure_errors(
     # end for
     ps = array(ps).T
     params_err = [get_fraction_error(p, fraction=fraction)[1] for p in ps]
-    structure = structure0.copy(path=structure_sub.path)
+    structure = structure0.copy(label=structure_sub.label)
     structure.params = structure0.params + structure_sub.params @ subspace
     structure.params_err = params_err
     structure.value = structure_sub.value

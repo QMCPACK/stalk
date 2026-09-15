@@ -46,7 +46,7 @@ class XyzGeometry(GeometryWriter, GeometryLoader):
             pos = structure.params.copy()
             elem = 'p'
         else:
-            raise TypeError(f'Cannot write to XYZ file: {structure}')
+            raise TypeError(f'Cannot write {structure} to XYZ file {path}')
         # end if
 
         header = str(len(elem)) + '\n'

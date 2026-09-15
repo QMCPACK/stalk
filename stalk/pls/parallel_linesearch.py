@@ -11,6 +11,7 @@ from textwrap import indent
 from typing import Generic, TypeVar, Type
 
 from stalk.io.ls_data import LineSearchData
+from stalk.io.stalk_path import StalkPath
 from stalk.params.pes_function import NotEvaluatedException, PesFunction
 from stalk.params.structure_collection import StructureCollection
 from stalk.util import get_fraction_error
@@ -22,13 +23,12 @@ from stalk.ls import LineSearch
 T = TypeVar('T', bound=LineSearch)
 
 
-class ParallelLineSearch(StructureCollection[ParameterSet], Generic[T]):
+class ParallelLineSearch(StalkPath, StructureCollection[ParameterSet], Generic[T]):
     _ls_class: Type[T] = LineSearch
     _ls_list: list[T] = []  # list of line-search objects
     _hessian = None  # hessian object
     _structure = None  # eqm structure
     _structure_next = None  # next structure
-    _path = None
 
     def __init__(
         self,
@@ -43,7 +43,7 @@ class ParallelLineSearch(StructureCollection[ParameterSet], Generic[T]):
         **ls_args
         # M=7, fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
     ):
-        self.path = path
+        StalkPath.__init__(self, path)
         if structure is not None:
             self.structure = structure
         # end if
@@ -61,22 +61,6 @@ class ParallelLineSearch(StructureCollection[ParameterSet], Generic[T]):
         # Make sure that LS is solved after successful loading
         if self.evaluated and self.structure_next is None:
             self.finalize()
-        # end if
-    # end def
-
-    @property
-    def path(self):
-        return self._path
-    # end def
-
-    @path.setter
-    def path(self, path: str | Path | None):
-        if path is None:
-            self._path = None
-        elif isinstance(path, (str, Path)):
-            self._path = Path(path)
-        else:
-            raise ValueError('path must be str')
         # end if
     # end def
 

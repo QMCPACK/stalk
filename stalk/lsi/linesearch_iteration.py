@@ -9,18 +9,17 @@ from pathlib import Path
 from numpy import array, isscalar, mean
 from matplotlib import pyplot as plt
 
+from stalk.io.stalk_path import StalkPath
 from stalk.params.effective_variance_map import EffectiveVarianceMap
 from stalk.params.parameter_set import ParameterSet
 from stalk.params.pes_function import NotEvaluatedException, PesFunction
 from stalk.pls.surrogate import Surrogate
-from stalk.util import directorize
 from stalk.pls import ParallelLineSearch
 from stalk.util.util import FF, FFS, FI, FIS, FU
 
 
-class LineSearchIteration():
+class LineSearchIteration(StalkPath):
     _pls_list: list[ParallelLineSearch]  # list of ParallelLineSearch objects
-    _path: Path | None = None
     _transient = 0
     _var_eff_map = None
 
@@ -33,7 +32,7 @@ class LineSearchIteration():
         var_eff_map=None,
         **pls_args
     ):
-        self.path = path
+        StalkPath.__init__(self, path)
         self._pls_list = []
         self.var_eff_map = var_eff_map
         # if no iterations loaded, try to initialize
@@ -60,20 +59,6 @@ class LineSearchIteration():
     @property
     def pls_list(self):
         return self._pls_list
-    # end def
-
-    @property
-    def path(self):
-        return self._path
-    # end def
-
-    @path.setter
-    def path(self, path):
-        if isinstance(path, str):
-            self._path = directorize(path)
-        else:
-            raise TypeError("path must be a string")
-        # end if
     # end def
 
     @property
@@ -166,12 +151,12 @@ class LineSearchIteration():
     ):
         if isinstance(surrogate, Surrogate):
             pls = surrogate.copy(
-                path=self._get_pls_path(0),
+                path=self.path / 'pls0',
                 structure=structure,
             )
         elif isinstance(surrogate, ParallelLineSearch):
             pls = surrogate.copy(
-                path=self._get_pls_path(0),
+                path=self.path / 'pls0',
                 structure=structure,
             )
         else:
@@ -193,7 +178,7 @@ class LineSearchIteration():
     ):
         if len(self) == 0:
             pls = ParallelLineSearch(
-                path=self._get_pls_path(0),
+                path=self.path / 'pls0',
                 hessian=hessian,
                 structure=structure,
                 **pls_args
@@ -204,10 +189,6 @@ class LineSearchIteration():
             pls.hessian = hessian
             pls.structure = structure
         # end if
-    # end def
-
-    def _get_pls_path(self, i):
-        return '{}pls{}/'.format(self.path, i)
     # end def
 
     def evaluate(
@@ -238,7 +219,7 @@ class LineSearchIteration():
         try:
             pls_next = self[-1].propagate(
                 pes=pes,
-                next_path=self._get_pls_path(i),
+                next_path=self.path / f'pls{i}',
                 add_sigma=add_sigma,
                 interactive=interactive,
                 var_eff_map=self.var_eff_map,

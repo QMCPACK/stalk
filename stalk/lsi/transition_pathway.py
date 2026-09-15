@@ -5,23 +5,24 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
+
 from numpy import sort, dot, array
 
+from stalk.io.stalk_path import StalkPath
 from stalk.lsi.pathway_image import PathwayImage
 from stalk.params.parameter_set import ParameterSet
-from stalk.util.util import directorize
 
 
-class TransitionPathway():
+class TransitionPathway(StalkPath):
     _images: list[PathwayImage] = []  # list of LineSearchIteration objects
-    _path = ''  # base path
 
     def __init__(
         self,
-        path='',
         images: list[ParameterSet] = None,
+        path: str | Path | None = None,
     ):
-        self.path = path
+        StalkPath.__init__(self, path=path)
         self._images = []
         if images is not None:
             # add image A
@@ -32,20 +33,6 @@ class TransitionPathway():
                 self.add_image(image)
             # end for
         # end def
-    # end def
-
-    @property
-    def path(self):
-        return self._path
-    # end def
-
-    @path.setter
-    def path(self, path):
-        if isinstance(path, str):
-            self._path = directorize(path)
-        else:
-            raise TypeError("path must be a string")
-        # end if
     # end def
 
     # Return a list of all pathway images
@@ -106,10 +93,20 @@ class TransitionPathway():
     def add_image(self, image: ParameterSet, rc=None):
         if self.pointA is None:
             # add point A
-            self.images.append(PathwayImage(image, reaction_coordinate=0.0))
+            pw_image = PathwayImage(
+                image,
+                reaction_coordinate=0.0,
+                path=self.path / 'image_A'
+            )
+            self.images.append(pw_image)
         elif self.pointB is None:
             # add point B
-            self.images.append(PathwayImage(image, reaction_coordinate=1.0))
+            pw_image = PathwayImage(
+                image,
+                reaction_coordinate=1.0,
+                path=self.path / 'image_B'
+            )
+            self.images.append(pw_image)
         else:
             if rc is None:
                 rc = self._calculate_rc(image)
@@ -120,7 +117,12 @@ class TransitionPathway():
                 raise ValueError("Cannot add intermediate image with reaction coordinate >= 1")
             else:
                 # Insert next to last, presuming ordering by reaction coordinate
-                self.images.insert(-1, PathwayImage(image, reaction_coordinate=rc))
+                pw_image = PathwayImage(
+                    image,
+                    reaction_coordinate=1.0,
+                    path=self.path / f'image_{rc:+5.4f}/'
+                )
+                self.images.insert(-1, pw_image)
                 sort(self.intermediate_images)
             # end if
         # end if
@@ -132,12 +134,10 @@ class TransitionPathway():
     ):
         self.pointA.calculate_hessian(
             tangent=None,
-            path=f'{self.path}image_A/',
             **hessian_args
         )
         self.pointB.calculate_hessian(
             tangent=None,
-            path=f'{self.path}image_B/',
             **hessian_args
         )
         for i, image in enumerate(self.intermediate_images):
@@ -146,26 +146,25 @@ class TransitionPathway():
             tangent = im_next.structure.params - im_prev.structure.params
             image.calculate_hessian(
                 tangent=tangent,
-                path=('{}image_{:+5.4f}/').format(self.path, image.reaction_coordinate),
                 **hessian_args
             )
         # end for
     # end def
 
     def generate_surrogates(self, **surrogate_args):
-        for i, image in enumerate(self.images):
+        for _, image in enumerate(self.images):
             image.generate_surrogate(**surrogate_args)
         # end for
     # end def
 
     def optimize_surrogates(self, **optimize_args):
-        for i, image in enumerate(self.images):
+        for _, image in enumerate(self.images):
             image.optimize_surrogate(**optimize_args)
         # end for
     # end def
 
     def run_linesearches(self, **lsi_args):
-        for i, image in enumerate(self.images):
+        for _, image in enumerate(self.images):
             image.run_linesearch(**lsi_args)
         # end for
     # end def
