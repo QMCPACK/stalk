@@ -11,7 +11,7 @@ from matplotlib import pyplot as plt
 from numpy import array, all, ndarray, searchsorted
 
 from stalk.params.linesearch_point import LineSearchPoint
-from stalk.params.structure_collection import StructureCollection
+from stalk.pes.structure_collection import StructureCollection
 from stalk.util.util import FFS
 
 # Passing on the generic type

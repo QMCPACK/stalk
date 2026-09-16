@@ -47,7 +47,6 @@ if nexus_enabled:
 # params module
 from stalk.params import EffectiveVariance
 from stalk.params import EffectiveVarianceMap
-from stalk.params import GeometryResult
 from stalk.params import LineSearchPoint
 from stalk.params import Parameter
 from stalk.params import BondLength
@@ -57,10 +56,6 @@ from stalk.params import ParameterHessian
 from stalk.params import ParameterMapping
 from stalk.params import ParameterSet
 from stalk.params import ParameterStructure
-from stalk.params import PesFunction
-from stalk.params import PesLoader
-from stalk.params import PesResult
-from stalk.params import RelaxFunction
 from stalk.params import angle
 from stalk.params import bond_angle
 from stalk.params import distance
@@ -71,6 +66,13 @@ from stalk.params import mean_param
 from stalk.params import periodic_distance
 from stalk.params import periodic_bond_angle
 from stalk.params import rotate_2d
+# pes module
+from stalk.pes import GeometryResult
+from stalk.pes import PesFunction
+from stalk.pes import PesLoader
+from stalk.pes import PesResult
+from stalk.pes import RelaxFunction
+from stalk.pes import StructureCollection
 # pls module
 from stalk.pls import ParallelLineSearch
 from stalk.pls import Surrogate
@@ -131,10 +133,6 @@ __all__ = [
     'ParameterMapping',
     'ParameterSet',
     'ParameterStructure',
-    'PesFunction',
-    'PesLoader',
-    'RelaxFunction',
-    'PesResult',
     'angle',
     'bond_angle',
     'distance',
@@ -145,6 +143,13 @@ __all__ = [
     'periodic_distance',
     'periodic_bond_angle',
     'rotate_2d',
+    # pes module
+    'GeometryResult',
+    'PesFunction',
+    'PesLoader',
+    'RelaxFunction',
+    'PesResult',
+    'StructureCollection',
     # pls module
     'ParallelLineSearch',
     'TargetParallelLineSearch',

@@ -7,7 +7,7 @@ __license__ = "BSD-3-Clause"
 from pathlib import Path
 
 from stalk.io.txt_data import TxtData
-from stalk.params.geometry_result import GeometryResult
+from stalk.pes.geometry_result import GeometryResult
 from stalk.util.args_container import ArgsContainer
 
 

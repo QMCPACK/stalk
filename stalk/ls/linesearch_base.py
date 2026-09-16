@@ -12,7 +12,7 @@ from stalk.ls.fitting_result import FittingResult
 from stalk.ls.linesearch_grid import LineSearchGrid
 from stalk.ls.ls_settings import LsSettings
 from stalk.params.parameter_set import ParameterSet
-from stalk.params.pes_function import PesFunction
+from stalk.pes.pes_function import PesFunction
 from stalk.util.util import FF, FU
 
 

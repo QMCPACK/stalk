@@ -8,7 +8,7 @@ from pathlib import Path
 
 from stalk.io.txt_data import TxtData
 from stalk.params.util import NotEvaluatedException
-from stalk.params.pes_result import PesResult
+from stalk.pes.pes_result import PesResult
 from stalk.util.args_container import ArgsContainer
 
 

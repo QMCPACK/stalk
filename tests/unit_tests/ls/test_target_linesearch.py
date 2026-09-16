@@ -9,7 +9,7 @@ from numpy import array, isnan, linspace, where
 from pytest import raises
 
 from stalk.ls.polynomial_fit import PolynomialFit
-from stalk.params.pes_function import PesFunction
+from stalk.pes.pes_function import PesFunction
 from stalk.util import match_to_tol
 from stalk import TargetLineSearch
 

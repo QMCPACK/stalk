@@ -12,8 +12,8 @@ from stalk import PesLoader
 from stalk import ParameterHessian
 from stalk import ParameterStructure
 from stalk.nexus.nexus_structure import NexusStructure
-from stalk.params import PesFunction
-from stalk.params.pes_result import PesResult
+from stalk.pes.pes_function import PesFunction
+from stalk.pes.pes_result import PesResult
 from .helper import harmonic_a, morse, mean_distances, bond_angle
 
 

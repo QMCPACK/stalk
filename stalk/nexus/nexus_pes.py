@@ -11,9 +11,9 @@ from pickle import load
 
 from nexus import run_project, bundle
 
-from stalk.params.pes_loader import PesLoader
+from stalk.pes.pes_loader import PesLoader
 from stalk.nexus.nexus_structure import NexusStructure
-from stalk.params.pes_function import NotEvaluatedException, PesFunction
+from stalk.pes.pes_function import NotEvaluatedException, PesFunction
 from stalk.params.effective_variance_map import EffectiveVarianceMap
 
 

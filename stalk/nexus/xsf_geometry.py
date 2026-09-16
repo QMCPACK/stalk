@@ -11,7 +11,7 @@ from nexus import Structure
 from stalk.nexus.nexus_structure import NexusStructure
 from stalk.io.geometry_writer import GeometryWriter
 from stalk.io.geometry_loader import GeometryLoader
-from stalk.params.geometry_result import GeometryResult
+from stalk.pes.geometry_result import GeometryResult
 
 
 class XsfGeometry(GeometryLoader, GeometryWriter):

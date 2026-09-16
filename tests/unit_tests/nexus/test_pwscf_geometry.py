@@ -7,8 +7,8 @@ __license__ = "BSD-3-Clause"
 from pytest import raises
 from stalk.nexus.pwscf_geometry import PwscfGeometry
 from stalk.io.xyz_geometry import XyzGeometry
-from stalk.params import GeometryResult
-from stalk.params.pes_function import NotEvaluatedException
+from stalk.pes import GeometryResult
+from stalk.pes.pes_function import NotEvaluatedException
 from stalk.util.util import match_to_tol
 
 

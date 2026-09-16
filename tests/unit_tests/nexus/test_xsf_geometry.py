@@ -7,7 +7,7 @@ __license__ = "BSD-3-Clause"
 from numpy import array
 from pytest import raises
 
-from stalk.params import GeometryResult
+from stalk.pes import GeometryResult
 from stalk.nexus.xsf_geometry import XsfGeometry
 from stalk.nexus.nexus_structure import NexusStructure
 from stalk.params.parameter_structure import ParameterStructure

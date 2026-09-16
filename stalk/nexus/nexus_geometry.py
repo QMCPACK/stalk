@@ -12,7 +12,7 @@ from nexus import run_project
 
 from stalk.io.geometry_loader import GeometryLoader
 from stalk.nexus.nexus_structure import NexusStructure
-from stalk.params.relax_function import RelaxFunction
+from stalk.pes.relax_function import RelaxFunction
 
 
 class NexusGeometry(RelaxFunction):

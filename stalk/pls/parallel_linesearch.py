@@ -12,8 +12,8 @@ from typing import Generic, TypeVar, Type
 
 from stalk.io.ls_data import LineSearchData
 from stalk.io.stalk_path import StalkPath
-from stalk.params.pes_function import NotEvaluatedException, PesFunction
-from stalk.params.structure_collection import StructureCollection
+from stalk.pes.pes_function import NotEvaluatedException, PesFunction
+from stalk.pes.structure_collection import StructureCollection
 from stalk.util import get_fraction_error
 from stalk.params import ParameterSet
 from stalk.params import ParameterHessian

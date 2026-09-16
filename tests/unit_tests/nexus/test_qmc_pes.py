@@ -8,7 +8,7 @@ from pytest import raises
 
 from stalk.nexus.qmc_pes import QmcPes
 from stalk.params.parameter_set import ParameterSet
-from stalk.params.pes_function import NotEvaluatedException
+from stalk.pes.pes_function import NotEvaluatedException
 from stalk.util.util import match_to_tol
 
 

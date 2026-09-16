@@ -8,9 +8,9 @@ from pathlib import Path
 
 from nexus import PwscfAnalyzer
 
-from stalk.params.pes_function import NotEvaluatedException
-from stalk.params.pes_result import PesResult
-from stalk.params.pes_loader import PesLoader
+from stalk.pes.pes_function import NotEvaluatedException
+from stalk.pes.pes_result import PesResult
+from stalk.pes.pes_loader import PesLoader
 
 
 class PwscfPes(PesLoader):

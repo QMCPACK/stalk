@@ -7,7 +7,7 @@ __license__ = "BSD-3-Clause"
 from numpy import savetxt
 
 from stalk.io.files_pes import FilesPes
-from stalk.params.pes_loader import PesLoader
+from stalk.pes.pes_loader import PesLoader
 from stalk.io.xyz_geometry import XyzGeometry
 from stalk.io.files_pes import write_xyz_sigma
 from stalk.util.util import match_to_tol

@@ -5,7 +5,7 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from pytest import raises
-from stalk.params.pes_result import PesResult
+from stalk.pes.pes_result import PesResult
 
 
 def test_PesResult():

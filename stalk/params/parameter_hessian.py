@@ -11,7 +11,7 @@ from numpy import array, linalg, diag, isscalar, ndarray, zeros, ones, where, me
 
 from stalk.io.txt_data import TxtData
 from stalk.params.parameter_structure import ParameterStructure
-from stalk.params.pes_function import NotEvaluatedException, PesFunction
+from stalk.pes.pes_function import NotEvaluatedException, PesFunction
 from stalk.util import bipolyfit
 from stalk.params.parameter_set import ParameterSet
 

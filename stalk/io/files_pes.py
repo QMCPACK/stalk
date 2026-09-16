@@ -10,8 +10,8 @@ from numpy import nan
 from stalk.io.xyz_geometry import XyzGeometry
 from stalk.params.effective_variance_map import EffectiveVarianceMap
 from stalk.params.parameter_set import ParameterSet
-from stalk.params.pes_function import NotEvaluatedException, PesFunction
-from stalk.params.pes_loader import PesLoader
+from stalk.pes.pes_function import NotEvaluatedException, PesFunction
+from stalk.pes.pes_loader import PesLoader
 
 
 def write_xyz_sigma(

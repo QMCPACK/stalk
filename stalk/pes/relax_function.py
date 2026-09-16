@@ -5,10 +5,10 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from stalk.io.txt_data import TxtData
-from stalk.params.geometry_result import GeometryResult
+from stalk.pes.geometry_result import GeometryResult
 from stalk.params.parameter_set import ParameterSet
 from stalk.params.parameter_structure import ParameterStructure
-from stalk.params.pes_function import NotEvaluatedException, PesFunction
+from stalk.pes.pes_function import NotEvaluatedException, PesFunction
 
 
 class RelaxFunction(PesFunction):

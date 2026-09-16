@@ -10,9 +10,9 @@ from numpy import array
 
 from nexus import QmcpackAnalyzer
 
-from stalk.params.pes_function import NotEvaluatedException
-from stalk.params.pes_result import PesResult
-from stalk.params.pes_loader import PesLoader
+from stalk.pes.pes_function import NotEvaluatedException
+from stalk.pes.pes_result import PesResult
+from stalk.pes.pes_loader import PesLoader
 
 
 class QmcPes(PesLoader):

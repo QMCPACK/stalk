@@ -6,7 +6,7 @@ __license__ = "BSD-3-Clause"
 
 from pytest import raises
 
-from stalk.params.pes_function import NotEvaluatedException
+from stalk.pes.pes_function import NotEvaluatedException
 from stalk.util.util import match_to_tol
 from stalk.nexus.nexus_pes import NexusPes
 from stalk.nexus.nexus_structure import NexusStructure

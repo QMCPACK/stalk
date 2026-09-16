@@ -5,7 +5,7 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from pytest import raises
-from stalk.params.pes_function import PesFunction
+from stalk.pes.pes_function import PesFunction
 from stalk.pls.surrogate import Surrogate
 from stalk.util import match_to_tol
 

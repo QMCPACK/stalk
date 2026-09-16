@@ -12,7 +12,7 @@ from stalk import ParameterStructure
 from stalk import PesFunction
 from stalk import BondLength
 from stalk.io.xyz_geometry import XyzGeometry
-from stalk.params.relax_function import RelaxFunction
+from stalk import RelaxFunction
 from stalk.util.util import Bohr
 
 

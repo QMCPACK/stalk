@@ -5,7 +5,7 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from stalk.params.parameter_set import ParameterSet
-from stalk.params.pes_function import PesFunction
+from stalk.pes.pes_function import PesFunction
 from stalk.util.util import match_to_tol
 
 

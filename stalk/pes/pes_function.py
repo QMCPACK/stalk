@@ -11,14 +11,14 @@ import warnings
 from numpy import isscalar
 from scipy.optimize import minimize
 
-from stalk.params.pes_loader import PesLoader
+from stalk.pes.pes_loader import PesLoader
 from stalk.io.stalk_path import StalkPath
 from stalk.io.txt_data import TxtData
 from stalk.params.effective_variance import EffectiveVariance
 from stalk.params.effective_variance_map import EffectiveVarianceMap
 from stalk.params.parameter_set import ParameterSet
-from stalk.params.pes_result import PesResult
-from stalk.params.structure_collection import StructureCollection
+from stalk.pes.pes_result import PesResult
+from stalk.pes.structure_collection import StructureCollection
 from stalk.params.util import NotEvaluatedException
 from stalk.util.function_caller import FunctionCaller
 

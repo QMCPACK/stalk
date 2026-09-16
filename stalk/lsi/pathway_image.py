@@ -16,7 +16,7 @@ from stalk.io.stalk_path import StalkPath
 from stalk.lsi.linesearch_iteration import LineSearchIteration
 from stalk.params.parameter_hessian import ParameterHessian
 from stalk.params.parameter_set import ParameterSet
-from stalk.params.pes_function import PesFunction
+from stalk.pes.pes_function import PesFunction
 from stalk.pls.surrogate import Surrogate
 from stalk.util.util import get_fraction_error, orthogonal_subspace_basis
 

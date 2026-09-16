@@ -6,9 +6,9 @@ __license__ = "BSD-3-Clause"
 
 from pytest import raises
 
-from stalk.params.pes_function import NotEvaluatedException
-from stalk.params.pes_result import PesResult
-from stalk.params.pes_loader import PesLoader
+from stalk.pes.pes_function import NotEvaluatedException
+from stalk.pes.pes_result import PesResult
+from stalk.pes.pes_loader import PesLoader
 
 
 # Test PesLoader class

@@ -9,8 +9,8 @@ from pathlib import Path
 from nexus import PwscfAnalyzer
 
 from stalk.io.geometry_loader import GeometryLoader
-from stalk.params.geometry_result import GeometryResult
-from stalk.params.pes_function import NotEvaluatedException
+from stalk.pes.geometry_result import GeometryResult
+from stalk.pes.pes_function import NotEvaluatedException
 
 
 class PwscfGeometry(GeometryLoader):

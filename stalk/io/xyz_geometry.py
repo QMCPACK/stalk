@@ -12,7 +12,7 @@ from stalk.params.parameter_set import ParameterSet
 from stalk.params.parameter_structure import ParameterStructure
 from stalk.io.geometry_writer import GeometryWriter
 from stalk.io.geometry_loader import GeometryLoader
-from stalk.params.geometry_result import GeometryResult
+from stalk.pes.geometry_result import GeometryResult
 
 
 class XyzGeometry(GeometryWriter, GeometryLoader):

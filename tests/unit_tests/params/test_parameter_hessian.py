@@ -7,7 +7,7 @@ __license__ = "BSD-3-Clause"
 from pytest import raises, warns
 from numpy import linalg, where
 
-from stalk.params.pes_function import PesFunction
+from stalk.pes.pes_function import PesFunction
 from stalk.params.parameter_hessian import ParameterHessian
 
 from stalk.util.util import match_to_tol

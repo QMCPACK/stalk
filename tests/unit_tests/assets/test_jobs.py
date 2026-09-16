@@ -10,12 +10,12 @@ from pathlib import Path
 from nexus import obj, job, settings, generate_physical_system, input_template
 from nexus.simulation import GenericSimulation, SimulationAnalyzer, Simulation
 from stalk.io.geometry_loader import GeometryLoader
-from stalk.params.pes_loader import PesLoader
+from stalk.pes.pes_loader import PesLoader
 from stalk.io.xyz_geometry import XyzGeometry
 from stalk.nexus.nexus_structure import NexusStructure
-from stalk.params.geometry_result import GeometryResult
-from stalk.params.pes_function import NotEvaluatedException
-from stalk.params.pes_result import PesResult
+from stalk.pes.geometry_result import GeometryResult
+from stalk.pes.pes_function import NotEvaluatedException
+from stalk.pes.pes_result import PesResult
 
 # Add nexus tester to path
 app_path = os.path.dirname(__file__) + "/../../nxs_tester.py"

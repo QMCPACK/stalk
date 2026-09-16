@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 from stalk.io.stalk_path import StalkPath
 from stalk.params.effective_variance_map import EffectiveVarianceMap
 from stalk.params.parameter_set import ParameterSet
-from stalk.params.pes_function import NotEvaluatedException, PesFunction
+from stalk.pes.pes_function import NotEvaluatedException, PesFunction
 from stalk.pls.surrogate import Surrogate
 from stalk.pls import ParallelLineSearch
 from stalk.util.util import FF, FFS, FI, FIS, FU

@@ -7,7 +7,7 @@ __license__ = "BSD-3-Clause"
 from numpy import loadtxt, array
 from pytest import raises
 from stalk.io.xyz_geometry import XyzGeometry
-from stalk.params import GeometryResult
+from stalk.pes.geometry_result import GeometryResult
 from stalk.params.parameter_structure import ParameterStructure
 from stalk.util.util import match_to_tol
 from stalk.util import Bohr
