@@ -5,10 +5,13 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 
-class GeometryResult:
-    pos = None
-    axes = None
-    elem = None
+from numpy import ndarray
+
+
+class GeometryResult():
+    pos: ndarray = None
+    axes: ndarray | None = None
+    elem: list[str] = None
 
     def __init__(self, pos, axes=None, elem=None):
         self.pos = pos
@@ -20,19 +23,19 @@ class GeometryResult:
         return self.pos
     # end def
 
-    def get_axes(self):
+    def get_axes(self) -> ndarray | None:
         return self.axes
     # end def
 
-    def get_elem(self):
+    def get_elem(self) -> list[str] | None:
         return self.elem
     # end def
 
-    def get_result(self):
+    def get_result(self) -> tuple[ndarray, ndarray | None]:
         return self.get_pos(), self.get_axes()
     # end def
 
-    def rescale(self, scale):
+    def rescale(self, scale) -> None:
         if self.pos is not None:
             self.pos /= scale
         # end if

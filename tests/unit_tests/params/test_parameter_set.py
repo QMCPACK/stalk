@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
@@ -23,7 +23,7 @@ def test_ParameterSet():
     assert s.params_err is None
     assert s.value is None
     assert s.error == 0.0
-    assert s.label is None
+    assert s.label == 'p' + str(hash(s))[:8]
 
     # nominal test, meaningful values
     params = [1, 2]
@@ -58,7 +58,7 @@ def test_ParameterSet():
     assert len(s_copy) == 2
     assert s_copy.value == value
     assert s_copy.error == error
-    assert s_copy.label is None
+    assert s_copy.label == label
     for param, param_ref in zip(s_copy.params_list, params):
         assert isinstance(param, Parameter)
         assert param.value == param_ref

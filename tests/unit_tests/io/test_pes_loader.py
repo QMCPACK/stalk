@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"

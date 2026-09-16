@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from numpy import savetxt
+from numpy import savetxt, loadtxt
 
 from stalk.io.files_pes import FilesPes
 from stalk.pes.pes_loader import PesLoader
@@ -25,25 +25,33 @@ def test_FilesPes(tmp_path):
 
     # Test evaluate
     s = get_structure_H2O()
+    sigma = 0.1
+    s.sigma = sigma
     path = tmp_path / 'test0'
-    # This creates the structure file but does not load the energy yet
+    # This creates the structure, sigma files but does not load the energy yet
     pes.evaluate(s, path=path)
-    assert s.value is None
-    assert s.error == 0.0
-    res = XyzGeometry(suffix='structure.xyz').load(path)
-    sigma_path = path / 'sigma.dat'
-    assert not sigma_path.exists()
+    # Sigma should be created
+    sigma_path = s.path / 'sigma.dat'
+    assert sigma_path.exists()
+    assert loadtxt(sigma_path, ndmin=1)[0] == sigma
+    # Geometry should be created
+    structure_path = s.path / 'structure.xyz'
+    res = XyzGeometry(suffix='structure.xyz').load(structure_path)
     assert match_to_tol(s.pos, res.get_pos())
     for e, e_ref in zip(s.elem, res.get_elem()):
         assert e == e_ref
     # end for
+    # Params should also be created
+    params_path = s.path / 'params.dat'
+    assert params_path.exists()
+    # Value shoud not be available yet
     assert s.value is None
     assert s.error == 0.0
-
-    # Next, add energy
+    # Next, write energies to disk and evaluate again to load the values
+    value_path = s.path / 'energy.dat'
     value_ref = 1.0
     error_ref = 0.1
-    savetxt(path / 'energy.dat', [value_ref, error_ref])
+    savetxt(value_path, [value_ref, error_ref])
     pes.evaluate(s, path=path)
     assert match_to_tol(s.value, value_ref)
     assert match_to_tol(s.error, error_ref)
@@ -53,15 +61,9 @@ def test_FilesPes(tmp_path):
     s2b = s.copy(label='2b')
     s2a.reset_value()
     s2b.reset_value()
-    suffix = 'test_structure.xyz'
-    sigma_suffix = 'test_sigma.dat'
-    sigmas = [0.1, 0.2]
     pes.evaluate_all(
         [s2a, s2b],
         path=path,
-        sigmas=sigmas,
-        suffix=suffix,
-        sigma_suffix=sigma_suffix,
     )
     values_ref = [1.1, 2.1]
     errors_ref = [0.11, 0.22]
@@ -70,9 +72,6 @@ def test_FilesPes(tmp_path):
     pes.evaluate_all(
         [s2a, s2b],
         path=path,
-        sigmas=sigmas,
-        suffix=suffix,
-        sigma_suffix=sigma_suffix
     )
     assert match_to_tol(s2b.value, values_ref[1])
     assert match_to_tol(s2b.error, errors_ref[1])
@@ -82,9 +81,6 @@ def test_FilesPes(tmp_path):
     pes.evaluate_all(
         [s2a, s2b],
         path=path,
-        sigmas=sigmas,
-        suffix=suffix,
-        sigma_suffix=sigma_suffix
     )
     assert match_to_tol(s2a.value, values_ref[0])
     assert match_to_tol(s2a.error, errors_ref[0])

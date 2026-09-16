@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
@@ -19,7 +19,7 @@ def test_linesearchiteration(tmp_path):
 
     lsi = LineSearchIteration()
     assert len(lsi) == 0
-    assert lsi.path == ''
+    assert lsi.path is None
 
     # Test default init from Hessian and structure
     pes = PesFunction(pes_H2O)
@@ -33,7 +33,7 @@ def test_linesearchiteration(tmp_path):
         structure=structure,
     )
     assert len(lsi) == 1
-    assert lsi.path == path0 + '/'
+    assert str(lsi.path) == path0
     # We can call evaluate explicitly
     lsi.evaluate(pes)
     assert lsi.evaluated

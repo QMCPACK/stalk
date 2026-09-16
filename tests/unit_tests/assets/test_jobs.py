@@ -169,7 +169,7 @@ def nxs_generic_pes(
     sim = GenericSimulation(
         system=system,
         job=job(**testjob),
-        path=structure.path,
+        path=str(structure.path),
         input=job_input,
         identifier='nxs_test'
     )

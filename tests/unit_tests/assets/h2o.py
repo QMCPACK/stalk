@@ -83,7 +83,13 @@ def pes_H2O(structure, sigma=0.0, dvar_eff=None, **kwargs):
 
 
 def get_structure_H2O():
-    return ParameterStructure(forward=forward_H2O, backward=backward_H2O, pos=pos_H2O, elem=elem_H2O)
+    return ParameterStructure(
+        forward=forward_H2O,
+        backward=backward_H2O,
+        pos=pos_H2O,
+        elem=elem_H2O,
+        label='H2O',
+    )
 # end def
 
 

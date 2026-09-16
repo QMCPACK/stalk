@@ -46,6 +46,13 @@ class StructureCollection(Generic[T]):
     # end def
 
     def add_point(self, point: T) -> bool:
+        # Allow addition of floats as LineSearchPoints
+        if isinstance(point, float):
+            # Will throw exception if T is incompatible
+            point = LineSearchPoint(point)
+        elif not isinstance(point, LineSearchPoint):
+            raise TypeError(f'Point must be a LineSearchPoint or float, got {type(point)}')
+        # end if
         # Only add the point if it is not already in the grid
         if point not in self:
             self._grid.append(point)

@@ -17,7 +17,7 @@ def test_ParallelLineSearch(tmp_path):
 
     # Test default values
     pls = ParallelLineSearch()
-    assert pls.path == 'pls'
+    assert pls.path is None
     assert not pls.setup
     assert not pls.shifted
     assert not pls.evaluated
@@ -69,8 +69,8 @@ def test_ParallelLineSearch(tmp_path):
 
     # Test propagate and write
     pls.path = str(tmp_path)
-    pls_next = pls.propagate(pes)
-    assert pls_next.path == str(tmp_path) + '_next/'
+    pls_next = pls.propagate(pes, next_path=str(tmp_path) + '_next_test')
+    assert str(pls_next.path) == str(tmp_path) + '_next_test'
 
     # Test loading of the data (requires consistent input parameters)
     pls_load = ParallelLineSearch(

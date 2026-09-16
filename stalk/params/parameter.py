@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Base class for representing an optimizable parameters."""
 
 __author__ = "Juha Tiihonen"

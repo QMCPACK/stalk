@@ -14,8 +14,8 @@ from stalk import PesFunction
 from stalk import BondLength
 from stalk import BondAngle
 from stalk import Parameter
-from stalk.io.xyz_geometry import XyzGeometry
-from stalk.params.relax_function import RelaxFunction
+from stalk import XyzGeometry
+from stalk import RelaxFunction
 
 
 # Natural forward mapping using bond lengths and angles

@@ -39,7 +39,7 @@ def test_NexusPes(tmp_path):
     pes.loader.args = {}  # ensure that other tests are not interfering with the args
     assert not pes.disable_failed
     assert not pes.bundle_jobs
-    pes.evaluate(s, path=str(tmp_path) + '/nosigma', sigma=0.0)
+    pes.evaluate(s, path=str(tmp_path) + '/nosigma')
     assert s.generated
     assert len(s.jobs) == 1
     assert s.finished
@@ -48,8 +48,8 @@ def test_NexusPes(tmp_path):
     assert match_to_tol(s.error, 0.0)
     # 1b: Test successful generation of jobs with noise
     sigma = 0.1
-    s.reset_value()
-    pes.evaluate(s, path=str(tmp_path) + '/sigma', sigma=sigma, add_sigma=True)
+    s.sigma = sigma
+    pes.evaluate(s, path=str(tmp_path) + '/sigma', add_sigma=True, reset_value=True)
     # The value must have shifted
     assert not match_to_tol(s.value, E_original)
     assert match_to_tol(s.error, 0.1)
@@ -57,7 +57,7 @@ def test_NexusPes(tmp_path):
     s.reset_value()
     pes.loader.args = {'produce_fail': True}  # make the loader fail
     with raises(NotEvaluatedException):
-        pes.evaluate(s, path=str(tmp_path) + '/fail', sigma=0.0)
+        pes.evaluate(s, path=str(tmp_path) + '/fail')
     # end with
     assert s.enabled
     assert match_to_tol(s.error, 0.0)
@@ -75,10 +75,12 @@ def test_NexusPes(tmp_path):
     s2b = s.copy(pos=pos_H2O * 1.1, label='s2b')
     s2eqm2 = s.copy(pos=pos_H2O, label='eqm')
     structures = [s2a, s2eqm1, s2b, s2eqm2]
+    for sigma, structure in zip(sigmas, structures):
+        structure.sigma = sigma
+    # end for
     pes.evaluate_all(
         structures,
         path=str(tmp_path) + '/eval_all',
-        sigmas=sigmas,
         add_sigma=True
     )
     # All are generated but the later duplicate eqm should match the first one
@@ -89,7 +91,6 @@ def test_NexusPes(tmp_path):
     pes.evaluate_all(
         structures,
         path=str(tmp_path) + '/eval_all',
-        sigmas=sigmas,
         add_sigma=True
     )
     # 2a: Test dep_jobs
@@ -122,11 +123,10 @@ def test_NexusPes(tmp_path):
     pes.evaluate_all(
         structures_bundle,
         path=str(tmp_path) + '/bundle',
-        sigmas=sigmas,
         add_sigma=True
     )
     assert all([s.generated for s in structures_bundle])
-    assert match_to_tol([s.error for s in structures_bundle], sigmas)
+    assert match_to_tol([s.error for s in structures_bundle], 2 * [s.sigma])
 
     # 4: Test effective variance map
     samples = 15
@@ -149,6 +149,7 @@ def test_NexusPes(tmp_path):
 
     s_evm0 = s_evm.copy(label='evm_test0', pos=pos_H2O * 0.9)
     sigma = 0.0001
+    s_evm0.sigma = sigma
     s_evm.forward = forward_H2O
     s_evm0.forward = forward_H2O
     samples_ref = evm.get_samples(s_evm0, error=sigma)
@@ -156,7 +157,6 @@ def test_NexusPes(tmp_path):
         s_evm0,
         path=str(tmp_path) + '/evm_test0',
         var_eff_map=evm,
-        sigma=sigma,
     )
     assert s_evm0.samples == samples_ref
     assert len(evm) == 2

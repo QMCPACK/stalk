@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
@@ -50,21 +50,22 @@ def test_LineSearchBase():
     assert match_to_tol(ls_noisy.y0, ref.y0)
     assert ls_noisy.x0_err > 0.0
     assert ls_noisy.y0_err > 0.0
-    # Test search
-    # TODO: add coverage
-    res = ls_noisy.search()
+    ls_noisy.reset_search()
+    assert ls_noisy.fit_res is None
+
+    # Test search, no noise, no store
+    res = ls_noisy.search(store=False, noisy=False)
     assert isinstance(res, FittingResult)
     assert match_to_tol(res.x0, ref.x0)
     assert match_to_tol(res.y0, ref.y0)
     assert res.x0_err == 0.0
     assert res.y0_err == 0.0
-    # Test search with error
-    # TODO: add coverage
-    res = ls_noisy.search_with_error()
+    # Test search with noise, store
+    res = ls_noisy.search(store=True, noisy=True)
     assert isinstance(res, FittingResult)
-    assert match_to_tol(res.x0, ref.x0)
-    assert match_to_tol(res.y0, ref.y0)
-    assert res.x0_err > 0.0
-    assert res.y0_err > 0.0
+    assert match_to_tol(ls_noisy.x0, ref.x0)
+    assert match_to_tol(ls_noisy.y0, ref.y0)
+    assert ls_noisy.x0_err > 0.0
+    assert ls_noisy.y0_err > 0.0
 
 # end def

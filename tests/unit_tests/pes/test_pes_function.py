@@ -23,12 +23,12 @@ def test_PesFunction():
     # Test evaluation add_sigma=False
     params = [1.0, 2.0, 3.0]
     sigma = 3.5
-    s = ParameterSet(params)
-    pf.evaluate(s, add_sigma=False, sigma=sigma)
+    s = ParameterSet(params, sigma=sigma)
+    pf.evaluate(s, add_sigma=False)
     assert s.value == sum(params)
     assert match_to_tol(s.error, args['arg'])
 
-    pf.evaluate(s, add_sigma=True, sigma=sigma)
+    pf.evaluate(s, add_sigma=True)
     assert s.value != sum(params)
     assert match_to_tol(s.error, (args['arg']**2 + sigma**2)**0.5)
 
