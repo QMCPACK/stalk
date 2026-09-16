@@ -12,30 +12,30 @@ from run2_surrogate import surrogates
 
 # Run line-searches between PES combinations
 lsis = {}
-epsilon_p = [0.005, 0.005]
-for xc_srg, pes_srg in pes_dict.items():
+# Choose a tolerance for the line-searches
+epsilon_p = 0.005
+for xc_srg, surrogate in surrogates.items():
     lsis[xc_srg] = {}
     for xc_ls, pes_ls in pes_dict.items():
-        path = f'ls_005/{xc_srg}-{xc_ls}'
-        structure = surrogates[xc_srg].structure.copy()
+        path = f'ls_{epsilon_p}/{xc_srg}-{xc_ls}'
+        structure = surrogate.structure.copy()
         if xc_srg == xc_ls:
-            structure.shift_params([0.1, -0.2])
+            structure.shift_params([0.1, -0.1])
         # end if
-        surrogates[xc_srg].optimize(epsilon_p=epsilon_p)
+        surrogates[xc_srg].optimize(epsilon_p=len(structure) * [epsilon_p])
         lsi = LineSearchIteration(
-            surrogate=surrogates[xc_srg],
+            surrogate=surrogate,
             structure=structure,
             path=path,
-            pes=pes_ls,
         )
         for i in range(4):
-            lsi.propagate(i, add_sigma=True)
+            lsi.propagate(pes_ls, i, add_sigma=True)
         # end for
         # Evaluate the latest eqm structure
-        lsi.pls().evaluate_eqm(add_sigma=True)
+        lsi.pls(-1).evaluate_eqm(pes_ls, add_sigma=True)
         print(f'Line-search ({xc_ls} + noise) on {xc_srg} surrogate:')
         print(lsi)
-        print(surrogates[xc_ls].structure.params)
+        print(surrogate.structure.params)
         print('^^Reference params^^')
         lsis[xc_srg][xc_ls] = lsi
     # end for

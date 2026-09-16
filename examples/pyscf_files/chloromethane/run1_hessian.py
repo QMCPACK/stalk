@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from stalk import ParameterHessian
 
@@ -6,9 +6,10 @@ from params import pes_xyz
 from run0_relax import structure_relax
 
 
-hessian_dir = 'hessian/'
 hessian = ParameterHessian(structure=structure_relax)
-if not hessian.load(hessian_dir):
-    hessian.compute_fdiff(pes=pes_xyz, path=hessian_dir, dp=0.01)
-# end if
+hessian.compute_fdiff(
+    pes=pes_xyz,
+    path='hessian',
+    dp=0.01
+)
 print(hessian)

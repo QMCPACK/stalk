@@ -82,7 +82,7 @@ def scf_vcrelax_job(structure: NexusStructure, **kwargs):
     relax = generate_pwscf(
         system=system,
         job=job(**pwscfjob),
-        path=structure.path,
+        path=str(structure.path),
         identifier='vcrelax',
         calculation='vc-relax',
         forc_conv_thr=1e-4,
@@ -104,7 +104,7 @@ def scf_pes_job(structure: NexusStructure, **kwargs):
     scf = generate_pwscf(
         system=system,
         job=job(**pwscfjob),
-        path=structure.path,
+        path=str(structure.path),
         identifier='scf',
         calculation='scf',
         **scf_args
@@ -168,7 +168,7 @@ def dmc_pes_job(
     scf = generate_pwscf(
         system=primcell,
         job=job(**pwscfjob),
-        path=path + 'scf',
+        path=str(path / 'scf'),
         identifier='scf',
         calculation='scf',
         kgrid=(8, 8, 8),
@@ -179,7 +179,7 @@ def dmc_pes_job(
     nscf = generate_pwscf(
         system=supercell,
         job=job(**pwscfjob),
-        path=path + 'nscf',
+        path=str(path / 'nscf'),
         identifier='nscf',
         calculation='nscf',
         wf_collect=True,
@@ -190,14 +190,14 @@ def dmc_pes_job(
     )
     p2q = generate_pw2qmcpack(
         identifier='p2q',
-        path=path + 'nscf',
+        path=str(path / 'nscf'),
         job=job(**p2qjob),
         write_psir=False,
         dependencies=[(nscf, 'orbitals')],
     )
     opt = generate_qmcpack(
         system=supercell,
-        path=path + 'opt',
+        path=str(path / 'opt'),
         job=job(**optjob),
         dependencies=[(p2q, 'orbitals')],
         cycles=opt_cycles,
@@ -225,7 +225,7 @@ def dmc_pes_job(
     nscft = generate_pwscf(
         system=twisted_supercell,
         job=job(**pwscfjob),
-        path=path + 'nscft',
+        path=str(path / 'nscft'),
         identifier='nscf',
         calculation='nscf',
         wf_collect=True,
@@ -236,14 +236,14 @@ def dmc_pes_job(
     )
     p2qt = generate_pw2qmcpack(
         job=job(**p2qjob),
-        path=path + 'nscft',
+        path=str(path / 'nscft'),
         identifier='p2q',
         write_psir=False,
         dependencies=[(nscft, 'orbitals')],
     )
     dmc = generate_qmcpack(
         system=twisted_supercell,
-        path=path + 'dmc',
+        path=str(path / 'dmc'),
         job=job(**dmcjob),
         dependencies=[(p2qt, 'orbitals'), (opt, 'jastrow')],
         steps=dmcsteps,

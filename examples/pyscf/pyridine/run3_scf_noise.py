@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 
 from stalk import LineSearchIteration
 
-from params import pes
+from params import pes_pbe
 from run2_surrogate import surrogate
 
 
@@ -16,15 +16,15 @@ srg_ls = LineSearchIteration(
     surrogate=surrogate,
     structure=shifted_structure,
     path='srg_ls',
-    pes=pes,
+    pes=pes_pbe,
 )
 # Propagate the parallel line-search (compute values, analyze, then move on) 4 times
 #   add_sigma = True means that target errorbars are used to simulate random noise
 for i in range(4):
-    srg_ls.propagate(pes, i, add_sigma=True)
+    srg_ls.propagate(pes_pbe, i, add_sigma=True)
 # end for
 # Evaluate the latest eqm structure
-srg_ls.pls().evaluate_eqm(pes, add_sigma=True)
+srg_ls.pls().evaluate_eqm(pes_pbe, add_sigma=True)
 
 if __name__ == '__main__':
     # Print the line-search performance

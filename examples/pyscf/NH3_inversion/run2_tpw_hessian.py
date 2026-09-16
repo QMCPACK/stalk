@@ -1,14 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from stalk import TransitionPathway
 
 from params import pes_pbe
 from run1_neb import traj_neb
 
-basedir = 'tpw'
-
 tpw = TransitionPathway(
-    path=basedir,
+    path='tpw',
     images=traj_neb
 )
 tpw.calculate_hessians(pes=pes_pbe)

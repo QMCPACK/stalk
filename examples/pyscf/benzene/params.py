@@ -11,6 +11,9 @@ from pyscf.gto.mole import tofile
 from stalk import ParameterStructure
 from stalk import PesFunction
 from stalk import BondLength
+from stalk.io.xyz_geometry import XyzGeometry
+from stalk.params.relax_function import RelaxFunction
+from stalk.util.util import Bohr
 
 
 # Forward mapping: produce parameter values from an array of atomic positions
@@ -81,7 +84,7 @@ def kernel_pyscf(structure: ParameterStructure, xc='pbe'):
     # end for
     mol = gto.Mole()
     mol.atom = atom
-    mol.verbose = 3
+    mol.verbose = 2
     mol.basis = 'ccpvdz'
     mol.unit = 'B'
     mol.ecp = 'ccecp'
@@ -97,14 +100,13 @@ def kernel_pyscf(structure: ParameterStructure, xc='pbe'):
 # end def
 
 
-def relax_pyscf(structure: ParameterStructure):
+def relax_pyscf(structure: ParameterStructure) -> None:
     mf = kernel_pyscf(structure=structure)
     mf.kernel()
     mol_eq = optimize(mf, maxsteps=100, constraints='benzene_constraints.txt')
-    # Write to external file
+    # Write to external file in Bohr, to be loaded by the XyzGeometry loader
     makedirs(structure.path, exist_ok=True)
     tofile(mol_eq, f'{structure.path}/relax.xyz', format='xyz')
-    return mf.e_tot, 0.0
 # end def
 
 
@@ -116,4 +118,7 @@ def pes_pyscf(structure: ParameterStructure, **kwargs):
 
 
 pes = PesFunction(pes_pyscf)
-relax_pes = PesFunction(relax_pyscf)
+relax_pes = RelaxFunction(
+    relax_pyscf,
+    loader=XyzGeometry(suffix='relax.xyz', scale=Bohr),
+)

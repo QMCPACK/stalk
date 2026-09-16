@@ -21,6 +21,9 @@ srg_ls = LineSearchIteration(
 #   add_sigma = True means that target errorbars are used to simulate random noise
 for i in range(4):
     srg_ls.propagate(pes_xyz, i=i, add_sigma=True)
+    # Plot intermediate results of the latest complete iteration
+    srg_ls.pls(-2).plot()
+    plt.show()
 # end for
 # Evaluate the latest eqm structure
 srg_ls[-1].evaluate_eqm(pes_xyz, add_sigma=True)

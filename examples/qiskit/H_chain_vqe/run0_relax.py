@@ -41,15 +41,11 @@ theta_init = [PhaseAngle(0.1 * v, label=f't{t}') for t, v in enumerate(np.random
 s_init.params = theta_init
 
 # Step 0: optimize the VQE classically (or load)
-relaxfile = f'{directory}relax.dat'
-try:
-    params_relax = np.loadtxt(relaxfile)
-    s_relax = s_init.copy(params_relax, label='relax')
-except FileNotFoundError:
-    s_relax = s_init.copy(label='relax')
-    vqe_pes.relax(s_relax)
-    np.savetxt(relaxfile, s_relax.params)
-# end try
+s_relax = vqe_pes.relax(
+    structure=s_init.copy(label='relax'),
+    path=directory,
+)
+
 if interactive:
     print(s_relax)
 # end if

@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
 from stalk import ParameterStructure
-from stalk import XyzGeometry
 from stalk import BondLength
-from stalk.util import Bohr
 
-from params import forward, backward, relax_pyscf
+from params import forward, backward, relax_pes
 
 
 # Let us initiate a ParameterStructure object that implements the parametric mappings
@@ -23,11 +21,9 @@ structure_init = ParameterStructure(
     units=units,
 )
 
-xyz = XyzGeometry(suffix='relax.xyz', scale=Bohr)
-structure_relax = xyz.load_or_relax(
-    path='relax',
-    relax_func=relax_pyscf,
-    structure=structure_init
+structure_relax = relax_pes(
+    structure=structure_init.copy(label='relax'),
+    path='./',
 )
 
 if __name__ == '__main__':

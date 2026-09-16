@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from os import makedirs
+
 from numpy import array, sin, cos, ndarray, pi
 
 from pyscf import dft
@@ -11,6 +13,8 @@ from stalk import ParameterStructure
 from stalk import PesFunction
 from stalk import BondLength
 from stalk import BondAngle
+from stalk import RelaxFunction
+from stalk import XyzGeometry
 
 
 # Natural forward mapping using bond lengths and angles
@@ -68,13 +72,14 @@ def kernel_pyscf(structure: ParameterStructure):
 # end def
 
 
-def relax_pyscf(structure: ParameterStructure, outfile='relax.xyz', xc='pbe'):
+def relax_pyscf(structure: ParameterStructure, xc='pbe'):
     mf = kernel_pyscf(structure=structure)
     mf.xc = xc
     mf.kernel()
     mol_eq = optimize(mf, maxsteps=100, constraints='h2o_constraints.txt')
     # Write to external file
-    tofile(mol_eq, outfile, format='xyz')
+    makedirs(structure.path, exist_ok=True)
+    tofile(mol_eq, f'{structure.path}/relax.xyz', format='xyz')
 # end def
 
 
@@ -91,8 +96,14 @@ xcs = ['pbe', 'b3lyp', 'lda']
 # Colors to go with different functionals for plotting
 colors = ['tab:blue', 'tab:orange', 'tab:green']
 pes_dict = {}
+relax_dict = {}
 co_dict = {}
 for xc, color in zip(xcs, colors):
     co_dict[xc] = color
     pes_dict[xc] = PesFunction(pes_pyscf, xc=xc)
+    relax_dict[xc] = RelaxFunction(
+        relax_pyscf,
+        xc=xc,
+        loader=XyzGeometry(suffix='relax.xyz')
+    )
 # end for

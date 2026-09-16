@@ -7,4 +7,4 @@ $system
 
 $calculation
 
-savetxt('energy.dat', [[e_scf, 0.0]])
+savetxt('value.dat', [[e_scf, 0.0]])

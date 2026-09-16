@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 
 from numpy import array
-from pyscf.geomopt.geometric_solver import optimize
-from pyscf.gto.mole import tofile
 
 from stalk import ParameterStructure
 from stalk import XyzGeometry
 from stalk import BondLength
 from stalk import Parameter
 
-from params import forward, backward, kernel_pyscf
+from params import forward, backward
 
 
 # Let us initiate a ParameterStructure object that implements the parametric mappings
@@ -28,20 +26,22 @@ structure = ParameterStructure(
     label='init'
 )
 
-outfile = 'relax.xyz'
+xyz_r = XyzGeometry(suffix='relax.xyz')
+xyz_i = XyzGeometry(suffix='structure.xyz')
+relaxdir = 'relax'
 try:
-    geom = XyzGeometry().load(outfile)
+    # Try to load the file from 'relax/relax.xyz'
+    geom = xyz_r.load(relaxdir)
 except FileNotFoundError:
-    mf = kernel_pyscf(structure=structure, xc='pbe')
-    mf.kernel()
-    mol_eq = optimize(mf, maxsteps=100, constraints='chloromethane_constraints.txt')
-    # Write to external file
-    tofile(mol_eq, outfile, format='xyz')
-    geom = XyzGeometry().load(outfile)
+    # If not found, create the initial structure and instruct to relax it
+    xyz_i.write(structure, relaxdir)
+    print(f'Wrote initial structure to {relaxdir}/structure.xyz')
+    print(f'Next, run "python3 relax_geometry.py {relaxdir}/structure.xyz" to relax.')
+    exit(0)
 # end try
-new_params = structure.map_forward(geom.get_pos())
 print('Initial params:')
 print(structure.params)
 print('Relaxed structure:')
+new_params = structure.map_forward(geom.get_pos())
 structure_relax = structure.copy(params=new_params)
 print(structure_relax)

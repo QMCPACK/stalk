@@ -19,6 +19,8 @@ from stalk import ParameterStructure
 from stalk import PesFunction
 from stalk import BondLength
 from stalk import Parameter
+from stalk import XyzGeometry
+from stalk import RelaxFunction
 
 
 # Forward mapping: produce parameter values from an array of atomic positions
@@ -114,8 +116,6 @@ def relax_pyscf(
     # Write to external file
     makedirs(structure.path, exist_ok=True)
     tofile(mol_eq, f'{structure.path}/relax.xyz', format='xyz')
-    e_scf = mf.e_tot
-    return e_scf, 0.0
 # end def
 
 
@@ -140,10 +140,22 @@ def pes_pyscf(
 
 # PBE PES
 pes_pbe = PesFunction(pes_pyscf, xc='pbe', basis='ccecpccpvdz', ecp='ccecp')
-relax_pbe = PesFunction(relax_pyscf, xc='pbe', basis='ccecpccpvdz', ecp='ccecp')
+relax_pbe = RelaxFunction(
+    relax_pyscf,
+    xc='pbe',
+    loader=XyzGeometry(suffix='relax.xyz'),
+    basis='ccecpccpvdz',
+    ecp='ccecp'
+)
 # LDA PES
 pes_lda = PesFunction(pes_pyscf, xc='lda', basis='ccecpccpvdz', ecp='ccecp')
-relax_lda = PesFunction(relax_pyscf, xc='lda', basis='ccecpccpvdz', ecp='ccecp')
+relax_lda = RelaxFunction(
+    relax_pyscf,
+    xc='lda',
+    loader=XyzGeometry(suffix='relax.xyz'),
+    basis='ccecpccpvdz',
+    ecp='ccecp'
+)
 
 
 # To run a NEB calculation with ASE, we need to define a calculator that can compute

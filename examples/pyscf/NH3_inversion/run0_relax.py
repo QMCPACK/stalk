@@ -11,7 +11,7 @@ from params import forward, backward, relax_pbe
 
 # Let us initiate a ParameterStructure object that implements the parametric mappings
 elem = ['N'] + 3 * ['H']
-structure_A_init = ParameterStructure(
+structure_a_init = ParameterStructure(
     forward=forward,
     backward=backward,
     params=[
@@ -20,8 +20,9 @@ structure_A_init = ParameterStructure(
     ],
     elem=elem,
     units='A',
+    label='pointA',
 )
-structure_B_init = ParameterStructure(
+structure_b_init = ParameterStructure(
     forward=forward,
     backward=backward,
     params=[
@@ -30,17 +31,16 @@ structure_B_init = ParameterStructure(
     ],
     elem=elem,
     units='A',
+    label='pointB',
 )
 
 # The suffix 'relax.xyz' is hardcoded to the relaxation function
 xyz = XyzGeometry(suffix='relax.xyz')
-structure_a = xyz.load_or_relax(
-    path='pointA',
-    relax_func=relax_pbe,
-    structure=structure_A_init,
+structure_a = relax_pbe(
+    structure=structure_a_init,
+    path='relax',
 )
-structure_b = xyz.load_or_relax(
-    path='pointB',
-    relax_func=relax_pbe,
-    structure=structure_B_init,
+structure_b = relax_pbe(
+    structure=structure_b_init,
+    path='relax',
 )

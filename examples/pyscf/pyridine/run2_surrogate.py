@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from stalk import Surrogate
 
-from params import pes
+from params import pes_pbe
 from run1_hessian import hessian
 
 
@@ -14,7 +14,7 @@ surrogate = Surrogate(
     window_frac=0.5,  # maximum displacement relative to Lambda of each direction
     M=15  # number of points per direction to sample
 )
-surrogate.evaluate(pes)
+surrogate.evaluate(pes_pbe)
 
 epsilon_p = 10 * [0.01]
 surrogate.optimize(

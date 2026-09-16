@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from os import makedirs
+
 from numpy import array, sin, cos, ndarray, pi
 
 from pyscf import dft
@@ -12,6 +14,8 @@ from stalk import PesFunction
 from stalk import BondLength
 from stalk import BondAngle
 from stalk import Parameter
+from stalk.io.xyz_geometry import XyzGeometry
+from stalk.params.relax_function import RelaxFunction
 
 
 # Natural forward mapping using bond lengths and angles
@@ -105,24 +109,35 @@ def kernel_pyscf(structure: ParameterStructure):
 # end def
 
 
-def relax_pyscf(structure: ParameterStructure, outfile='relax.xyz', xc='pbe'):
+def relax_pyscf(structure: ParameterStructure, xc='pbe'):
     mf = kernel_pyscf(structure=structure)
     mf.xc = xc
     mf.kernel()
     mol_eq = optimize(mf, maxsteps=100, constraints='chloromethane_constraints.txt')
     # Write to external file
-    tofile(mol_eq, outfile, format='xyz')
+    makedirs(structure.path, exist_ok=True)
+    tofile(mol_eq, f'{structure.path}/relax.xyz', format='xyz')
 # end def
 
 
 def pes_pyscf(structure: ParameterStructure, xc='pbe', **kwargs):
-    print(f'Computing: {structure.label} ({xc})')
+    print(f'Computing: {structure.path} ({xc})')
     mf = kernel_pyscf(structure=structure)
     mf.xc = xc
     e_scf = mf.kernel()
-    return e_scf, 0.0
+    return e_scf
 # end def
 
 
-pes_pbe = PesFunction(pes_pyscf, {'xc': 'pbe'})
-pes_b3lyp = PesFunction(pes_pyscf, {'xc': 'b3lyp'})
+pes_pbe = PesFunction(pes_pyscf, xc='pbe')
+pes_b3lyp = PesFunction(pes_pyscf, xc='b3lyp')
+relax_pbe = RelaxFunction(
+    relax_pyscf,
+    xc='pbe',
+    loader=XyzGeometry(suffix='relax.xyz')
+)
+relax_b3lyp = RelaxFunction(
+    relax_pyscf,
+    xc='b3lyp',
+    loader=XyzGeometry(suffix='relax.xyz')
+)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from params import pes_pbe
 from run2_tpw_hessian import tpw

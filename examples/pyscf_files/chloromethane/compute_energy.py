@@ -6,9 +6,9 @@ import numpy as np
 
 from stalk import XyzGeometry
 from stalk import PesResult
+from stalk import ParameterStructure
 
 from params import kernel_pyscf
-from run0_relax import structure_relax
 
 parser = argparse.ArgumentParser(description='Compute energies from XYZ structures')
 parser.add_argument('filename', nargs='+', help='Structure files')
@@ -17,27 +17,38 @@ parser.add_argument('--xc', default='pbe', help='XC functional')
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    for fname in args.filename:
-        if not fname.endswith('structure.xyz'):
-            print(f'Skipping {fname}')
+    for xyzname in args.filename:
+        # Only treat .xyz files
+        if not xyzname.endswith('.xyz'):
+            print(f'Skipping {xyzname}')
             continue
         # end if
-        efile = fname.replace('structure.xyz', 'energy.dat')
-        sfile = fname.replace('structure.xyz', 'sigma.dat')
+        xyzfile = Path(xyzname)
+        xyzpath = xyzfile.parent
 
-        geom = XyzGeometry(suffix='').load(fname)
-        structure = structure_relax.copy(pos=geom.get_pos())
+        # Load the geometry
+        geom = XyzGeometry(suffix=xyzfile.name).load(xyzpath)
+        structure = ParameterStructure(
+            pos=geom.get_pos(),
+            elem=geom.get_elem(),
+        )
 
+        # Calculate the energy using PySCF kernel
         xc = args.xc
-        print(f'Computing: {fname} ({xc})')
+        print(f'Computing: {xyzname} ({xc})')
         mf = kernel_pyscf(structure=structure, xc=xc)
         e_scf = mf.kernel()
         energy = PesResult(e_scf)
 
+        # Add sigma to energy if it exists
+        sfile = xyzpath / 'sigma.dat'
         if Path(sfile).exists():
             sigma = float(np.loadtxt(sfile))
             energy.add_sigma(sigma)
         # end if
+
+        # Write the energy to file
+        efile = xyzpath / 'value.dat'
         np.savetxt(efile, [energy.value, energy.error])
     # end for
 # end if

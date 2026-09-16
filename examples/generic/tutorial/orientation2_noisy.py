@@ -12,13 +12,13 @@ from stalk import PesFunction
 
 
 sigma = 0.1  # noise level for the PES evaluations
-p = ParameterSet([1.0])  # initial parameter set
+p = ParameterSet([1.0], sigma=sigma)  # initial parameter set
 pes = PesFunction(pes_func, c=[1.0, 2.0, 3.0])
 n = 1000
 
 energies = []
 for _ in range(n):
-    pes(p, sigma=sigma, add_sigma=True)
+    pes(p, add_sigma=True)
     energies.append(p.value)
 # end for
 # Calculate the apparent standard deviation of the noisy PES evaluations

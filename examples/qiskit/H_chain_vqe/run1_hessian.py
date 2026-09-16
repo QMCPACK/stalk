@@ -7,11 +7,12 @@ from run0_relax import s_relax, directory
 
 
 interactive = __name__ == '__main__'
-hessian_dir = f'{directory}hessian/'
 hessian = ParameterHessian(structure=s_relax)
-if not hessian.load(hessian_dir):
-    hessian.compute_fdiff(pes=vqe_pes, path=hessian_dir, dp=0.01)
-# end if
+hessian.compute_fdiff(
+    pes=vqe_pes,
+    path=f'{directory}hessian',
+    dp=0.01
+)
 if interactive:
     print(hessian)
 # end if

@@ -105,7 +105,7 @@ def pes_exact(
     structure: ParameterStructure,
     **kwargs  # charge=0, spin=0, basis="sto3g", callback=None, exact=False
 ):
-    ansatz, mapper, q_hamiltonian = kernel_vqe(structure, **kwargs)
+    _, _, q_hamiltonian = kernel_vqe(structure, **kwargs)
     solver = NumPyMinimumEigensolver()
     result = solver.compute_minimum_eigenvalue(q_hamiltonian)
     energy = result.eigenvalue.real
@@ -118,9 +118,9 @@ def pes_exact(
 
 
 # VQE surrogate PES
-vqe_pes = PesFunction(func=pes_vqe, kernel_args={})
+vqe_pes = PesFunction(pes_vqe, kernel_args={})
 # Exact PES
-exact_pes = PesFunction(func=pes_exact, kernel_args={})
+exact_pes = PesFunction(pes_exact, kernel_args={})
 # Create another instance to allow (optionally) a different PES and to reset eval count
 #   NB: Using here the same PES, only this time it is noisy
-vqe_pes_noisy = PesFunction(func=pes_vqe, kernel_args={})
+vqe_pes_noisy = PesFunction(pes_vqe, kernel_args={})

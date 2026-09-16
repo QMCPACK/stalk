@@ -19,9 +19,9 @@ structure_init = NexusStructure(
 
 structure_relax = structure_init.copy()
 
-relax_pyscf.relax(
-    structure_relax,
-    path='relax/',
+structure_relax = relax_pyscf(
+    structure_init.copy(label='relax'),
+    path='./',
     interactive=interactive,
 )
 

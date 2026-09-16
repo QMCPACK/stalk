@@ -11,6 +11,8 @@ from pyscf.gto.mole import tofile
 from stalk import ParameterStructure
 from stalk import PesFunction
 from stalk import Parameter
+from stalk import RelaxFunction
+from stalk import XyzGeometry
 
 
 # Forward mapping: produce parameter values from an array of atomic positions
@@ -110,7 +112,7 @@ def backward(params: ndarray) -> ndarray:
 # end def
 
 
-def kernel_pyscf(structure: ParameterStructure, **kwargs):
+def kernel_pyscf(structure: ParameterStructure):
     atom = []
     for el, pos in zip(structure.elem, structure.pos):
         atom.append([el, tuple(pos)])
@@ -128,27 +130,32 @@ def kernel_pyscf(structure: ParameterStructure, **kwargs):
     mol.build()
 
     mf = dft.RKS(mol)
-    mf.xc = 'pbe'
     return mf
 # end def
 
 
-def relax_pyscf(structure: ParameterStructure, **kwargs):
+def relax_pyscf(structure: ParameterStructure, xc='pbe', **kwargs):
     mf = kernel_pyscf(structure=structure, **kwargs)
+    mf.xc = xc
     mf.kernel()
     mol_eq = optimize(mf, maxsteps=100)
     # Write to external file
     makedirs(structure.path, exist_ok=True)
     tofile(mol_eq, f'{structure.path}/relax.xyz', format='xyz')
-    return mf.e_tot, 0.0
 # end def
 
 
-def pes_pyscf(structure: ParameterStructure, **kwargs):
+def pes_pyscf(structure: ParameterStructure, xc='pbe', **kwargs):
     mf = kernel_pyscf(structure=structure, **kwargs)
+    mf.xc = xc
     e_scf = mf.kernel()
     return e_scf, 0.0
 # end def
 
 
-pes = PesFunction(pes_pyscf)
+pes_pbe = PesFunction(pes_pyscf, xc='pbe')
+relax_pbe = RelaxFunction(
+    relax_pyscf,
+    xc='pbe',
+    loader=XyzGeometry(suffix='relax.xyz')
+)

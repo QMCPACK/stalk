@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from stalk import ParameterHessian
 
@@ -6,16 +6,13 @@ from params import pes_pyscf
 from run0_relax import structure_relax
 
 interactive = __name__ == "__main__"
-hessian_dir = 'hessian/'
 hessian = ParameterHessian(structure=structure_relax)
-if not hessian.load(hessian_dir):
-    hessian.compute_fdiff(
-        pes=pes_pyscf,
-        path=hessian_dir,
-        dp=0.001,
-        interactive=interactive,
-    )
-# end if
+hessian.compute_fdiff(
+    pes=pes_pyscf,
+    path='hessian',
+    dp=0.01,
+    interactive=interactive,
+)
 if interactive:
     print(hessian)
 # end if

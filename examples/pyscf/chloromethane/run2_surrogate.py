@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from matplotlib import pyplot as plt
 
@@ -13,11 +13,10 @@ surrogate = Surrogate(
     fit_kind='pf3',
     structure=hessian.structure,
     hessian=hessian,
-    pes=pes_pbe,
     window_frac=0.2,
     M=15
 )
-surrogate.bracket_target_biases()
+surrogate.evaluate(pes=pes_pbe)
 
 epsilon_p = [0.02, 0.02, 0.02]
 surrogate.optimize(

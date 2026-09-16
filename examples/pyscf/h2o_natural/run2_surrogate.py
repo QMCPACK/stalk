@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import numpy as np
 
@@ -13,10 +13,9 @@ surrogates = {}
 epsilon_p = np.array([0.01, 0.01])
 
 for xc, pes in pes_dict.items():
-    surrogate_dir = f'surrogate/{xc}'
     # Characterize PES
     surrogate = Surrogate(
-        path=surrogate_dir,
+        path=f'{xc}/surrogate',
         fit_kind='pf3',
         structure=hessians[xc].structure,
         hessian=hessians[xc],
@@ -27,13 +26,13 @@ for xc, pes in pes_dict.items():
 
     # Optimize to tolerances
     surrogate.optimize(
-        epsilon_p=epsilon_p / 2,
+        epsilon_p=epsilon_p,
         fit_kind='pf3',
         M=7,
         N=400,
         reoptimize=False,
+        logger=3,
     )
-    surrogate.optimize(epsilon_p=epsilon_p)
     print(f'Surrogate model ({xc})')
     print(surrogate)
     surrogates[xc] = surrogate

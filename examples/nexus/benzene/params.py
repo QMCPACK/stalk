@@ -98,7 +98,7 @@ def scf_relax_job(structure: NexusStructure, xc='pbe', **kwargs):
         system=system,
         identifier='relax',
         job=job(**pyscfjob),
-        path=structure.path,
+        path=str(structure.path),
         mole=obj(
             verbose=4,
             ecp='ccecp',
@@ -136,7 +136,7 @@ def scf_pes_job(structure: NexusStructure, xc='pbe', **kwargs):
         system=system,
         identifier='scf',
         job=job(**pyscfjob),
-        path=structure.path,
+        path=str(structure.path),
         mole=obj(
             verbose=4,
             ecp='ccecp',
@@ -156,7 +156,7 @@ def scf_pes_job(structure: NexusStructure, xc='pbe', **kwargs):
 # Hessian based on the structural mappings
 pes_pyscf = NexusPes(
     func=PesFunction(scf_pes_job),
-    loader=PesLoader(suffix='energy.dat')
+    loader=PesLoader(suffix='value.dat')
 )
 
 
@@ -189,7 +189,7 @@ def dmc_pes_job(
     scf = generate_pwscf(
         system=system,
         job=job(**pwscfjob),
-        path=path + 'scf',
+        path=str(path / 'scf'),
         pseudos=scfpseudos,
         identifier='scf',
         calculation='scf',
@@ -210,7 +210,7 @@ def dmc_pes_job(
     )
     p2q = generate_pw2qmcpack(
         identifier='p2q',
-        path=path + 'scf',
+        path=str(path / 'scf'),
         job=job(**p2qjob),
         dependencies=[(scf, 'orbitals')],
     )
@@ -225,7 +225,7 @@ def dmc_pes_job(
     # end if
     opt = generate_qmcpack(
         system=system,
-        path=path + 'opt',
+        path=str(path / 'opt'),
         job=job(**optjob),
         dependencies=[(p2q, 'orbitals')],
         cycles=opt_cycles,
@@ -249,7 +249,7 @@ def dmc_pes_job(
     # end if
     dmc = generate_qmcpack(
         system=system,
-        path=path + 'dmc',
+        path=str(path / 'dmc'),
         job=job(**dmcjob),
         dependencies=[(p2q, 'orbitals'), (opt, 'jastrow')],
         steps=dmcsteps,

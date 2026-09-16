@@ -22,7 +22,7 @@ for i in range(4):
     srg_ls.propagate(pes_pbe, i, add_sigma=True)
 # end for
 # Evaluate the latest eqm structure
-srg_ls.pls().evaluate_eqm(add_sigma=True)
+srg_ls.pls().evaluate_eqm(pes_pbe, add_sigma=True)
 
 if __name__ == "__main__":
     # Print the line-search performance

@@ -28,7 +28,7 @@ for i in range(4):
     # end if
 # end for
 # Evaluate the latest eqm structure
-srg_ls.pls().evaluate_eqm(add_sigma=True, interactive=interactive)
+srg_ls.pls().evaluate_eqm(pes_pyscf, add_sigma=True, interactive=interactive)
 
 # Print the line-search performance
 if interactive:

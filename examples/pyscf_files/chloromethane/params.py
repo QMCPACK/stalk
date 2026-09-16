@@ -102,4 +102,5 @@ def kernel_pyscf(structure: ParameterStructure, xc='pbe'):
 # end def
 
 
+# The default FilesPes writes structure.xyz files and sigma.dat files for each structure
 pes_xyz = FilesPes()

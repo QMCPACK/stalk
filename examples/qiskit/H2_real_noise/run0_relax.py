@@ -5,7 +5,6 @@ from os import makedirs
 
 from stalk import ParameterStructure
 from stalk import PhaseAngle
-from stalk import TxtData
 
 from params import vqe_pes, kernel_vqe
 
@@ -42,16 +41,10 @@ theta_init = [PhaseAngle(0.1 * v, label=f't{t}') for t, v in enumerate(np.random
 s_init.params = theta_init
 
 # Step 0: optimize the VQE classically (or load)
-xyz = TxtData(suffix='relax.dat')
-params_relax = xyz.load_result(directory, [False])
-if all(params_relax):
-    print(f'Loaded relaxed parameters from {xyz.get_filename(directory)}.')
-    s_relax = s_init.copy(params_relax, label='relax')
-else:
-    s_relax = s_init.copy(label='relax')
-    vqe_pes.relax(s_relax)
-    xyz.save_result(directory, s_relax.params)
-# end if
+s_relax = vqe_pes.relax(
+    structure=s_init.copy(label='relax'),
+    path=directory,
+)
 
 if interactive:
     print(s_relax)

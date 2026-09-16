@@ -15,7 +15,7 @@ from stalk.nexus.nexus_structure import NexusStructure
 
 # This requires the following job arguments to be defined in local nxs.py
 # Copy examples/nexus/nxs_template.py to ./nxs.py and edit accordingly
-from nxs import pyscfjob, optjob, dmcjob
+from nxs import pyscfjob, optjob, dmcjob  # type: ignore
 
 # Pseudos (execute download_pseudos.sh in the working directory)
 qmcpseudos = ['C.ccECP.xml']
@@ -63,7 +63,7 @@ def scf_relax_job(structure: NexusStructure, **kwargs):
         system=system,
         identifier='relax',
         job=job(**pyscfjob),
-        path=structure.path,
+        path=str(structure.path),
         mole=scf_mole_args,
         calculation=obj(
             method='RKS',
@@ -85,7 +85,7 @@ def scf_pes_job(structure: NexusStructure, **kwargs):
         system=system,
         identifier='scf',
         job=job(**pyscfjob),
-        path=structure.path,
+        path=str(structure.path),
         mole=scf_mole_args,
         calculation=obj(
             method='RKS',
@@ -128,7 +128,7 @@ def dmc_pes_job(
         system=system,
         identifier='scf',
         job=job(**pyscfjob),
-        path=path + 'scf',
+        path=str(path / 'scf'),
         mole=obj(
             spin=4,
             verbose=4,
@@ -144,13 +144,13 @@ def dmc_pes_job(
     )
     c4q = generate_convert4qmc(
         identifier='c4q',
-        path=path + 'scf',
+        path=str(path / 'scf'),
         job=job(cores=1),
         dependencies=(scf, 'orbitals'),
     )
     opt = generate_qmcpack(
         system=system,
-        path=path + 'opt',
+        path=str(path / 'opt'),
         job=job(**optjob),
         dependencies=[(c4q, 'orbitals')],
         cycles=opt_cycles,
@@ -174,7 +174,7 @@ def dmc_pes_job(
     # end if
     dmc = generate_qmcpack(
         system=system,
-        path=path + 'dmc',
+        path=str(path / 'dmc'),
         job=job(**dmcjob),
         dependencies=[(c4q, 'orbitals'), (opt, 'jastrow')],
         steps=dmcsteps,
@@ -202,7 +202,7 @@ relax_pyscf = NexusGeometry(
 pes_pyscf = NexusPes(
     scf_pes_job,
     # pyscf_pes.py is configured to output SCF energy in energy.dat
-    loader=PesLoader(suffix='energy.dat')
+    loader=PesLoader(suffix='value.dat')
 )
 pes_dmc = NexusPes(
     dmc_pes_job,

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from matplotlib import pyplot as plt
 
@@ -7,7 +7,6 @@ from run3_tpw_surrogate import tpw
 
 tpw.run_linesearches(
     num_iter=3,
-    path='lsi',
     pes=pes_lda,
     add_sigma=True,
 )

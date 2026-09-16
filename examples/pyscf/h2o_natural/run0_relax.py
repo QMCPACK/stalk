@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
-from os import makedirs
 from numpy import pi
 
 from stalk import ParameterStructure
-from stalk import XyzGeometry
 from stalk import BondLength
 from stalk import BondAngle
 
-from params import forward, backward, relax_pyscf, pes_dict
+from params import forward, backward, relax_pyscf, pes_dict, relax_dict
 
 
 # Let us initiate a ParameterStructure object that implements the parametric mappings
@@ -25,20 +23,13 @@ structure = ParameterStructure(
     units='A'
 )
 
-relax_dir = 'relax/'
-makedirs(relax_dir, exist_ok=True)
-
 # Treat a collection relaxed geometries based on alternative XC functionals
 structure_relax = {}
 for xc, pes in pes_dict.items():
-    outfile = f'{relax_dir}{xc}.xyz'
-    xyz = XyzGeometry(suffix=outfile)
-    structure_relax[xc] = xyz.load_or_relax(
-        path='./',
+    structure_relax[xc] = relax_dict[xc](
+        path=f'{xc}',
         relax_func=relax_pyscf,
-        structure=structure,
-        xc=xc,
-        outfile=outfile,
+        structure=structure.copy(label='relax'),
     )
     print(f'Relaxed parameters ({xc}):')
     print(structure_relax[xc].params)

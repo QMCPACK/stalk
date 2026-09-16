@@ -3,10 +3,9 @@
 from numpy import pi, sin, cos
 
 from stalk import ParameterStructure
-from stalk import XyzGeometry
 from stalk import Parameter
 
-from params import forward, backward, relax_pyscf
+from params import forward, backward, relax_pbe
 
 
 # Let us initiate a ParameterStructure object that implements the parametric mappings
@@ -33,11 +32,9 @@ structure_init = ParameterStructure(
     units='A'
 )
 
-xyz = XyzGeometry(suffix='relax.xyz')
-structure_relax = xyz.load_or_relax(
-    path='./',
-    relax_func=relax_pyscf,
-    structure=structure_init
+structure_relax = relax_pbe(
+    structure=structure_init.copy(label='relax'),
+    path='pbe/',
 )
 
 if __name__ == '__main__':
