@@ -5,7 +5,6 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from pathlib import Path
-from numpy import nan
 
 from stalk.io.xyz_geometry import XyzGeometry
 from stalk.params.effective_variance_map import EffectiveVarianceMap
@@ -43,7 +42,6 @@ class FilesPes(PesFunction):
         self,
         structure: ParameterSet,
         path: str | Path,
-        sigma=0.0,
         samples=None,
         var_eff_map: EffectiveVarianceMap = None,
         dep_jobs=None,  # catch dep_jobs
@@ -52,8 +50,6 @@ class FilesPes(PesFunction):
     ):
         # Store the file path to the structure
         self._set_path(structure, path, required=True)
-        # Associate the sigma with the structure
-        structure.sigma = sigma
         # Set the number of samples
         self._set_samples(structure, var_eff_map=var_eff_map, samples=samples)
         # Use params.dat to determine if the jobs have been already generated
@@ -66,7 +62,7 @@ class FilesPes(PesFunction):
             eval_args = self.args.copy()
             eval_args.update(**kwargs)
             # Call for the evaluation function
-            self.func(structure, sigma=sigma, **eval_args)
+            self.func(structure, **eval_args)
         # end if
         # Try to load the value from disk if it exists
         self._try_load_value(structure)
@@ -108,7 +104,6 @@ class FilesPes(PesFunction):
             # Nothing to do here but update the var_eff_map if needed
             self._update_var_eff_map(structure, var_eff_map=var_eff_map)
         except NotEvaluatedException:
-            structure.value = nan
             msg = f'{structure.path} has not been evaluated. '
             msg += 'Supply output file to disk to continue.'
             print(msg)

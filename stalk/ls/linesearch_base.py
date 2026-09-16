@@ -261,5 +261,4 @@ class LineSearchBase(LineSearchGrid[ParameterSet]):
         return string
     # end def
 
-
 # end class

@@ -53,6 +53,9 @@ class LineSearchData():
         path: str | Path,
     ) -> LineSearchBase:
         '''Load line-search data from file and return a LineSearchBase instance of desired type.'''
+        if path is None:
+            return None
+        # end if
         data = self.ls_file.load_result(path, None)
         if data is None:
             return None

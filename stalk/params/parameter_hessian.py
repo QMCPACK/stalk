@@ -28,17 +28,16 @@ class ParameterHessian():
 
     def __init__(
         self,
+        structure: ParameterSet,
         hessian: ndarray | None = None,
-        structure: ParameterSet = None,
         disable_limit: float = 0.0,
     ):
+        # The ParameterHessian must have a ParameterSet structure
         self.structure = structure
         self.disable_limit = disable_limit
+        self.hessian = hessian
         self.hessian_file = TxtData('hessian.dat')
         self.params_file = TxtData('hessian_params.dat')
-        if self.structure is not None:
-            self.hessian = hessian
-        # end if
     # end def
 
     @property
@@ -47,44 +46,43 @@ class ParameterHessian():
     # end def
 
     @structure.setter
-    def structure(self, structure) -> None:
-        if structure is None:
-            self.reset()
-        elif isinstance(structure, ParameterSet):
-            if not structure.check_consistency():
-                if self.require_consistent:
-                    raise AssertionError('The structure is not consistent! Aborting.')
-                else:
-                    warnings.warn("The structure is not consistent!")
-                # end if
+    def structure(self, structure: ParameterSet) -> None:
+        if isinstance(structure, ParameterStructure):
+            if structure.require_consistent and not structure.check_consistency():
+                raise AssertionError('The structure is not consistent! Aborting.')
             # end if
             self._structure = structure
+        elif isinstance(structure, ParameterSet):
+            self._structure = structure
         else:
-            raise TypeError('Structure must be inherited from ParameterSet class.')
+            raise TypeError(f'Structure must be a ParameterSet, provided {type(structure)}')
         # end if
     # end def
 
     @property
-    def hessian(self) -> ndarray:
-        return self._hessian
+    def hessian(self) -> ndarray | None:
+        if self._hessian is None:
+            # Default Hessian
+            d = len(self.structure)
+            return diag(d * [1.0])
+        else:
+            return self._hessian
+        # end if
     # end def
 
     @hessian.setter
-    def hessian(self, hessian) -> None:
-        if self.structure is None:
-            raise AssertionError('Cannot set Hessian without setting structure first!')
+    def hessian(self, hessian: ndarray) -> None:
+        if hessian is None:
+            self._hessian = None
+            self._enabled = None
+            return
         # end if
         d = len(self.structure)
-        if hessian is None:
-            # Default Hessian
-            self._hessian = diag(d * [1.0])
-        else:
-            hessian = array(hessian)
-            if len(hessian.shape) != 2 or hessian.shape[0] != d or hessian.shape[1] != d:
-                raise AssertionError(f'The Hessian must be {d}x{d} array, provided: {hessian.shape}')
-            # end if
-            self._hessian = hessian
+        hessian = array(hessian)
+        if len(hessian.shape) != 2 or hessian.shape[0] != d or hessian.shape[1] != d:
+            raise AssertionError(f'The Hessian must be {d}x{d} array, provided: {hessian.shape}')
         # end if
+        self._hessian = hessian
         Lambda, U = linalg.eig(self.hessian)
         self._Lambda = Lambda
         self._U = U
@@ -121,47 +119,30 @@ class ParameterHessian():
     # end def
 
     @property
-    def U(self) -> ndarray:
+    def U(self) -> ndarray | None:
         return self._U
     # end def
 
     @property
-    def directions(self) -> ndarray:
+    def directions(self) -> ndarray | None:
         if self.U is not None:
             return self.U.T
         # end if
     # end def
 
     @property
-    def enabled_directions(self) -> ndarray:
+    def enabled_directions(self) -> ndarray | None:
         return self.U.T[where(self.enabled)]
     # end def
 
     @property
-    def lambdas(self) -> ndarray:
+    def lambdas(self) -> ndarray | None:
         return self._Lambda
     # end def
 
     @property
-    def enabled_lambdas(self) -> ndarray:
+    def enabled_lambdas(self) -> ndarray | None:
         return self.lambdas[where(self.enabled)]
-    # end def
-
-    @property
-    def require_consistent(self) -> bool:
-        if isinstance(self.structure, ParameterStructure):
-            return self.structure.require_consistent
-        else:
-            return True
-        # end if
-    # end def
-
-    def reset(self):
-        self._structure = None
-        self._hessian = None
-        self._Lambda = None
-        self._U = None
-        self._enabled = None
     # end def
 
     # Only preserved for backward compatibility
@@ -300,6 +281,9 @@ class ParameterHessian():
     # end def
 
     def load(self, path: str) -> bool:
+        if path is None:
+            return False
+        # end if
         params = self.params_file.load_result(path, False)
         hessian = self.hessian_file.load_result(path, False)
         if isinstance(params, ndarray) and isinstance(self.structure, ParameterSet):

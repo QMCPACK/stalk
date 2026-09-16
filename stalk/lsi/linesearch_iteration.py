@@ -151,12 +151,12 @@ class LineSearchIteration(StalkPath):
     ):
         if isinstance(surrogate, Surrogate):
             pls = surrogate.copy(
-                path=self.path / 'pls0',
+                path=StalkPath(self.path) / 'pls0',
                 structure=structure,
             )
         elif isinstance(surrogate, ParallelLineSearch):
             pls = surrogate.copy(
-                path=self.path / 'pls0',
+                path=StalkPath(self.path) / 'pls0',
                 structure=structure,
             )
         else:
@@ -178,7 +178,7 @@ class LineSearchIteration(StalkPath):
     ):
         if len(self) == 0:
             pls = ParallelLineSearch(
-                path=self.path / 'pls0',
+                path=StalkPath(self.path) / 'pls0',
                 hessian=hessian,
                 structure=structure,
                 **pls_args
@@ -219,7 +219,7 @@ class LineSearchIteration(StalkPath):
         try:
             pls_next = self[-1].propagate(
                 pes=pes,
-                next_path=self.path / f'pls{i}',
+                next_path=StalkPath(self.path) / f'pls{i}',
                 add_sigma=add_sigma,
                 interactive=interactive,
                 var_eff_map=self.var_eff_map,
