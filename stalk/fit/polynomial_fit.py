@@ -6,8 +6,9 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from numpy import argmin, polyder, polyfit, polyval, roots, where
-from stalk.ls import FittingFunction
-from stalk.ls.polynomial_result import PolynomialResult
+
+from stalk.fit.fitting_function import FittingFunction
+from stalk.fit.polynomial_result import PolynomialResult
 
 
 class PolynomialFit(FittingFunction):

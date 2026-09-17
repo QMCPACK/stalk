@@ -17,7 +17,7 @@ from stalk.pes.structure_collection import StructureCollection
 from stalk.util import get_fraction_error
 from stalk.params import ParameterSet
 from stalk.params import ParameterHessian
-from stalk.ls import LineSearch
+from stalk.ls.linesearch import LineSearch
 
 # Line-search type
 T = TypeVar('T', bound=LineSearch)

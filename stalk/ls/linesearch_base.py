@@ -8,7 +8,7 @@ __license__ = "BSD-3-Clause"
 import warnings
 from numpy import linspace, isscalar
 from matplotlib import pyplot as plt
-from stalk.ls.fitting_result import FittingResult
+from stalk.fit.fitting_result import FittingResult
 from stalk.ls.linesearch_grid import LineSearchGrid
 from stalk.ls.ls_settings import LsSettings
 from stalk.params.parameter_set import ParameterSet
@@ -144,7 +144,7 @@ class LineSearchBase(LineSearchGrid[ParameterSet]):
     ):
         settings = self.settings.copy(**ls_overrides)
         if noisy:
-            res = settings.fit_func.find_noisy_minimum(
+            res = settings.fit_func.find_minimum(
                 self,
                 sgn=settings.sgn,
                 fraction=settings.fraction,
@@ -152,7 +152,9 @@ class LineSearchBase(LineSearchGrid[ParameterSet]):
             )
         else:
             res = settings.fit_func.find_minimum(
-                self,
+                self.valid_offsets,
+                self.valid_values,
+                # no errors
                 sgn=settings.sgn
             )
         # end if

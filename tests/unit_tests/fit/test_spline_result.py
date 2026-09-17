@@ -7,7 +7,7 @@ __license__ = "BSD-3-Clause"
 from numpy import linspace
 from scipy.interpolate import CubicSpline
 
-from stalk.ls.spline_result import SplineResult
+from stalk.fit.spline_result import SplineResult
 from stalk.util.util import match_to_tol
 
 

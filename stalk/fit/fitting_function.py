@@ -7,28 +7,13 @@ __license__ = "BSD-3-Clause"
 
 from numpy import ndarray, random, array
 
-from stalk.ls.fitting_result import FittingResult
-from stalk.ls.linesearch_grid import LineSearchGrid
+from stalk.fit.fitting_result import FittingResult
 from stalk.util import get_fraction_error
+from stalk.util.function_caller import FunctionCaller
 
 
-class FittingFunction():
-    func = None
-    args = {}
+class FittingFunction(FunctionCaller):
     _result_class = FittingResult
-
-    def __init__(
-        self,
-        func=None,
-        args={}
-    ):
-        if callable(func):
-            self.func = func
-            self.args = args
-        else:
-            raise ValueError("The fitting function must be callable.")
-        # end if
-    # end def
 
     @property
     def kind(self):
@@ -38,34 +23,25 @@ class FittingFunction():
 
     def find_minimum(
         self,
-        grid,
-        sgn=1,
+        grid: ndarray,  # grid or offsets
+        values: ndarray | None = None,
+        errors: ndarray | None = None,
+        N: int = 200,
+        Gs: ndarray | None = None,
+        sgn: int = 1,
+        fraction: float = 0.025
     ):
-        if not isinstance(grid, LineSearchGrid):
-            raise ValueError("Fitting function input must be inherited from LineSearchGrid.")
-        # end if
-        return self._eval_function(grid.valid_offsets, grid.valid_values * sgn)
-    # end def
-
-    def find_noisy_minimum(
-        self,
-        grid,
-        sgn=1,
-        N=200,
-        Gs=None,
-        fraction=0.025
-    ):
-        if not isinstance(grid, LineSearchGrid):
-            raise ValueError("Fitting function input must be inherited from LineSearchGrid.")
-        # end if
-        result = self._eval_function(grid.valid_offsets, grid.valid_values * sgn)
+        offsets, values, errors = self._sanitize_inputs(grid, values, errors)
+        result = self._eval_function(offsets * sgn, values)
         # If errors present, resample errorbars; if not, errors default to 0
-        if grid.noisy:
+        if errors is not None:
             x0s, y0s = self.get_distribution(
-                grid,
-                sgn=sgn,
+                offsets,
+                values,
+                errors,
                 N=N,
-                Gs=Gs
+                Gs=Gs,
+                sgn=sgn,
             )
             result.x0_err = get_fraction_error(x0s - result.x0, fraction=fraction)[1]
             result.y0_err = get_fraction_error(y0s - result.y0, fraction=fraction)[1]
@@ -78,29 +54,29 @@ class FittingFunction():
     # (offsets, values, errors) realized on the fitting function
     def get_distribution(
         self,
-        grid,
-        sgn=1,
-        N=200,
-        Gs: ndarray = None,
+        grid: ndarray,  # grid or offsets
+        values: ndarray | None = None,
+        errors: ndarray | None = None,
+        N: int = 200,
+        Gs: ndarray | None = None,
+        sgn: int = 1,
     ):
-        if not isinstance(grid, LineSearchGrid):
-            raise ValueError("Fitting function input must be inherited from LineSearchGrid.")
-        # end if
+        offsets, values, errors = self._sanitize_inputs(grid, values, errors)
         if Gs is None:
             if isinstance(N, int) and N > 0:
-                Gs = random.randn(N, len(grid.valid_errors))
+                Gs = random.randn(N, len(errors))
             else:
                 raise ValueError("Must provide either N > 0 or an array of G displacements")
             # end if
-        elif Gs.shape[1] != len(grid.valid_errors):
+        elif Gs.shape[1] != len(errors):
             raise AssertionError("Must provide Gs that are consistent with valid data.")
         # end if
         x0_distribution = []
         y0_distribution = []
         fit_distribution = []
         for G in Gs:
-            values = sgn * grid.valid_values + grid.valid_errors * G
-            result_this = self._eval_function(grid.valid_offsets, values)
+            values_this = sgn * values + errors * G
+            result_this = self._eval_function(offsets, values_this)
             x0_distribution.append(result_this.x0)
             y0_distribution.append(result_this.y0)
             fit_distribution.append(result_this.fit)
@@ -110,18 +86,41 @@ class FittingFunction():
 
     def get_x0_distribution(
         self,
-        grid,
-        **kwargs,  # sng=1, N=200, Gs=None
+        *args,  # grid, values, errors
+        **kwargs,  # N=200, Gs=None, sgn=1
     ):
-        return self.get_distribution(grid, **kwargs)[0]
+        return self.get_distribution(*args, **kwargs)[0]
     # end def
 
     def get_y0_distribution(
         self,
-        grid,
-        **kwargs  # sng=1, N=200, Gs=None
+        *args,  # grid, values, errors
+        **kwargs,  # N=200, Gs=None, sgn=1
     ):
-        return self.get_distribution(grid, **kwargs)[1]
+        return self.get_distribution(*args, **kwargs)[1]
+    # end def
+
+    def _sanitize_inputs(
+        self,
+        grid: ndarray,  # grid or offsets
+        values: ndarray | None = None,
+        errors: ndarray | None = None,
+    ):
+        if hasattr(grid, 'valid_args'):
+            # If grid is a LineSearchGrid, use its valid arguments
+            offsets, values, errors = grid.valid_args
+        elif values is None:
+            raise TypeError("Must provide either a grid or offsets and values.")
+        else:
+            offsets = grid
+            if len(offsets) != len(values):
+                raise ValueError("Offsets and values must be of the same length.")
+            # end if
+        # end if
+        if errors is not None and len(offsets) != len(errors):
+            raise ValueError("Offsets, values and errors must be of the same length.")
+        # end if
+        return offsets, values, errors
     # end def
 
     def _eval_function(self, offsets, values) -> FittingResult:

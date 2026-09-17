@@ -234,12 +234,10 @@ class TargetLineSearchBase(LineSearchBase):
         offsets = grid.valid_offsets
         values = self.evaluate_target(offsets)
         if values is not None:
-            res = settings.fit_func.find_noisy_minimum(
-                grid=LineSearchGrid(
-                    offsets,
-                    values=values,
-                    errors=grid.valid_errors
-                ),
+            res = settings.fit_func.find_minimum(
+                offsets,
+                values,
+                errors=grid.valid_errors,
                 sgn=settings.sgn,
                 N=None,
                 Gs=settings.Gs[:, :len(offsets)],

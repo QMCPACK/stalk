@@ -5,7 +5,7 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from stalk.ls import FittingResult
+from stalk.fit.fitting_result import FittingResult
 from stalk.util.util import morse
 
 

@@ -7,9 +7,9 @@ __license__ = "BSD-3-Clause"
 from numpy import ones
 from pytest import raises
 
-from stalk.ls.polynomial_fit import PolynomialFit
-from stalk.ls.fitting_function import FittingFunction
-from stalk.ls.polynomial_result import PolynomialResult
+from stalk.fit.polynomial_fit import PolynomialFit
+from stalk.fit.fitting_function import FittingFunction
+from stalk.fit.polynomial_result import PolynomialResult
 from stalk.util.util import match_to_tol
 
 from ..assets.fitting_pf2 import generate_exact_pf2, minimize_pf
@@ -32,7 +32,7 @@ def test_PolynomialFit():
     grid, ref = generate_exact_pf2(1.23, 2.34, h=h, N=5, error=0.1)
     fit = PolynomialFit(2)
     # Find minimum, noise not requested
-    fit_res = fit.find_minimum(grid)
+    fit_res = fit.find_minimum(grid.valid_offsets, grid.valid_values)
     assert isinstance(fit_res, PolynomialResult)
     assert fit_res.analyzed
     assert match_to_tol(fit_res.x0, ref.x0)
@@ -43,13 +43,13 @@ def test_PolynomialFit():
     # Test too small grid
     with raises(ValueError):
         grid_small, ref_small = generate_exact_pf2(1.23, 2.34, N=4)
-        PolynomialFit(4).find_minimum(grid_small)
+        PolynomialFit(4).find_minimum(grid_small.valid_offsets, grid_small.valid_values)
     # end with
 
     # Find noisy minimum (elevate by y_offset using Gs)
     y_offset = 2.0
     Gs = y_offset * ones((20, 5))
-    fit_noisy = fit.find_noisy_minimum(grid, Gs=Gs)
+    fit_noisy = fit.find_minimum(*grid.valid_args, Gs=Gs)
     assert isinstance(fit_noisy, PolynomialResult)
     assert fit_noisy.analyzed
     assert match_to_tol(fit_noisy.x0, ref.x0)

@@ -6,8 +6,8 @@ __license__ = "BSD-3-Clause"
 
 from pytest import raises
 
-from stalk.ls.spline_fit import SplineFit
-from stalk.ls.spline_result import SplineResult
+from stalk.fit.spline_fit import SplineFit
+from stalk.fit.spline_result import SplineResult
 from stalk.util.util import match_to_tol
 
 from ..assets.fitting_pf2 import generate_exact_pf2
@@ -21,7 +21,7 @@ def test_SplineFit():
     grid, ref = generate_exact_pf2(1.23, 2.34, h=h, N=5, error=0.1)
     fit = SplineFit()
     # Find minimum, noise not requested
-    fit_res = fit.find_minimum(grid)
+    fit_res = fit.find_minimum(grid.valid_offsets, grid.valid_values)
     assert isinstance(fit_res, SplineResult)
     assert fit_res.analyzed
     assert match_to_tol(fit_res.x0, ref.x0)

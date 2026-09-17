@@ -8,8 +8,8 @@ __license__ = "BSD-3-Clause"
 from pytest import raises
 
 from stalk.ls.linesearch_grid import LineSearchGrid
-from stalk.ls.morse_fit import MorseFit
-from stalk.ls.morse_result import MorseResult
+from stalk.fit.morse_fit import MorseFit
+from stalk.fit.morse_result import MorseResult
 from stalk.util.util import match_to_tol
 
 from ..assets.fitting_pf2 import generate_exact_morse
@@ -24,7 +24,7 @@ def test_MorseFit():
     grid, ref = generate_exact_morse(x0, 0.1, y0, N=9)
     fit = MorseFit()
     # Find minimum, noise not requested
-    fit_res = fit.find_minimum(grid)
+    fit_res = fit.find_minimum(grid.valid_offsets, grid.valid_values)
 
     assert isinstance(fit_res, MorseResult)
     assert fit_res.analyzed
@@ -37,14 +37,14 @@ def test_MorseFit():
     # Find minimum of a grid centered at minimum
     grid_cent = LineSearchGrid(grid.offsets - x0)
     grid_cent.values = grid.values
-    fit_res = fit.find_minimum(grid_cent)
+    fit_res = fit.find_minimum(grid_cent.valid_offsets, grid_cent.valid_values)
     assert match_to_tol(fit_res.x0, 0.0, 1e-4)
     assert match_to_tol(fit_res.y0, ref.y0, 1e-4)
 
     # Test too small grid
     with raises(ValueError):
         grid_small, ref_small = generate_exact_morse(x0, 0.1, y0, N=2)
-        MorseFit().find_minimum(grid_small)
+        MorseFit().find_minimum(grid_small.valid_offsets, grid_small.valid_values)
     # end with
 
     # TODO: test with ultrasmall grid?

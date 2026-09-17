@@ -9,7 +9,7 @@ import warnings
 from matplotlib import pyplot as plt
 from numpy import array, polyval, sign
 
-from stalk.ls.fitting_result import FittingResult
+from stalk.fit.fitting_result import FittingResult
 from stalk.params.parameter_hessian import ParameterHessian
 from stalk.params.parameter_set import ParameterSet
 from stalk.ls.linesearch_base import LineSearchBase

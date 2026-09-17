@@ -5,7 +5,7 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from numpy import array, flipud
-from stalk.ls.polynomial_fit import PolynomialFit
+from stalk.fit.polynomial_fit import PolynomialFit
 from stalk.pes.pes_function import PesFunction
 from stalk.pls.surrogate import Surrogate
 from stalk.util import match_to_tol

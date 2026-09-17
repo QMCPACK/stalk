@@ -9,8 +9,8 @@ from numpy import linspace
 import warnings
 from scipy.interpolate import CubicSpline, PchipInterpolator
 
-from stalk.ls import PolynomialFit
-from stalk.ls.fitting_function import FittingFunction
+from stalk.fit.polynomial_fit import PolynomialFit
+from stalk.fit.fitting_function import FittingFunction
 from stalk.ls.tls_settings import TlsSettings
 from stalk.util.util import match_to_tol
 

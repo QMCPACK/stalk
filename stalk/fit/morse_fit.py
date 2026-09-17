@@ -8,9 +8,9 @@ __license__ = "BSD-3-Clause"
 from numpy import dot
 from scipy.optimize import minimize
 
-from stalk.ls import FittingFunction
-from stalk.ls.morse_result import MorseResult
-from stalk.ls.polynomial_fit import PolynomialFit
+from stalk.fit.fitting_function import FittingFunction
+from stalk.fit.morse_result import MorseResult
+from stalk.fit.polynomial_fit import PolynomialFit
 from stalk.util.util import match_to_tol, morse
 
 

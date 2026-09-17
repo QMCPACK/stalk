@@ -5,7 +5,7 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from numpy import linspace
-from stalk.ls.morse_result import MorseResult
+from stalk.fit.morse_result import MorseResult
 from stalk.util.util import match_to_tol, morse
 
 

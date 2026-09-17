@@ -6,10 +6,10 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from numpy import isscalar
-from stalk.ls.morse_fit import MorseFit
-from stalk.ls.polynomial_fit import PolynomialFit
-from stalk.ls.fitting_function import FittingFunction
-from stalk.ls.spline_fit import SplineFit
+from stalk.fit.morse_fit import MorseFit
+from stalk.fit.polynomial_fit import PolynomialFit
+from stalk.fit.fitting_function import FittingFunction
+from stalk.fit.spline_fit import SplineFit
 
 
 class LsSettings():

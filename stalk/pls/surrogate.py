@@ -15,8 +15,8 @@ from stalk.io.stalk_logger import StalkLogger
 from stalk.ls.linesearch_grid import LineSearchGrid
 from stalk.ls.ls_settings import LsSettings
 from stalk.util import get_fraction_error
-from stalk.ls import TargetLineSearch
-from stalk.pls import ParallelLineSearch
+from stalk.ls.target_linesearch import TargetLineSearch
+from stalk.pls.parallel_linesearch import ParallelLineSearch
 from stalk.util.util import FF, FFS, FI, FIS, FP, FPS
 
 

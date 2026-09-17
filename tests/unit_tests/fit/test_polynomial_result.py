@@ -5,7 +5,7 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from numpy import linspace, polyval
-from stalk.ls.polynomial_result import PolynomialResult
+from stalk.fit.polynomial_result import PolynomialResult
 from stalk.util.util import match_to_tol
 
 

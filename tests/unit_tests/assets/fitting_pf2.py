@@ -7,8 +7,8 @@ __license__ = "BSD-3-Clause"
 from numpy import argmin, linspace, polyder, polyfit, polyval, roots, where
 
 from stalk.ls.linesearch_grid import LineSearchGrid
-from stalk.ls.fitting_result import FittingResult
-from stalk.ls.morse_result import MorseResult
+from stalk.fit.fitting_result import FittingResult
+from stalk.fit.morse_result import MorseResult
 from stalk.util.util import morse
 
 

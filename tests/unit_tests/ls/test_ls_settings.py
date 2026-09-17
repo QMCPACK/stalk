@@ -6,8 +6,8 @@ __license__ = "BSD-3-Clause"
 
 from pytest import raises
 
-from stalk.ls.polynomial_fit import PolynomialFit
-from stalk.ls.fitting_function import FittingFunction
+from stalk.fit.polynomial_fit import PolynomialFit
+from stalk.fit.fitting_function import FittingFunction
 from stalk.ls.ls_settings import LsSettings
 
 

@@ -9,10 +9,10 @@ from scipy.interpolate import PchipInterpolator
 from pytest import raises
 
 from stalk.ls.linesearch_grid import LineSearchGrid
-from stalk.ls.polynomial_fit import PolynomialFit
+from stalk.ls.target_linesearch_base import TargetLineSearchBase
+from stalk.fit.polynomial_fit import PolynomialFit
 from stalk.params.linesearch_point import LineSearchPoint
 from stalk.util import match_to_tol
-from stalk.ls import TargetLineSearchBase
 
 from ..assets.fitting_pf2 import generate_exact_pf2, generate_exact_pf3
 

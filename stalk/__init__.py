@@ -6,6 +6,15 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 __version__ = "0.2.2dev3"
 
+# fit module
+from stalk.fit import FittingFunction
+from stalk.fit import FittingResult
+from stalk.fit import MorseFit
+from stalk.fit import MorseResult
+from stalk.fit import PolynomialFit
+from stalk.fit import PolynomialResult
+from stalk.fit import SplineFit
+from stalk.fit import SplineResult
 # io module
 from stalk.io import FilesPes
 from stalk.io import GeometryLoader
@@ -14,18 +23,10 @@ from stalk.io import XyzGeometry
 from stalk.io import TxtData
 from stalk.io import write_xyz_sigma
 # ls module
-from stalk.ls import FittingFunction
-from stalk.ls import FittingResult
 from stalk.ls import LineSearch
 from stalk.ls import LineSearchBase
 from stalk.ls import LineSearchGrid
 from stalk.ls import LsSettings
-from stalk.ls import MorseFit
-from stalk.ls import MorseResult
-from stalk.ls import PolynomialFit
-from stalk.ls import PolynomialResult
-from stalk.ls import SplineFit
-from stalk.ls import SplineResult
 from stalk.ls import TargetLineSearch
 from stalk.ls import TargetLineSearchBase
 from stalk.ls import TlsSettings
@@ -85,6 +86,15 @@ from stalk.util import morse
 TargetParallelLineSearch = Surrogate
 
 __all__ = [
+    # fit module
+    'FittingFunction',
+    'FittingResult',
+    'MorseFit',
+    'MorseResult',
+    'PolynomialFit',
+    'PolynomialResult',
+    'SplineFit',
+    'SplineResult',
     # io module
     'FilesPes',
     'GeometryLoader',
@@ -93,18 +103,10 @@ __all__ = [
     'TxtData',
     'write_xyz_sigma',
     # ls module
-    'FittingFunction',
-    'FittingResult',
     'LineSearch',
     'LineSearchBase',
     'LineSearchGrid',
     'LsSettings',
-    'MorseFit',
-    'MorseResult',
-    'PolynomialFit',
-    'PolynomialResult',
-    'SplineFit',
-    'SplineResult',
     'TargetLineSearch',
     'TargetLineSearchBase',
     'TlsSettings',

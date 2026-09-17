@@ -9,8 +9,8 @@ import warnings
 from numpy import argmin, where
 from scipy.interpolate import CubicSpline
 
-from stalk.ls import FittingFunction
-from stalk.ls.spline_result import SplineResult
+from stalk.fit.fitting_function import FittingFunction
+from stalk.fit.spline_result import SplineResult
 
 
 class SplineFit(FittingFunction):

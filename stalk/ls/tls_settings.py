@@ -9,7 +9,7 @@ import warnings
 from numpy import isscalar, ndarray, random, where
 from scipy.interpolate import CubicHermiteSpline, PchipInterpolator
 from stalk.io.stalk_logger import StalkLogger
-from stalk.ls.fitting_result import FittingResult
+from stalk.fit.fitting_result import FittingResult
 from stalk.ls.ls_settings import LsSettings
 
 

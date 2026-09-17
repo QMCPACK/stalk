@@ -9,7 +9,7 @@ from pathlib import Path
 from numpy import array
 
 from stalk.io.txt_data import TxtData
-from stalk.ls.fitting_result import FittingResult
+from stalk.fit.fitting_result import FittingResult
 from stalk.ls.linesearch_base import LineSearchBase
 
 

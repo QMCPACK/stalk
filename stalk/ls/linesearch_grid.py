@@ -60,6 +60,12 @@ class LineSearchGrid[T](StructureCollection[T]):
     # end def
 
     @property
+    def valid_args(self) -> ndarray:
+        '''Return valid (offsets, values, errors) as a tuple of arrays'''
+        return self.valid_offsets, self.valid_values, self.valid_errors
+    # end def
+
+    @property
     def offsets(self) -> ndarray:
         '''Return offset array of points'''
         return array([point.offset for point in self._grid])

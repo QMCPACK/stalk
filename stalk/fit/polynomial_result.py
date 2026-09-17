@@ -7,7 +7,7 @@ __license__ = "BSD-3-Clause"
 
 from numpy import polyder, polyval
 
-from stalk.ls import FittingResult
+from stalk.fit.fitting_result import FittingResult
 
 
 class PolynomialResult(FittingResult):

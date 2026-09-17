@@ -4,8 +4,8 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from stalk.ls import PolynomialFit
-from stalk.ls.fitting_result import FittingResult
+from stalk.fit.polynomial_fit import PolynomialFit
+from stalk.fit.fitting_result import FittingResult
 from stalk.ls.linesearch_base import LineSearchBase
 from stalk.util.util import match_to_tol
 

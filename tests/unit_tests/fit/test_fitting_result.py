@@ -5,7 +5,7 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from pytest import raises
-from stalk.ls.fitting_result import FittingResult
+from stalk.fit.fitting_result import FittingResult
 
 
 # Test FittingResult class
