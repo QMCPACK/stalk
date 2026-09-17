@@ -15,6 +15,7 @@ from stalk.pes.pes_loader import PesLoader
 from stalk.nexus.nexus_structure import NexusStructure
 from stalk.pes.pes_function import NotEvaluatedException, PesFunction
 from stalk.params.effective_variance_map import EffectiveVarianceMap
+from stalk.util.noise import Noise
 
 
 class NexusPes(PesFunction):
@@ -130,7 +131,7 @@ class NexusPes(PesFunction):
     def _finalize_structure(
         self,
         structure: NexusStructure,
-        add_sigma: bool = False,
+        add_sigma: bool | Noise = False,
         var_eff_map: EffectiveVarianceMap = None,
         warn_limit=2.0,
         interactive: bool = False,
@@ -138,9 +139,7 @@ class NexusPes(PesFunction):
         # Then, try to load the result
         try:
             result = self.loader.load(structure.path)
-            if add_sigma:
-                result.add_sigma(structure.sigma)
-            # end if
+            result.add_sigma(structure.sigma, kind=add_sigma)
             structure.value = result.value
             structure.error = result.error
             self._save_value(structure)

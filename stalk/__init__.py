@@ -78,8 +78,12 @@ from stalk.pes import StructureCollection
 from stalk.pls import ParallelLineSearch
 from stalk.pls import Surrogate
 # util module
-from stalk.util import FunctionCaller
 from stalk.util import ArgsContainer
+from stalk.util import FunctionCaller
+from stalk.util import AbsNoise
+from stalk.util import Noise
+from stalk.util import NoiseFactory
+from stalk.util import WhiteNoise
 from stalk.util import morse
 
 # Make practical alias
@@ -159,5 +163,9 @@ __all__ = [
     # util module
     'ArgsContainer',
     'FunctionCaller',
+    'AbsNoise',
+    'Noise',
+    'NoiseFactory',
+    'WhiteNoise',
     'morse',
 ]

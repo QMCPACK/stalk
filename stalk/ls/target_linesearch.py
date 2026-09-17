@@ -251,7 +251,7 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
         # W_resolution=0.1, S_resolution=0.1
         # fit_kind=None, fit_func=None, fit_args={}, fraction=None,
         # generate_args: W_num, W_max, sigma_num, sigma_max, noise_frac, M, N, Gs
-        # bias_mix, bias_order
+        # bias_mix, bias_order, noise
     ):
         """Optimize W and sigma to a given target error epsilon > 0."""
         if not self.valid_target:
@@ -323,7 +323,7 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
         logger=StalkLogger(log_level=2),
         **ls_overrides
         # fit_kind=None, fit_func=None, fit_args={}, fraction=0.025, Gs=None,
-        # M=None, N=None, bias_mix=0.0, bias_order=1
+        # M=None, N=None, bias_mix=0.0, bias_order=1, noise='std'
     ):
         if not self.valid_target:
             logger.log(f"tls{self.d}: Must have valid target data before setup.", level=1)

@@ -17,6 +17,10 @@ from .util import Hartree
 from .util import Ry
 from .args_container import ArgsContainer
 from .function_caller import FunctionCaller
+from .noise import AbsNoise
+from .noise import Noise
+from .noise import NoiseFactory
+from .noise import WhiteNoise
 
 __all__ = [
     'bipolyfit',
@@ -31,4 +35,8 @@ __all__ = [
     'Ry',
     'ArgsContainer',
     'FunctionCaller',
+    'AbsNoise',
+    'Noise',
+    'NoiseFactory',
+    'WhiteNoise',
 ]

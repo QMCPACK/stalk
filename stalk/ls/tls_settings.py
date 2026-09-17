@@ -6,11 +6,12 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 import warnings
-from numpy import isscalar, ndarray, random, where
+from numpy import isscalar, ndarray, where
 from scipy.interpolate import CubicHermiteSpline, PchipInterpolator
 from stalk.io.stalk_logger import StalkLogger
 from stalk.fit.fitting_result import FittingResult
 from stalk.ls.ls_settings import LsSettings
+from stalk.util.noise import Noise, NoiseFactory
 
 
 class TlsSettings(LsSettings):
@@ -19,6 +20,7 @@ class TlsSettings(LsSettings):
     _bias_order: int
     _target: FittingResult
     _interp = CubicHermiteSpline  # Interpolant
+    _noise: Noise = None
     logger: StalkLogger = None
 
     def __init__(
@@ -31,10 +33,12 @@ class TlsSettings(LsSettings):
         target_x0=0.0,
         target_y0=0.0,
         logger=StalkLogger(log_level=1),
+        noise: Noise = 'std',
         **ls_args
         # fraction=0.025, sgn=1, fit_kind=None, fit_func=None, fit_args={},
     ):
         super().__init__(self, **ls_args)
+        self.noise = noise
         self.regenerate_Gs(M, N, Gs)
         self.bias_order = bias_order
         self.bias_mix = bias_mix
@@ -101,6 +105,16 @@ class TlsSettings(LsSettings):
     # end def
 
     @property
+    def noise(self):
+        return self._noise
+    # end def
+
+    @noise.setter
+    def noise(self, noise: Noise | str):
+        self._noise = NoiseFactory.create(noise)
+    # end def
+
+    @property
     def interp(self):
         return self._interp
     # end def
@@ -157,7 +171,7 @@ class TlsSettings(LsSettings):
             N = N if N is not None else self.N
             if M != self.M and N != self.N:
                 # The values of M and N are checked in Gs.setter
-                self.Gs = random.randn(N, M)
+                self.Gs = self.noise.generate(N, M)
             # end if
         # end if
     # end def
@@ -177,6 +191,7 @@ class TlsSettings(LsSettings):
             'bias_mix': self.bias_mix,
             'bias_order': self.bias_order,
             'Gs': Gs,
+            'noise': self.noise,
             'logger': self.logger,
         }
         M = M if M is not None else self.M
@@ -245,6 +260,7 @@ class TlsSettings(LsSettings):
         result &= self.Gs is other.Gs
         result &= self.interp is other.interp
         result &= self.target is other.target
+        result &= self.noise.__class__ == other.noise.__class__
         result &= self.bias_order == other.bias_order
         result &= self.bias_mix == other.bias_mix
         return result

@@ -5,7 +5,9 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from numpy import isscalar, nan, isnan, random
+from numpy import isscalar, nan, isnan
+
+from stalk.util.noise import AbsNoise, Noise, WhiteNoise
 
 
 class PesResult:
@@ -50,12 +52,30 @@ class PesResult:
         self.error /= scale
     # end def
 
-    def add_sigma(self, sigma):
-        '''Add artificial white noise to the result for error resampling purposes.'''
+    def add_sigma(self, sigma, kind: bool | Noise = True):
+        '''Generate random noise to the result for error resampling purposes.'''
+        if not kind:
+            # False -> do not add noise
+            return
+        elif isinstance(kind, bool) and kind:
+            # True -> use standard white noise
+            noise = WhiteNoise()
+        elif isinstance(kind, str):
+            if kind.lower() == 'std':
+                noise = WhiteNoise()
+            elif kind.lower() == 'abs':
+                noise = AbsNoise()
+            # end if
+        else:
+            noise = kind
+        # end if
+        if not isinstance(noise, Noise):
+            raise ValueError('Noise kind must be a Noise object or True/False')
+        # end if
         if isinstance(sigma, float) and sigma >= 0.0:
             self.error = (self.error**2 + sigma**2)**0.5
             if not isnan(self.value):
-                self.value += sigma * random.randn(1)[0]
+                self.value += sigma * noise.generate_one()
             # end if
         else:
             raise ValueError('Tried to add poor sigma: ' + str(sigma))

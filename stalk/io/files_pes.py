@@ -11,6 +11,7 @@ from stalk.params.effective_variance_map import EffectiveVarianceMap
 from stalk.params.parameter_set import ParameterSet
 from stalk.pes.pes_function import NotEvaluatedException, PesFunction
 from stalk.pes.pes_loader import PesLoader
+from stalk.util.noise import Noise
 
 
 def write_xyz_sigma(
@@ -82,7 +83,7 @@ class FilesPes(PesFunction):
     def _finalize_structure(
         self,
         structure: ParameterSet,
-        add_sigma: bool = False,
+        add_sigma: bool | Noise = False,
         var_eff_map: EffectiveVarianceMap = None,
         warn_limit=2.0,
         interactive: bool = False,
@@ -94,9 +95,7 @@ class FilesPes(PesFunction):
         # Try to load the result from disk
         try:
             result = self.loader.load(structure.path)
-            if add_sigma:
-                result.add_sigma(structure.sigma)
-            # end if
+            result.add_sigma(structure.sigma, kind=add_sigma)
             structure.value = result.value
             structure.error = result.error
             # TODO: interactively discard bad data?

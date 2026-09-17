@@ -12,6 +12,7 @@ from scipy.interpolate import CubicSpline, PchipInterpolator
 from stalk.fit.polynomial_fit import PolynomialFit
 from stalk.fit.fitting_function import FittingFunction
 from stalk.ls.tls_settings import TlsSettings
+from stalk.util.noise import AbsNoise, WhiteNoise
 from stalk.util.util import match_to_tol
 
 
@@ -38,6 +39,7 @@ def test_TlsSettings():
     assert ls.interp_kind is None
     assert ls.target.x0 == 0.0
     assert ls.target.y0 == 0.0
+    assert isinstance(ls.noise, WhiteNoise)
 
     # Test wrong values
     with raises(ValueError):
@@ -70,6 +72,7 @@ def test_TlsSettings():
     y0 = 0.2
     M = 4
     N = 5
+    noise = 'abs'
     func = FittingFunction(dummy_fit, {'test': 0})
     ls1 = TlsSettings(
         fit_func=func,
@@ -81,7 +84,8 @@ def test_TlsSettings():
         target_y0=y0,
         M=M,
         N=N,
-        Gs=None
+        Gs=None,
+        noise=noise
     )
     assert ls1.N == N
     assert ls1.fraction == fraction
@@ -98,6 +102,7 @@ def test_TlsSettings():
     assert ls1.interp_kind is None
     assert ls1.target.x0 == x0
     assert ls1.target.y0 == y0
+    assert isinstance(ls1.noise, AbsNoise)
 
     # Test direct supply of Gs
     ls2 = TlsSettings(
@@ -121,6 +126,7 @@ def test_TlsSettings():
         target_y0=y0,
         M=M,
         N=N,
+        noise=noise
     )
     # Same number of samples results in same Gs
     assert ls1 == ls1.copy(Gs=None, M=M, N=N)

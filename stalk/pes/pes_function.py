@@ -21,6 +21,7 @@ from stalk.pes.pes_result import PesResult
 from stalk.pes.structure_collection import StructureCollection
 from stalk.params.util import NotEvaluatedException
 from stalk.util.function_caller import FunctionCaller
+from stalk.util.noise import Noise
 
 
 class PesFunction(FunctionCaller):
@@ -78,7 +79,7 @@ class PesFunction(FunctionCaller):
         structure: ParameterSet,
         path: Path | str | None = None,
         samples=None,
-        add_sigma=False,
+        add_sigma: bool | Noise = False,
         var_eff_map: EffectiveVarianceMap = None,
         interactive=False,
         warn_limit=2.0,
@@ -117,7 +118,7 @@ class PesFunction(FunctionCaller):
         self,
         structures: list[ParameterSet],
         path: Path | str | None = None,
-        add_sigma=False,
+        add_sigma: bool | Noise = False,
         var_eff_map=None,
         interactive=False,
         warn_limit=2.0,
@@ -316,16 +317,14 @@ class PesFunction(FunctionCaller):
     def _finalize_structure(
         self,
         structure: ParameterSet,
-        add_sigma: bool = False,
+        add_sigma: bool | Noise = False,
         var_eff_map: EffectiveVarianceMap = None,
         warn_limit=2.0,
         interactive: bool = False,
     ):
         # Moving value+error back and forth to comply with other implementations
         result = PesResult(structure.value, structure.error)
-        if add_sigma:
-            result.add_sigma(structure.sigma)
-        # end if
+        result.add_sigma(structure.sigma, kind=add_sigma)
         structure.value = result.value
         structure.error = result.error
         if structure.path is not None:

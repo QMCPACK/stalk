@@ -5,11 +5,12 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from numpy import ndarray, random, array
+from numpy import ndarray, array
 
 from stalk.fit.fitting_result import FittingResult
 from stalk.util import get_fraction_error
 from stalk.util.function_caller import FunctionCaller
+from stalk.util.noise import Noise, NoiseFactory
 
 
 class FittingFunction(FunctionCaller):
@@ -29,7 +30,8 @@ class FittingFunction(FunctionCaller):
         N: int = 200,
         Gs: ndarray | None = None,
         sgn: int = 1,
-        fraction: float = 0.025
+        fraction: float = 0.025,
+        noise: str | Noise = 'std',
     ):
         offsets, values, errors = self._sanitize_inputs(grid, values, errors)
         result = self._eval_function(offsets * sgn, values)
@@ -42,6 +44,7 @@ class FittingFunction(FunctionCaller):
                 N=N,
                 Gs=Gs,
                 sgn=sgn,
+                noise=noise,
             )
             result.x0_err = get_fraction_error(x0s - result.x0, fraction=fraction)[1]
             result.y0_err = get_fraction_error(y0s - result.y0, fraction=fraction)[1]
@@ -60,11 +63,12 @@ class FittingFunction(FunctionCaller):
         N: int = 200,
         Gs: ndarray | None = None,
         sgn: int = 1,
+        noise: str | Noise = 'std',
     ):
         offsets, values, errors = self._sanitize_inputs(grid, values, errors)
         if Gs is None:
             if isinstance(N, int) and N > 0:
-                Gs = random.randn(N, len(errors))
+                Gs = NoiseFactory.create(noise).generate(N, len(errors))
             else:
                 raise ValueError("Must provide either N > 0 or an array of G displacements")
             # end if
@@ -87,7 +91,7 @@ class FittingFunction(FunctionCaller):
     def get_x0_distribution(
         self,
         *args,  # grid, values, errors
-        **kwargs,  # N=200, Gs=None, sgn=1
+        **kwargs,  # N=200, Gs=None, sgn=1, noise='std'
     ):
         return self.get_distribution(*args, **kwargs)[0]
     # end def
@@ -95,7 +99,7 @@ class FittingFunction(FunctionCaller):
     def get_y0_distribution(
         self,
         *args,  # grid, values, errors
-        **kwargs,  # N=200, Gs=None, sgn=1
+        **kwargs,  # N=200, Gs=None, sgn=1, noise='std'
     ):
         return self.get_distribution(*args, **kwargs)[1]
     # end def
