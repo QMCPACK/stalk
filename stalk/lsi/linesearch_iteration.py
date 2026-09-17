@@ -209,7 +209,7 @@ class LineSearchIteration(StalkPath):
         i=None,
         add_sigma=False,
         interactive=False,
-        **kwargs  # dep_jobs=[]
+        **kwargs  # dep_jobs=[], samples=None,
     ):
         # Do not propagate if 'i' points to earlier iteration
         if i is not None and i < len(self.pls_list) - 1:

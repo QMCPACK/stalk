@@ -10,14 +10,17 @@ from numpy import isnan, nan, array, mean, isscalar
 
 class EffectiveVariance():
     _errorbar_data = None
+    empirical: bool = None
 
     def __init__(
         self,
         samples=None,
         error=None,
         var_eff=None,
+        empirical: bool = False,
     ):
         self._errorbar_data = []
+        self.empirical = empirical
         if isscalar(samples) and isscalar(error):
             self.add_errorbar_data(samples, error)
         elif hasattr(samples, '__iter__') and hasattr(error, '__iter__'):

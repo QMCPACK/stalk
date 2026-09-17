@@ -6,6 +6,7 @@ __license__ = "BSD-3-Clause"
 
 from os import makedirs
 from pathlib import Path
+from numpy import std
 import warnings
 
 from numpy import isscalar
@@ -118,6 +119,7 @@ class PesFunction(FunctionCaller):
         self,
         structures: list[ParameterSet],
         path: Path | str | None = None,
+        samples=None,
         add_sigma: bool | Noise = False,
         var_eff_map=None,
         interactive=False,
@@ -130,6 +132,7 @@ class PesFunction(FunctionCaller):
         self._generate_structure_all(
             structures,
             path=path,
+            samples=samples,
             var_eff_map=var_eff_map,
             dep_jobs=dep_jobs,
             **kwargs
@@ -242,6 +245,7 @@ class PesFunction(FunctionCaller):
         self,
         structures: list[ParameterSet],
         path: Path | str | None,
+        samples=None,
         var_eff_map=None,
         interactive=False,
         dep_jobs=[],
@@ -252,6 +256,7 @@ class PesFunction(FunctionCaller):
             self._generate_structure(
                 structure,
                 path=path,
+                samples=samples,
                 var_eff_map=var_eff_map,
                 interactive=interactive,
                 dep_jobs=dep_jobs,
@@ -385,9 +390,10 @@ class PesFunction(FunctionCaller):
         structure: ParameterSet,
         var_eff_map: EffectiveVarianceMap
     ):
-        if isinstance(var_eff_map, EffectiveVarianceMap) and (
-                hasattr(structure, 'samples') and isscalar(structure.samples)):
-            # Add the effective variance to the map
+        if var_eff_map is None:
+            return
+        # end if
+        if structure.error > 0.0 and not var_eff_map.empirical:
             var_eff = EffectiveVariance(structure.samples, structure.error)
             var_eff_map.add_var_eff(structure, var_eff)
         # end if
@@ -442,14 +448,35 @@ class PesFunction(FunctionCaller):
         path=None,
         samples: float | int = 10,
         interactive: bool = False,
+        resamples: int | None = None,
     ) -> EffectiveVariance:
-        self.evaluate(
-            structure,
-            path=path,
-            interactive=interactive,
-            samples=samples,
-        )
-        var_eff = EffectiveVariance(samples, structure.error)
+        if resamples is None:
+            # Use error of the PES evaluate
+            self.evaluate(
+                structure,
+                path=path,
+                interactive=interactive,
+                samples=samples,
+            )
+            var_eff = EffectiveVariance(samples, structure.error)
+        elif resamples > 1:
+            # Use resampling to estimate the effective variance
+            structures: list[ParameterSet] = []
+            for i in range(resamples):
+                s = structure.copy(label=f'resample_{i}')
+                structures.append(s)
+            # end for
+            self.evaluate_all(
+                structures,
+                path=path,
+                interactive=interactive,
+                samples=samples,
+            )
+            error = std([v for v in [s.value for s in structures]])
+            var_eff = EffectiveVariance(samples, error, empirical=True)
+        else:
+            raise ValueError("Resamples must be None or greater than 1.")
+        # end if
         return var_eff
     # end def
 
@@ -459,12 +486,14 @@ class PesFunction(FunctionCaller):
         path=None,
         samples=10,
         interactive=False,
+        resamples=None,
     ) -> EffectiveVarianceMap:
         var_eff = self.get_var_eff(
             structure,
             path=path,
             interactive=interactive,
             samples=samples,
+            resamples=resamples,
         )
         var_eff_map = EffectiveVarianceMap(structure, var_eff=var_eff)
         return var_eff_map

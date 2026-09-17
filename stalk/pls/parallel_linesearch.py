@@ -240,6 +240,7 @@ class ParallelLineSearch(StalkPath, StructureCollection[ParameterSet], Generic[T
     def evaluate(
         self,
         pes: PesFunction,
+        samples=None,
         add_sigma=False,
         interactive=False,
         dep_jobs=[],
@@ -253,6 +254,7 @@ class ParallelLineSearch(StalkPath, StructureCollection[ParameterSet], Generic[T
         pes(
             structures,
             path=self.path,
+            samples=samples,
             add_sigma=add_sigma,
             interactive=interactive,
             dep_jobs=dep_jobs,
@@ -288,6 +290,7 @@ class ParallelLineSearch(StalkPath, StructureCollection[ParameterSet], Generic[T
     def evaluate_eqm(
         self,
         pes: PesFunction,
+        samples=None,
         add_sigma=False,
         interactive=False,
         dep_jobs=[],
@@ -297,6 +300,7 @@ class ParallelLineSearch(StalkPath, StructureCollection[ParameterSet], Generic[T
         pes(
             self.structure,
             path=self.path,
+            samples=samples,
             add_sigma=add_sigma,
             interactive=interactive,
             dep_jobs=dep_jobs,

@@ -32,12 +32,21 @@ class EffectiveVarianceMap():
         # end if
     # end def
 
-    def __init__(self, params: ParameterSet, var_eff: EffectiveVariance = None):
+    def __init__(
+        self,
+        params: ParameterSet,
+        var_eff: EffectiveVariance = None
+    ):
         self.params = params
         self.scaling_map = []
         if var_eff is not None:
             self.add_var_eff(params, var_eff)
         # end if
+    # end def
+
+    @property
+    def empirical(self):
+        return any([var_eff.empirical for _, var_eff in self.scaling_map])
     # end def
 
     def add_var_eff(self, params: ParameterSet, var_eff: EffectiveVariance, thr=1e-6):
