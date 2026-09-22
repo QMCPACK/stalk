@@ -52,9 +52,8 @@ def test_TargetLineSearch_init():
     assert len(tls) == 0
     assert not tls.valid
     assert tls.d is None
-    assert tls.direction == 0.0
+    assert tls.direction is None
     assert tls.structure is None
-    assert tls.hessian is None
     assert tls.W_max is None
     assert tls.Lambda is None
     assert tls.R_max == 0.0

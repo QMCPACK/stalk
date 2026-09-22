@@ -23,7 +23,7 @@ def test_LineSearchGrid():
     assert len(empty_grid.valid_values) == 0
     assert len(empty_grid.valid_errors) == 0
     assert empty_grid.R_max == 0.0
-    assert empty_grid.valid_R_max == 0.0
+    assert empty_grid.valid_R_max is None
     assert not empty_grid.shifted
     assert not empty_grid.evaluated
     assert not empty_grid.noisy

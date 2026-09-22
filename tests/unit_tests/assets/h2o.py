@@ -82,6 +82,9 @@ def pes_H2O(structure, sigma=0.0, dvar_eff=None, **kwargs):
 # end def
 
 
+h2o_pes = PesFunction(pes_H2O)
+
+
 def get_structure_H2O():
     return ParameterStructure(
         forward=forward_H2O,

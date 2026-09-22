@@ -5,13 +5,13 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from pytest import raises
-from numpy import linspace
+from numpy import linspace, array
 
 from stalk import LineSearch
-from stalk.params.linesearch_point import LineSearchPoint
+from stalk.params.parameter_set import ParameterSet
 from stalk.params.parameter_structure import ParameterStructure
 from stalk.util import match_to_tol
-from ..assets.h2o import get_structure_H2O, get_hessian_H2O
+from ..assets.h2o import get_structure_H2O, get_hessian_H2O, h2o_pes
 
 
 # test LineSearch class
@@ -19,45 +19,76 @@ def test_LineSearch():
 
     # Empty init
     ls = LineSearch()
-    assert ls.d is None
-    assert ls.settings.sgn == 1
-    assert ls.direction == 0.0
     assert ls.structure is None
-    assert ls.hessian is None
+    assert ls.direction is None
+
+    # Test default init with structure, no direction
+    p = ParameterSet([1.0, 2.0])
+    ls = LineSearch(p)
+    assert ls.structure == p
+    assert ls.direction is None
+    with raises(AssertionError):
+        ls.grid = [0.1, 0.2, 0.3]
+    # end with
+
+    direction = [0.0, 1.0]
+    ls = LineSearch(p, direction=direction)
+    assert ls.structure == p
+    assert match_to_tol(ls.direction, direction)
+    assert ls.d is None
+    assert ls.Lambda is None
     assert ls.W_max is None
+    assert ls.valid_W_max is None
     assert ls.R_max == 0.0
+    assert ls.valid_R_max is None
     assert len(ls) == 0
     assert len(ls.grid) == 0
     assert len(ls.offsets) == 0
     assert len(ls.values) == 0
     assert len(ls.errors) == 0
+    assert not ls.shifted
     assert ls.shifted_params is None
+
+    # Test reset of the grid
     with raises(ValueError):
         # M cannot be negative
         ls.figure_out_offsets(M=-1)
     # end with
-    with raises(ValueError):
-        # Must characterize grid somehow
-        ls.figure_out_offsets(M=5)
-    # end with
-    with raises(ValueError):
-        # Cannot use negative R
-        ls.figure_out_offsets(M=5, R=-0.1)
-    # end with
-    with raises(ValueError):
-        # Cannot use W before setting Hessian
-        ls.figure_out_offsets(M=5, W=0.1)
-    # end with
-    ls = LineSearch(d=1)
-    assert ls.d == 1
 
-    # Without structure, the grid is only abstract points
-    ls.set_grid(offsets=[0.1, 0.0, -0.1])
-    for point in ls.grid:
-        assert isinstance(point, LineSearchPoint)
-    # end for
-    ls.add_shift(0.2)
+    # Test with Lambda, W
+    Lambda = 0.5
+    W = 0.1
+    M = 5
+    ls.Lambda = Lambda
+    with raises(ValueError):
+        ls.reset_offsets(M=M, W=-W)
+    # end with
+    ls.reset_offsets(M=M, W=W)
+    assert len(ls) == M
+    assert match_to_tol(ls.W_max, W)
+    R_ref = (2 * W / Lambda)**0.5
+    assert match_to_tol(ls.offsets, linspace(-R_ref, R_ref, 5))
+    assert ls.shifted
+    assert not ls.evaluated
+
+    # Test init with offset, values, errors
+    offsets = [-0.1, 0.0, 0.1, 0.3]
+    values = [1.0, 2.0, 3.0, 4.0]
+    errors = [0.1, 0.2, 0.3, 0.4]
+    ls = LineSearch(
+        p,
+        direction=direction,
+        offsets=offsets,
+        values=values,
+        errors=errors,
+        R=0.4
+    )
+    assert ls.shifted
+    assert ls.evaluated
     assert len(ls) == 4
+    assert match_to_tol(ls.offsets, offsets)
+    assert match_to_tol(ls.values, values)
+    assert match_to_tol(ls.errors, errors)
 
     # Test nominal init using actual structure
     structure = get_structure_H2O()
@@ -66,9 +97,18 @@ def test_LineSearch():
     sigma = 3.0
     M = 5
     offsets_ref = linspace(-R, R, M)
+    direction_ref = array([0.0, 1.0])
     params_ref = structure.params[d] + offsets_ref
-    ls_s = LineSearch(structure=structure, M=M, d=d, sigma=sigma, R=R)
+    ls_s = LineSearch(
+        structure=structure,
+        direction=direction_ref,
+        M=M,
+        d=d,
+        sigma=sigma,
+        R=R
+    )
     assert ls_s.structure == structure
+    assert match_to_tol(ls_s.direction, direction_ref)
     assert len(ls_s) == M
     assert ls_s.d == 1
     assert ls_s.sigma == sigma
@@ -84,9 +124,6 @@ def test_LineSearch():
     for params, ref in zip(ls_s.shifted_params, params_ref):
         assert match_to_tol(params[d], ref)
     # end for
-    with raises(ValueError):
-        ls_s.d = 2
-    # end with
 
     # Test nominal init using Hessian
     hessian = get_hessian_H2O()
@@ -96,22 +133,18 @@ def test_LineSearch():
     ls_h = LineSearch(hessian=hessian, M=M, d=d, sigma=sigma, W=W)
     assert len(ls_h) == M
     assert ls_h.structure == hessian.structure
-    assert ls_h.hessian == hessian
+    assert match_to_tol(ls_h.direction, hessian.directions[d])
     assert ls_h.d == 1
-    assert ls_h.sgn == 1
     assert ls_h.W_max == W
-    assert ls_h.valid_W_max == 0.0
+    assert ls_h.valid_W_max is None
     assert ls_h.Lambda == hessian.lambdas[d]
-    with raises(ValueError):
-        ls_h.sigma = -1.0
-    # end with
-    with raises(ValueError):
-        ls_h.d = 2
-    # end with
-    with raises(ValueError):
-        ls_h.sigma = []
-    # end with
 
-    # TODO: test evaluation, fitting etc
+    # test evaluation, fitting etc
+    assert ls_h.shifted
+    assert not ls_h.evaluated
+    # Evaluate
+    h2o_pes(ls_h, path=None)
+    assert ls_h.evaluated
+    assert ls_h.valid
 
 # end def

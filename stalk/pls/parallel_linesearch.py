@@ -213,7 +213,8 @@ class ParallelLineSearch(StalkPath, StructureCollection[ParameterSet], Generic[T
                 # Create new line-search object
                 ls = self._ls_class(
                     structure=self.structure,
-                    hessian=self.hessian,
+                    direction=self.hessian.directions[d],
+                    Lambda=self.hessian.lambdas[d],
                     d=d,
                     sigma=sigma,
                     W=window,

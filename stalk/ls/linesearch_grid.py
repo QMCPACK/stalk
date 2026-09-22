@@ -137,7 +137,7 @@ class LineSearchGrid[T](StructureCollection[T]):
         if len(self.valid_grid) > 1:
             return min([-self.valid_offsets.min(), self.valid_offsets.max()])
         else:
-            return 0.0
+            return None
         # end if
     # end def
 
