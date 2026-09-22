@@ -34,10 +34,11 @@ class ParallelLineSearch(StalkPath, StructureCollection[ParameterSet], Generic[T
         self,
         # PLS arguments
         path: str | Path | None = None,
-        hessian=None,
-        structure=None,
-        windows=None,
-        window_frac=0.25,
+        hessian: ParameterHessian = None,
+        structure: ParameterSet = None,
+        windows: list[float] = None,
+        Rs: list[float] = None,
+        window_frac: float = 0.25,
         sigmas=None,
         # LineSearch args
         **ls_args
@@ -52,9 +53,10 @@ class ParallelLineSearch(StalkPath, StructureCollection[ParameterSet], Generic[T
         # end if
         if self.setup:
             self.initialize(
-                windows,
-                sigmas,
-                window_frac,
+                windows=windows,
+                sigmas=sigmas,
+                window_frac=window_frac,
+                Rs=Rs,
                 **ls_args
             )
         # end if
@@ -185,53 +187,53 @@ class ParallelLineSearch(StalkPath, StructureCollection[ParameterSet], Generic[T
         windows=None,
         sigmas=None,
         window_frac=None,
+        Rs=None,
+        M=7,
         **ls_args
         # M=7, fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
     ) -> None:
-        if windows is None:
-            windows = abs(self.Lambdas)**0.5 * window_frac
-        # end if
+        Rs = self._for_all_ls(Rs, default=None)
+        Ms = self._for_all_ls(M)
+        Ws = self._for_all_ls(windows, default=None)
         sigmas = self._for_all_ls(sigmas, default=0.0)
-        self._reset_ls_list(windows, sigmas, **ls_args)
-    # end def
-
-    def _reset_ls_list(
-        self,
-        windows,
-        sigmas,
-        M=7,
-        **ls_args,
-        # fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None, fraction=0.025
-    ) -> None:
-        M = self._for_all_ls(M)
         ls_list = []
-        for d, window, sigma in zip(self.D_list, windows, sigmas):
-            # Only add if enabled by the Hessian
-            if self.hessian.enabled[d]:
-                # Try to load from disk
-                ls_load = LineSearchData(label=f'ls{d}').load(path=self.path)
-                # Create new line-search object
-                ls = self._ls_class(
-                    structure=self.structure,
-                    direction=self.hessian.directions[d],
-                    Lambda=self.hessian.lambdas[d],
-                    d=d,
-                    sigma=sigma,
-                    W=window,
-                    M=M[d],
-                    **ls_args
-                )
-                if ls_load is not None and len(ls) == len(ls_load):
-                    if not all(ls.offsets == ls_load.offsets):
-                        raise ValueError('Offsets of the loaded line-search do not match the current offsets')
-                    # end if
-                    print(f'{self.path}/ls{d}: Line-search data loaded from disk.')
-                    ls.values = ls_load.values
-                    ls.errors = ls_load.errors
-                    ls.fit_res = ls_load.fit_res
-                # end if
-                ls_list.append(ls)
+        for d in self.D_list:
+            if not self.hessian.enabled[d]:
+                continue
             # end if
+            # Try to load from disk
+            ls_load = LineSearchData(label=f'ls{d}').load(path=self.path)
+            if Rs[d] is not None:
+                grid_args = {'R': Rs[d]}
+            elif Ws[d] is not None:
+                grid_args = {'W': Ws[d]}
+            elif window_frac is not None:
+                grid_args = {'W': window_frac * abs(self.hessian.lambdas[d])**0.5}
+            else:
+                # This leads to an error
+                grid_args = {}
+            # end if
+            # Create new line-search object
+            ls = self._ls_class(
+                structure=self.structure,
+                direction=self.hessian.directions[d],
+                Lambda=self.hessian.lambdas[d],
+                sigma=sigmas[d],
+                M=Ms[d],
+                d=d,
+                **grid_args,
+                **ls_args
+            )
+            if ls_load is not None and len(ls) == len(ls_load):
+                if not all(ls.offsets == ls_load.offsets):
+                    raise ValueError('Offsets of the loaded line-search do not match the current offsets')
+                # end if
+                print(f'{self.path}/ls{d}: Line-search data loaded from disk.')
+                ls.values = ls_load.values
+                ls.errors = ls_load.errors
+                ls.fit_res = ls_load.fit_res
+            # end if
+            ls_list.append(ls)
         # end for
         self._ls_list = ls_list
         # Reset next structure if re-initialized
