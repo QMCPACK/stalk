@@ -16,6 +16,7 @@ from stalk.fit import PolynomialResult
 from stalk.fit import SplineFit
 from stalk.fit import SplineResult
 # io module
+from stalk.io import Cacheable
 from stalk.io import FilesPes
 from stalk.io import GeometryLoader
 from stalk.io import GeometryWriter
@@ -100,6 +101,7 @@ __all__ = [
     'SplineFit',
     'SplineResult',
     # io module
+    'Cacheable',
     'FilesPes',
     'GeometryLoader',
     'GeometryWriter',
