@@ -14,17 +14,16 @@ from stalk.params.parameter_structure import ParameterStructure
 from stalk.pes.pes_function import NotEvaluatedException, PesFunction
 from stalk.util import bipolyfit
 from stalk.params.parameter_set import ParameterSet
+from stalk.io.cacheable import Cacheable
 
 
-class ParameterHessian():
+class ParameterHessian(Cacheable):
     _structure: ParameterSet = None
     _hessian: ndarray = None
     _Lambda: ndarray = None
     _U: ndarray = None
     _enabled: list[bool] = None
     _disable_limit: float = None
-    hessian_file: TxtData = None
-    params_file: TxtData = None
 
     def __init__(
         self,
@@ -36,8 +35,10 @@ class ParameterHessian():
         self.structure = structure
         self.disable_limit = disable_limit
         self.hessian = hessian
-        self.hessian_file = TxtData('hessian.dat')
-        self.params_file = TxtData('hessian_params.dat')
+        Cacheable.__init__(
+            self,
+            hessian=TxtData('hessian.out'),
+        )
     # end def
 
     @property
@@ -100,7 +101,7 @@ class ParameterHessian():
     # end def
 
     @property
-    def disable_limit(self):
+    def disable_limit(self) -> float:
         return self._disable_limit
     # end def
 
@@ -158,7 +159,7 @@ class ParameterHessian():
         dpos_mode=False,
         **kwargs,
     ):
-        if self.load(path):
+        if self.load_hessian(path):
             return
         # end if
         P = len(self)
@@ -234,9 +235,7 @@ class ParameterHessian():
             # end for
         # end if
         self.hessian = hessian
-        if pes.create_files:
-            self.save_hessian(path)
-        # end if
+        self.save_hessian(path)
     # end def
 
     def _get_fdiff_data(self, dps, dpos_mode=False):
@@ -280,18 +279,18 @@ class ParameterHessian():
         return dp_list, structure_list
     # end def
 
-    def load(self, path: str) -> bool:
+    def load_hessian(self, path: str) -> bool:
         if path is None:
             return False
         # end if
-        params = self.params_file.load_result(path, False)
-        hessian = self.hessian_file.load_result(path, False)
+        hessian = self.load(path, key='hessian')
+        params = self.structure.load(key='params', path=path)
         if isinstance(params, ndarray) and isinstance(self.structure, ParameterSet):
             self.structure.params = params
-            print(f'Loaded Hessian parameters from {self.params_file.get_filename(path)}.')
+            print(f'Loaded Hessian parameters from {path}.')
             if isinstance(hessian, ndarray):
                 self.hessian = hessian
-                print(f'Loaded Hessian from {self.hessian_file.get_filename(path)}.')
+                print(f'Loaded Hessian from {path}.')
                 return True
             # end if
         # end if
@@ -300,12 +299,9 @@ class ParameterHessian():
 
     def save_hessian(self, path: Path | str) -> None:
         if self.hessian is not None:
-            self.hessian_file.save_result(path, self.hessian)
+            self.save(path, hessian=self.hessian)
+            self.structure.save(path=path, params=self.structure.params)
             print(f'Saved Hessian to {path}.')
-        # end if
-        if self.structure is not None and self.structure.params is not None:
-            self.params_file.save_result(path, self.structure.params)
-            print(f'Saved Hessian parameters to {path}.')
         # end if
     # end def
 

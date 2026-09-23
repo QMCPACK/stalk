@@ -22,10 +22,9 @@ class NexusGeometry(RelaxFunction):
         self,
         func,
         args={},  # keep positional 'args' in place for backward compatibility
-        create_files=True,  # NexusGeometry must create files
         **kwargs  # loader=GeometryLoader(), disable_failed=False, custom kwargs
     ):
-        super().__init__(func, args=args, create_files=True, **kwargs)
+        super().__init__(func, args=args, **kwargs)
     # end def
 
     def _generate_structure(
@@ -38,17 +37,19 @@ class NexusGeometry(RelaxFunction):
     ):
         # Store the file path to the structure
         self._set_path(structure, path, required=True)
-        # Use params.dat to determine if the jobs have been already generated
-        if self.params_file.exists(structure.path):
+        # Use params.in to determine if the jobs have been already generated
+        params = structure.load(key='params', path=structure.path)
+        if params is not None:
             print(f'Nexus jobs in {structure.path} are already generated. Not regenerating.')
             structure.jobs = []  # Set empty jobs to indicate that the structure is generated
         else:
-            self._create_files(structure)
             # Create the jobs and store them in the structure
             # Hot update of eval_args
             eval_args = self.args.copy()
             eval_args.update(**kwargs)
             structure.jobs = self.func(structure, dep_jobs=dep_jobs, **eval_args)
+            # Save input
+            structure.save_input(overwrite=False)
         # end if
     # end def
 
@@ -74,8 +75,8 @@ class NexusGeometry(RelaxFunction):
         interactive: bool = False,
         **kwargs,
     ):
-        # Try to load relaxed parameters from disk
-        params_relax = self.params_relax_file.load_result(structure.path, None, ndmin=1)
+        # Try to load relaxed structure from disk
+        params_relax = structure.load(path=structure.path, key='params_out')
         if params_relax is not None:
             print(f'{structure.path} is already relaxed.')
             structure.params = params_relax
@@ -87,9 +88,7 @@ class NexusGeometry(RelaxFunction):
         else:
             warnings.warn("Running or loading of the relaxation result was unsuccessful!", UserWarning)
         # end if
-        if self.create_files and structure.path is not None:
-            self.params_relax_file.save_result(structure.path, structure.params)
-        # end if
+        structure.save(path=structure.path, params_out=structure.params)
     # end def
 
 # end class

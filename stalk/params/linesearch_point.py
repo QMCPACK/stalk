@@ -45,6 +45,11 @@ class LineSearchPoint():
     # end def
 
     @property
+    def label(self) -> str:
+        return f'{self.offset:5.4}'
+    # end def
+
+    @property
     def value(self):
         return self._value
     # end def

@@ -22,6 +22,7 @@ def test_NexusPes(tmp_path):
         label='label',
         pos=pos_H2O,
         elem=elem_H2O,
+        forward=forward_H2O,
         units='A'
     )
 
@@ -150,8 +151,6 @@ def test_NexusPes(tmp_path):
     s_evm0 = s_evm.copy(label='evm_test0', pos=pos_H2O * 0.9)
     sigma = 0.0001
     s_evm0.sigma = sigma
-    s_evm.forward = forward_H2O
-    s_evm0.forward = forward_H2O
     samples_ref = evm.get_samples(s_evm0, error=sigma)
     pes.evaluate(
         s_evm0,

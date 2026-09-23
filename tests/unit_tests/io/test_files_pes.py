@@ -31,7 +31,7 @@ def test_FilesPes(tmp_path):
     # This creates the structure, sigma files but does not load the energy yet
     pes.evaluate(s, path=path)
     # Sigma should be created
-    sigma_path = s.path / 'sigma.dat'
+    sigma_path = s.path / 'sigma.in'
     assert sigma_path.exists()
     assert loadtxt(sigma_path, ndmin=1)[0] == sigma
     # Geometry should be created
@@ -42,7 +42,7 @@ def test_FilesPes(tmp_path):
         assert e == e_ref
     # end for
     # Params should also be created
-    params_path = s.path / 'params.dat'
+    params_path = s.path / 'params.in'
     assert params_path.exists()
     # Value shoud not be available yet
     assert s.value is None

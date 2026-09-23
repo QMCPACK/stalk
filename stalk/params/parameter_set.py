@@ -5,15 +5,19 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
+
 from numpy import array, isscalar, random, ndarray, linspace
 from copy import deepcopy
 
+from stalk.io.cacheable import Cacheable
 from stalk.io.stalk_path import StalkPath
+from stalk.io.txt_data import TxtData
 from stalk.params.linesearch_point import LineSearchPoint
 from stalk.params.parameter import Parameter
 
 
-class ParameterSet(LineSearchPoint, StalkPath):
+class ParameterSet(LineSearchPoint, StalkPath, Cacheable):
     _param_list: list[Parameter] = []
     _samples: float = None  # samples for effective variance estimation
     _sigma: float = None  # target uncertainty for noisy simulations; sigma=0.0 means no noise
@@ -32,10 +36,19 @@ class ParameterSet(LineSearchPoint, StalkPath):
         self.params_list = params
         self.params_err = params_err
         self.sigma = sigma
+        # self.offset will be 0.0
         if value is not None:
             self.value = value
             self.error = error
         # end if
+        Cacheable.__init__(
+            self,
+            value=TxtData('value.out'),
+            error=TxtData('error.out'),
+            sigma=TxtData('sigma.in'),
+            params=TxtData('params.in'),
+            params_out=TxtData('params.out')
+        )
         # Path is always initialized to None, and only set later if needed.
         StalkPath.__init__(self, path=None)
     # end def
@@ -125,7 +138,7 @@ class ParameterSet(LineSearchPoint, StalkPath):
         # end if
     # end def
 
-    @property
+    @LineSearchPoint.label.getter
     def label(self) -> str:
         # If no custom label is provided, fall back to the hash of the parameter set.
         if self._label is None:
@@ -214,6 +227,81 @@ class ParameterSet(LineSearchPoint, StalkPath):
     # Mean unsigned distance between this and other ParameterSet
     def distance(self, other):
         return self.distance2(other)**0.5
+    # end def
+
+    def save_input(self, path: str | Path = None, overwrite=False):
+        """Save the input parameters to disk."""
+        path = path if path is not None else self.path
+        if path is None:
+            return
+        # end if
+        self.save(
+            path=path,
+            overwrite=overwrite,
+            params=self.params
+        )
+        # Save sigma if meaningful
+        if self.sigma is not None and self.sigma > 0.0:
+            self.save(
+                path=path,
+                overwrite=overwrite,
+                sigma=self.sigma
+            )
+        # end if
+    # end def
+
+    def save_value(self, path: str | Path = None, overwrite=False):
+        """Save the value to disk."""
+        path = path if path is not None else self.path
+        if path is None:
+            return
+        # end if
+        self.save(
+            path=path,
+            overwrite=overwrite,
+            value=self.value,
+        )
+        if self.error is not None and self.error > 0.0:
+            self.save(
+                path=path,
+                overwrite=overwrite,
+                error=self.error
+            )
+        # end if
+    # end def
+
+    def try_load_input(self, path: str | Path = None) -> bool:
+        """Load the input parameters from disk."""
+        path = path if path is not None else self.path
+        if path is None:
+            return False
+        # end if
+        result = self.load(path=path, default=None)
+        if result is not None:
+            if 'params' in result:
+                self.params = result['params']
+            # end if
+            if 'sigma' in result:
+                self.sigma = result['sigma']
+            # end if
+            return True
+        # end if
+        return False
+    # end def
+
+    def try_load_value(self, path: str | Path = None) -> bool:
+        """Load the value from disk."""
+        path = path if path is not None else self.path
+        if path is None:
+            return False
+        # end if
+        value = self.load(path=path, default=None, key='value')
+        if value is not None:
+            self.value = value
+            self.error = self.load(path=path, default=0.0, key='error')
+            return True
+        # end if
+        return False
     # end def
 
     def __sub__(self, other):

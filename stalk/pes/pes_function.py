@@ -4,7 +4,6 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from os import makedirs
 from pathlib import Path
 from numpy import std
 import warnings
@@ -14,7 +13,6 @@ from scipy.optimize import minimize
 
 from stalk.pes.pes_loader import PesLoader
 from stalk.io.stalk_path import StalkPath
-from stalk.io.txt_data import TxtData
 from stalk.params.effective_variance import EffectiveVariance
 from stalk.params.effective_variance_map import EffectiveVarianceMap
 from stalk.params.parameter_set import ParameterSet
@@ -26,12 +24,7 @@ from stalk.util.noise import Noise
 
 
 class PesFunction(FunctionCaller):
-    sigma_file: TxtData = None
-    params_file: TxtData = None
-    value_file: TxtData = None
     disable_failed = False
-    # If True, direct PES evaluations will be written do disk
-    create_files = None
     # Loader will not be used in the basic implementation
     loader: PesLoader = None  # Optional loader for loading results from disk
 
@@ -41,17 +34,12 @@ class PesFunction(FunctionCaller):
         args: dict = {},  # Keep 'args' for backward compatibility
         loader: PesLoader = None,
         disable_failed=False,
-        create_files=True,
         **kwargs,
     ):
         # Init the function caller
         super().__init__(func, args=args, **kwargs)
         self.disable_failed = disable_failed
-        self.create_files = create_files
         self.loader = loader
-        self.sigma_file = TxtData('sigma.dat')  # Initialize the sigma file handler
-        self.params_file = TxtData('params.dat')  # Initialize the params file handler
-        self.value_file = TxtData('value.dat')  # Initialize the value file handler
     # end def
 
     def generate(
@@ -176,69 +164,13 @@ class PesFunction(FunctionCaller):
         dep_jobs=[],
         **kwargs
     ) -> None:
+        """Set structure path and samples and generate the structure input files to disk."""
         # Set path for the structure
         self._set_path(structure, path, required=False)
+        # Set the number of samples
         self._set_samples(structure, var_eff_map=var_eff_map, samples=samples)
-        # Use params.dat to determine if the files have been already generated
-        if not self.params_file.exists(structure.path):
-            self._create_files(structure)
-        # end if
-        # Try to load from disk
-        self._try_load_value(structure)
-    # end def
-
-    def _create_files(self, structure: ParameterSet):
-        '''Check if the files for the structure have been already generated, and if not, create them.'''
-        if self.create_files and structure.path is not None:
-            makedirs(structure.path, exist_ok=True)
-            # Write the parameters to disk in a simple format (e.g., params.dat)
-            self.params_file.save_result(structure.path, structure.params)
-            # If the sigma is meaningful, write it to disk as well
-            if structure.sigma is not None and structure.sigma > 0.0:
-                self.sigma_file.save_result(structure.path, [structure.sigma])
-            # end if
-        # end if
-    # end def
-
-    def _try_load_value(self, structure: ParameterSet):
-        '''Try to load the value from disk, and if it exists, set it to the structure.'''
-        if self.value_file.exists(structure.path):
-            print(f'{structure.path} loaded value from disk.')
-            result = self.value_file.load_result(structure.path, [None, 0.0])
-            structure.value = result[0]
-            structure.error = result[1] if len(result) > 1 else 0.0
-        # end if
-    # end def
-
-    def _try_load_params(self, structure: ParameterSet):
-        '''Try to load the relaxed parameters from disk, and if they exist, set them to the structure.'''
-        if self.params_file.exists(structure.path):
-            print(f'{structure.path} loaded parameters from disk.')
-            params = self.params_file.load_result(structure.path, None, ndmin=1)
-            if params is not None and len(params) == len(structure.params):
-                structure.params = params
-                return True
-            # end if
-        # end if
-        return False
-    # end def
-
-    def _save_value(self, structure: ParameterSet, overwrite=False):
-        '''Save the value+error of the structure to disk.'''
-        if self.create_files and structure.path is not None:
-            self.value_file.save_result(
-                structure.path,
-                [structure.value, structure.error],
-                overwrite=overwrite
-            )
-        # end if
-    # end def
-
-    def _save_params(self, structure: ParameterSet):
-        '''Save the parameters of the structure to disk.'''
-        if self.create_files and structure.path is not None:
-            self.params_file.save_result(structure.path, structure.params)
-        # end if
+        # Save input (if enabled)
+        structure.save_input(overwrite=False)
     # end def
 
     def _generate_structure_all(
@@ -272,15 +204,21 @@ class PesFunction(FunctionCaller):
         reset_value=False,
         dep_jobs=[],
     ) -> None:
+        """Evaluate the structure."""
+        if reset_value:
+            # Reset value
+            structure.reset_value()
+        else:
+            # Try to load from disk
+            structure.try_load_value()
+            # Return if already evaluated or the cache loading succeeded
+            if structure.evaluated:
+                print(f'{structure.path} is already evaluated.')
+                return
+            # end if
+        # end if
         if interactive:
             self._prompt([structure])
-        # end if
-        if reset_value:
-            structure.reset_value()
-        # end if
-        if structure.evaluated and not reset_value and structure.path is not None:
-            print(f'{structure.path} is already evaluated.')
-            return
         # end if
         try:
             # The raw PES function is expected to return either a scalar or a tuple of (value, error)
@@ -296,8 +234,6 @@ class PesFunction(FunctionCaller):
             # using loaders. The data is transferred via the structure.
             structure.value = value
             structure.error = error
-            # Write to disk
-            self._save_value(structure)
         except NotEvaluatedException:
             print(f'{structure.label} could not be evaluated.')
         # end try
@@ -339,6 +275,8 @@ class PesFunction(FunctionCaller):
         self._warn_energy(structure, warn_limit=warn_limit)
         # Nothing to do here but update the var_eff_map if needed
         self._update_var_eff_map(structure, var_eff_map=var_eff_map)
+        # Write to disk (if enabled)
+        structure.save_value(overwrite=False)
     # end def
 
     def _finalize_structure_all(
@@ -405,12 +343,11 @@ class PesFunction(FunctionCaller):
         path=None,
         **kwargs
     ) -> ParameterSet:
-        create_files = self.create_files
-        self.create_files = False  # Disable file creation during relaxation
         self._set_path(structure, path, required=False)
-        if self._try_load_params(structure):
-            self._try_load_value(structure)  # Load the corresponding value as well
-            self.create_files = create_files  # Restore the original setting
+        params_relax = structure.load(key='params_out')
+        if params_relax is not None:
+            structure.params = params_relax
+            structure.try_load_value()
             return structure
         # end if
 
@@ -424,12 +361,9 @@ class PesFunction(FunctionCaller):
         res = minimize(relax_aux, p0, **kwargs)
         structure.params = res.x
         structure.value = relax_aux(res.x)
-        self.create_files = create_files  # Restore the original setting
-        if structure.path is not None:
-            # Save relaxed parameters and value to disk if file creation is enabled
-            self._save_value(structure)
-            self._save_params(structure)
-        # end if
+        # Save relaxed parameters and value to disk if enabled
+        structure.save(key='params_out', overwrite=False)
+        structure.save_value(overwrite=False)
         return structure
     # end def
 

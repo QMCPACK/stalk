@@ -14,7 +14,7 @@ from stalk.util.util import match_to_tol
 from unit_tests.assets.h2o import hessian_H2O, get_structure_H2O, pes_H2O
 
 
-def test_ParameterHessian():
+def test_ParameterHessian(tmp_path):
 
     # Test empty (raises error without structure)
     with raises(TypeError):
@@ -52,7 +52,7 @@ def test_ParameterHessian():
     E3_ref = -0.5  # see def pes_H2O()
     h3 = ParameterHessian(structure=s2.copy())
     assert match_to_tol(h3.hessian, [[1.0, 0.0], [0.0, 1.0]])
-    pes = PesFunction(pes_H2O, create_files=False)
+    pes = PesFunction(pes_H2O)
     h3.compute_fdiff(
         pes=pes,
         dp=[0.01, 0.02]
@@ -81,5 +81,12 @@ def test_ParameterHessian():
             dp=0.01
         )
     # end with
+
+    # Test writing and loading
+    h4.save_hessian(tmp_path / 'hessian')
+    h_load = ParameterHessian(structure=s1)
+    assert h_load.load_hessian(tmp_path / 'hessian')
+    assert match_to_tol(h_load.hessian, h4.hessian)
+    assert match_to_tol(h_load.structure.params, h4.structure.params)
 
 # end def

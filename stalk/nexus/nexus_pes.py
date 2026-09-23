@@ -26,12 +26,11 @@ class NexusPes(PesFunction):
         func,
         args: dict = {},  # Keep 'args' for backward compatibility
         loader: PesLoader = PesLoader(),
-        create_files=True,  # NexusPes must create files
         bundle_jobs=False,
         **kwargs,  # disable_failed=False, ...
     ):
         # Init the function caller
-        super().__init__(func, args=args, create_files=True, loader=loader, **kwargs)
+        super().__init__(func, args=args, loader=loader, **kwargs)
         self.bundle_jobs = bundle_jobs
     # end def
 
@@ -50,20 +49,20 @@ class NexusPes(PesFunction):
         self._set_path(structure, path, required=True)
         # Set the number of samples
         self._set_samples(structure, var_eff_map=var_eff_map, samples=samples)
-        # Use params.dat to determine if the jobs have been already generated
-        if self.params_file.exists(structure.path):
+        # Use params.in to determine if the jobs have been already generated
+        params = structure.load(key='params', path=structure.path)
+        if params is not None:
             print(f'Nexus jobs in {structure.path} are already generated. Not regenerating.')
             structure.jobs = []  # Set empty jobs to indicate that the structure is generated
         else:
-            self._create_files(structure)
             # Create the jobs and store them in the structure
             # Hot update of eval_args
             eval_args = self.args.copy()
             eval_args.update(**kwargs)
             structure.jobs = self.func(structure, dep_jobs=dep_jobs, **eval_args)
+            # Save input
+            structure.save_input(overwrite=False)
         # end if
-        # Try to load the value from disk if it exists
-        self._try_load_value(structure)
     # end def
 
     def _generate_structure_all(
@@ -94,10 +93,13 @@ class NexusPes(PesFunction):
         dep_jobs=[],
         reset_value=True,
     ) -> None:
+        if structure.try_load_value():
+            print(f'{structure.path} is already evaluated. Not re-evaluating.')
+            return
+        # end if
         if interactive:
             self._prompt([structure])
         # end if
-        # TODO: Try to load result from disk first
         # Run Nexus jobs
         jobs = dep_jobs + structure.jobs
         if self.bundle_jobs:
@@ -142,11 +144,12 @@ class NexusPes(PesFunction):
             result.add_sigma(structure.sigma, kind=add_sigma)
             structure.value = result.value
             structure.error = result.error
-            self._save_value(structure)
             # TODO: interactively discard bad data?
             self._warn_energy(structure, warn_limit=warn_limit)
             # Nothing to do here but update the var_eff_map if needed
             self._update_var_eff_map(structure, var_eff_map=var_eff_map)
+            # Write to disk
+            structure.save_value(overwrite=False)
         except NotEvaluatedException as e:
             if self.disable_failed:
                 structure.enabled = False

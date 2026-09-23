@@ -60,28 +60,19 @@ class LineSearch(LineSearchBase):
         # end if
         self.Lambda = Lambda
         self.d = d
+        # Default parent init
+        LineSearchBase.__init__(
+            self,
+            **ls_args
+        )
         if offsets is None:
-            if values is not None:
-                warnings.warn("Grid offsets are automatically generated, ignoring provided values.")
-                values = None
-            # end if
-            if errors is not None:
-                warnings.warn("Grid offsets are automatically generated, ignoring provided errors.")
-                errors = None
-            # end if
-            # Parent init ignoring offsets/values/errors
-            LineSearchBase.__init__(self, **ls_args)
-            # Finally, reset offsets
-            self.grid = self.figure_out_offsets(M=M, W=W, R=R)
-        else:
-            # Default parent init
-            LineSearchBase.__init__(
-                self,
-                offsets=offsets,
-                values=values,
-                errors=errors,
-                **ls_args
-            )
+            offsets = self.figure_out_offsets(M=M, W=W, R=R)
+        # end if
+        self.grid = offsets
+        if values is not None:
+            self.values = values
+            self.errors = errors
+            self.search()
         # end if
     # end def
 

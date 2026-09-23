@@ -4,7 +4,6 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
-from stalk.io.txt_data import TxtData
 from stalk.pes.geometry_result import GeometryResult
 from stalk.params.parameter_set import ParameterSet
 from stalk.params.parameter_structure import ParameterStructure
@@ -12,20 +11,6 @@ from stalk.pes.pes_function import NotEvaluatedException, PesFunction
 
 
 class RelaxFunction(PesFunction):
-    params_relax_file: TxtData = None
-
-    def __init__(
-        self,
-        func,
-        args: dict = {},  # Keep 'args' for backward compatibility
-        **kwargs,  # disable_failed=False, create_files=True, custom kwargs
-    ):
-        # Init the PesFunction
-        super().__init__(func, args=args, **kwargs)
-        # Initialize the init/relaxed params file handlers
-        self.params_file = TxtData('params_init.dat')
-        self.params_relax_file = TxtData('params_relax.dat')
-    # end def
 
     # Override the evaluate method to handle relaxation
     def _evaluate_structure(
@@ -35,29 +20,36 @@ class RelaxFunction(PesFunction):
         reset_value=False,
         dep_jobs=[],
     ) -> None:
+        """Evaluate the structure to be relaxed."""
+        if reset_value:
+            # Reset value
+            structure.reset_value()
+        else:
+            # Try to load relaxed structure from disk
+            params_relax = structure.load(path=structure.path, key='params_out')
+            # Return if already evaluated or the cache loading succeeded
+            if params_relax is not None:
+                value, error = structure.value, structure.error
+                structure.params = params_relax
+                structure.value, structure.error = value, error
+                print(f'{structure.path} is already relaxed.')
+                # Load value, error if available
+                structure.try_load_value()
+                return
+            # end if
+        # end if
         if interactive:
             self._prompt([structure])
-        # end if
-        if reset_value:
-            structure.reset_value()
-        # end if
-        # Try to load relaxed parameters from disk
-        params_relax = self.params_relax_file.load_result(structure.path, None, ndmin=1)
-        if params_relax is not None:
-            print(f'{structure.path} is already relaxed.')
-            value, error = structure.value, structure.error
-            structure.params = params_relax
-            structure.value, structure.error = value, error
-            return
         # end if
         try:
             # Unlike elsewhere, the structure, value and error can be set here directly and
             # bypass using loaders. The data is transferred via the structure
             res = self.func(structure, **self.args)
             if isinstance(res, ParameterSet):
+                value, error = res.value, res.error
                 structure.params = res.params
-                structure.value = res.value
-                structure.error = res.error
+                structure.value = value
+                structure.error = error
             elif res is None and isinstance(structure, ParameterStructure):
                 # Must be a GeometryLoader, providing a GeometryResult
                 geom_result = self.loader.load(structure.path)
@@ -71,11 +63,9 @@ class RelaxFunction(PesFunction):
             # end if
             # Ideally, the relax function also evaluates the energy but it is not strictly required.
             if structure.evaluated:
-                super()._save_value(structure)
+                structure.save_value()
             # end if
-            if self.create_files and structure.path is not None:
-                self.params_relax_file.save_result(structure.path, structure.params)
-            # end if
+            structure.save(path=structure.path, params_out=structure.params)
         except NotEvaluatedException:
             print(f'{structure.path} could not be relaxed.')
         # end try
