@@ -5,11 +5,14 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
+
 from matplotlib import pyplot as plt
 from numpy import array, isscalar, linspace, nan
 from numpy import ndarray
 
 from stalk.io.stalk_logger import StalkLogger
+from stalk.io.txt_data import TxtData
 from stalk.ls.error_surface import ErrorSurface
 from stalk.ls.linesearch_grid import LineSearchGrid
 from stalk.ls.tls_settings import TlsSettings
@@ -69,6 +72,11 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
             offsets=offsets,
             **ls_args,
         )
+        # Add optimization results to cache
+        self.add_cache('Gs', TxtData('Gs.out'))
+        self.add_cache('W_opt', TxtData('W_opt.out'))
+        self.add_cache('sigma_opt', TxtData('sigma_opt.out'))
+        self.add_cache('epsilon', TxtData('epsilon.out'))
     # end def
 
     @property
@@ -442,6 +450,45 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
         # end if
         E_col = [self._compute_target_error(W, sigma) for sigma in self.error_surface.Ys]
         self.error_surface.insert_col(W, E_col)
+    # end def
+
+    def save_optimization(self, path: str | Path, overwrite: bool = True):
+        """Save optimization results to disk."""
+        if self.optimized:
+            self.save(
+                path=path,
+                overwrite=overwrite,
+                Gs=self.Gs,
+                W_opt=self.W_opt,
+                sigma_opt=self.sigma_opt,
+            )
+            if self.epsilon is not None:
+                self.save(
+                    path=path,
+                    overwrite=overwrite,
+                    epsilon=self.epsilon,
+                )
+            # end if
+            self.error_surface.save_result(path=path, overwrite=overwrite)
+            print(f'Saved optimization to {path}')
+        # end if
+    # end def
+
+    def try_load_optimization(self, path: str | Path | None):
+        """Try to load optimization results from disk. Returns True if successful."""
+        if path is None:
+            return
+        # end if
+        self.Gs = self.load(path, 'Gs')
+        self.W_opt = self.load(path, 'W_opt')
+        self.sigma_opt = self.load(path, 'sigma_opt')
+        self.epsilon = self.load(path, 'epsilon')
+        # Try to load error surface
+        es_load = ErrorSurface()
+        if es_load.try_load_result(path):
+            self._error_surface = es_load
+        # end if
+        print(f'Loaded optimization from {path}')
     # end def
 
     # Compute fitting bias and error using consistent parameters

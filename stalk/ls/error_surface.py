@@ -6,13 +6,16 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from bisect import bisect
+from pathlib import Path
 from scipy.interpolate import LinearNDInterpolator
 from numpy import array, argsort, append, where, isscalar
 
+from stalk.io.cacheable import Cacheable
 from stalk.io.stalk_logger import StalkLogger
+from stalk.io.txt_data import TxtData
 
 
-class ErrorSurface():
+class ErrorSurface(Cacheable):
     _E_mat = None  # Matrix of total errors
     _X_mat = None  # X-mesh
     _Y_mat = None  # Y-mesh
@@ -38,6 +41,12 @@ class ErrorSurface():
         self.logger = logger
         self.label = label
         self.warnings = set()
+        Cacheable.__init__(
+            self,
+            E_mat=TxtData('es.out'),
+            X_mat=TxtData('es_X.out'),
+            Y_mat=TxtData('es_Y.out'),
+        )
     # end def
 
     @property
@@ -179,6 +188,33 @@ class ErrorSurface():
         # end if
 
         return x_vals, y_vals
+    # end def
+
+    def save_result(self, path: str | Path, overwrite: bool = True):
+        if path is None or self.E_mat is None:
+            return
+        # end if
+        self.save(
+            path,
+            overwrite=overwrite,
+            E_mat=self.E_mat,
+            X_mat=self.X_mat,
+            Y_mat=self.Y_mat,
+        )
+    # end def
+
+    def try_load_result(self, path: str | Path) -> bool:
+        E_mat = self.load(path, 'E_mat')
+        X_mat = self.load(path, 'X_mat')
+        Y_mat = self.load(path, 'Y_mat')
+        if E_mat is not None and X_mat is not None and Y_mat is not None:
+            self._E_mat = E_mat
+            self._X_mat = X_mat
+            self._Y_mat = Y_mat
+            return True
+        else:
+            return False
+        # end if
     # end def
 
     def _argmax_y(self, epsilon):

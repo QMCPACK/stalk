@@ -10,7 +10,6 @@ __license__ = "BSD-3-Clause"
 
 from numpy import argmin, array, isscalar, mean, linspace, nan
 
-from stalk.io.optimizer_data import OptimizerData
 from stalk.io.stalk_logger import StalkLogger
 from stalk.ls.linesearch_grid import LineSearchGrid
 from stalk.ls.ls_settings import LsSettings
@@ -216,15 +215,8 @@ class Surrogate(ParallelLineSearch[TargetLineSearch]):
         # end if
         # Try to load optimized data from disk
         for tls in self.ls_list:
-            od = OptimizerData(f'ls{tls.d}')
-            tls_load = od.load(self.path)
-            # If the files are not found, the following attributes will be None like they
-            # would be in any case
-            tls.Gs = tls_load.Gs
-            tls.W_opt = tls_load.W_opt
-            tls.sigma_opt = tls_load.sigma_opt
-            tls.epsilon = tls_load.epsilon
-            tls._error_surface = tls_load.error_surface
+            # Try to load optimization results from disk
+            tls.try_load_optimization(self.path / f'ls{tls.d}')
         # end for
     # end def
 
@@ -584,7 +576,7 @@ class Surrogate(ParallelLineSearch[TargetLineSearch]):
         # end if
         for tls in self.ls_list:
             # Write optimization results to disk
-            OptimizerData(f'ls{tls.d}').save(tls, self.path, overwrite=overwrite)
+            tls.save_optimization(self.path / f'ls{tls.d}', overwrite=overwrite)
         # end if
         print('Optimization successful!')
     # end def

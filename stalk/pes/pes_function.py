@@ -344,10 +344,11 @@ class PesFunction(FunctionCaller):
         **kwargs
     ) -> ParameterSet:
         self._set_path(structure, path, required=False)
-        params_relax = structure.load(key='params_out')
+        params_relax = structure.load(path=structure.path, key='params_out')
         if params_relax is not None:
             structure.params = params_relax
             structure.try_load_value()
+            print(f'Loaded relaxed parameters from {structure.path}.')
             return structure
         # end if
 
@@ -362,7 +363,7 @@ class PesFunction(FunctionCaller):
         structure.params = res.x
         structure.value = relax_aux(res.x)
         # Save relaxed parameters and value to disk if enabled
-        structure.save(key='params_out', overwrite=False)
+        structure.save(path=structure.path, overwrite=False, params_out=structure.params)
         structure.save_value(overwrite=False)
         return structure
     # end def
