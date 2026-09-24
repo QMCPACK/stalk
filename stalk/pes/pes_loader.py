@@ -13,7 +13,7 @@ from stalk.util.args_container import ArgsContainer
 
 
 class PesLoader(ArgsContainer, TxtData):
-    _suffix = 'energy.dat'
+    _suffix = 'value.out'  # default suffix for energy output files
 
     def __init__(
         self,

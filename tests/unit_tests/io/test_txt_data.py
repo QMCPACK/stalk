@@ -48,7 +48,7 @@ def test_TxtData(tmp_path):
     # end with
 
     # test loading with existing file
-    pl = TxtData(suffix='energy.dat', scale=2.0)
+    pl = TxtData(suffix='value.out', scale=2.0)
     res = pl.load_result('tests/unit_tests/assets')
     E_ref, err_ref = 15.0, 0.1
     assert isinstance(res, ndarray)
@@ -56,7 +56,7 @@ def test_TxtData(tmp_path):
     assert res[1] == err_ref / 2
 
     # Test pointing to a file directly
-    res = pl.load_result('tests/unit_tests/assets/energy.dat', rescale=False)
+    res = pl.load_result('tests/unit_tests/assets/value.out', rescale=False)
     assert isinstance(res, ndarray)
     assert res[0] == E_ref
     assert res[1] == err_ref

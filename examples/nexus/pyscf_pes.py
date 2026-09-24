@@ -7,4 +7,4 @@ $system
 
 $calculation
 
-savetxt('value.dat', [[e_scf, 0.0]])
+savetxt('value.out', [[e_scf, 0.0]])

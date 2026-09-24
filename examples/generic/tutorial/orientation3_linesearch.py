@@ -15,7 +15,7 @@ from stalk import LineSearch
 
 
 # Define the PES and parameter set
-pes = PesFunction(pes_func, c=[1.0, 2.0, 3.0], create_files=False)
+pes = PesFunction(pes_func, c=[1.0, 2.0, 3.0])
 p = ParameterSet([1.0])  # initial parameter set
 
 # Creating a regular grid of points assumed to contain the minimum
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     lsb = LineSearchBase(points, fit_kind='pf3')
     print('Base Line-search grid before evaluation:')
     print(lsb)
-    # Supply values
+    # Supply values and perform the search
     lsb.values = values
     results = lsb.search()
     lsb.fit_res = results
@@ -43,12 +43,12 @@ if __name__ == "__main__":
 if __name__ == "__main__":
     # Let's do it again but now with the context-aware LineSearch class
     offsets = np.linspace(-3, 3, 7)
-    # Now, the search is centered around 'p' searches by the offsets around it. Clearer, eh?
+    # Now, the search is centered around 'p' searches by the offsets around it.
     ls = LineSearch(p, d=0, offsets=offsets)
     print('Contextual Line-search before evaluation:')
     # When operating with parameter sets (instead of abstract points), we can readily evaluate
     # the PES.
-    ls.evaluate(pes)
+    pes(ls)
     print('Contextual Line-search after evaluation and search:')
     print(ls)
     ls.plot(ax=ax, color='tab:orange')

@@ -14,7 +14,7 @@ from stalk import LineSearch
 
 # Define the PES and parameter set
 c = [1.0, 2.0, 3.0]
-pes = PesFunction(pes_func, c=c, create_files=False)
+pes = PesFunction(pes_func, c=c)
 p = ParameterSet([1.0])  # initial parameter set
 
 # Let's define 3 different line-searches with variable grids
@@ -27,15 +27,16 @@ ls2 = LineSearch(p, d=0, offsets=offsets2, sigma=sigma)
 ls3 = LineSearch(p, d=0, offsets=offsets3, sigma=sigma)
 # exact minimum of the PES
 x0_exact = -c[1] / (2 * c[0]) - p[0]
+y0_exact = pes_func([x0_exact + p[0]], c)
 
 res1, res2, res3 = [], [], []
 if __name__ == "__main__":
     f, ax = plt.subplots()
     for _ in range(100):
-        # Evaluate the line-searches (bypass intermediate results)
-        ls1.evaluate(pes, reset_value=True, add_sigma=True)
-        ls2.evaluate(pes, reset_value=True, add_sigma=True)
-        ls3.evaluate(pes, reset_value=True, add_sigma=True)
+        # Evaluate the line-searches (bypass intermediate results with reset_value=True)
+        pes(ls1, reset_value=True, add_sigma=True)
+        pes(ls2, reset_value=True, add_sigma=True)
+        pes(ls3, reset_value=True, add_sigma=True)
         res1.append([ls1.fit_res.x0, ls1.fit_res.y0])
         res2.append([ls2.fit_res.x0, ls2.fit_res.y0])
         res3.append([ls3.fit_res.x0, ls3.fit_res.y0])
@@ -58,6 +59,7 @@ if __name__ == "__main__":
     ax.set_xlabel('x0')
     ax.set_ylabel('y0')
     plt.axvline(x0_exact, color='r', linestyle='dashed', linewidth=1, label='Exact PES value')
+    plt.axhline(y0_exact, color='r', linestyle='dashed', linewidth=1)
     ax.set_title(f'Line-search results with sigma={sigma}')
     ax.legend()
     plt.show()

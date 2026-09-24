@@ -201,8 +201,8 @@ relax_pyscf = NexusGeometry(
 )
 pes_pyscf = NexusPes(
     scf_pes_job,
-    # pyscf_pes.py is configured to output SCF energy in energy.dat
-    loader=PesLoader(suffix='value.dat')
+    # pyscf_pes.py is configured to output SCF energy in value.out
+    loader=PesLoader(suffix='value.out')
 )
 pes_dmc = NexusPes(
     dmc_pes_job,

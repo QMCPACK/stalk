@@ -156,7 +156,7 @@ def scf_pes_job(structure: NexusStructure, xc='pbe', **kwargs):
 # Hessian based on the structural mappings
 pes_pyscf = NexusPes(
     func=PesFunction(scf_pes_job),
-    loader=PesLoader(suffix='value.dat')
+    loader=PesLoader(suffix='value.out')
 )
 
 

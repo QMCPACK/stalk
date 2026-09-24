@@ -123,7 +123,7 @@ def get_backend(backend, q_hamiltonian):
 # end def
 
 
-# More realostic VQE PES that derives precision from a backend and transpiled circuit
+# More realistic VQE PES that derives precision from a backend and transpiled circuit
 #  NB: cannot handle zero noise (sigma=0)
 def pes_backend(
     structure: ParameterStructure,

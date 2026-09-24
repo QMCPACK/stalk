@@ -20,7 +20,7 @@ def test_FilesPes(tmp_path):
     pes = FilesPes()
     assert pes.func is write_xyz_sigma
     assert pes.args == {}
-    assert pes.loader.suffix == 'energy.dat'
+    assert pes.loader.suffix == 'value.out'
     assert isinstance(pes.loader, PesLoader)
 
     # Test evaluate
@@ -48,10 +48,12 @@ def test_FilesPes(tmp_path):
     assert s.value is None
     assert s.error == 0.0
     # Next, write energies to disk and evaluate again to load the values
-    value_path = s.path / 'energy.dat'
+    value_path = s.path / 'value.out'
+    error_path = s.path / 'error.out'
     value_ref = 1.0
     error_ref = 0.1
-    savetxt(value_path, [value_ref, error_ref])
+    savetxt(value_path, [value_ref])
+    savetxt(error_path, [error_ref])
     pes.evaluate(s, path=path)
     assert match_to_tol(s.value, value_ref)
     assert match_to_tol(s.error, error_ref)
@@ -68,7 +70,8 @@ def test_FilesPes(tmp_path):
     values_ref = [1.1, 2.1]
     errors_ref = [0.11, 0.22]
     # Adding one structure energy but not the other
-    savetxt(path / '2b/energy.dat', [values_ref[1], errors_ref[1]])
+    savetxt(path / '2b/value.out', [values_ref[1]])
+    savetxt(path / '2b/error.out', [errors_ref[1]])
     pes.evaluate_all(
         [s2a, s2b],
         path=path,
@@ -77,7 +80,8 @@ def test_FilesPes(tmp_path):
     assert match_to_tol(s2b.error, errors_ref[1])
     assert s2a.value is None
     # Adding the remaining structure energy
-    savetxt(path / '2a/energy.dat', [values_ref[0], errors_ref[0]])
+    savetxt(path / '2a/value.out', [values_ref[0]])
+    savetxt(path / '2a/error.out', [errors_ref[0]])
     pes.evaluate_all(
         [s2a, s2b],
         path=path,

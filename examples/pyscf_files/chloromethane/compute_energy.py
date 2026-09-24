@@ -41,14 +41,14 @@ if __name__ == '__main__':
         energy = PesResult(e_scf)
 
         # Add sigma to energy if it exists
-        sfile = xyzpath / 'sigma.dat'
+        sfile = xyzpath / 'sigma.in'
         if Path(sfile).exists():
             sigma = float(np.loadtxt(sfile))
             energy.add_sigma(sigma)
         # end if
 
         # Write the energy to file
-        efile = xyzpath / 'value.dat'
+        efile = xyzpath / 'value.in'
         np.savetxt(efile, [energy.value, energy.error])
     # end for
 # end if

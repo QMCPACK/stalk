@@ -88,7 +88,7 @@ def pes_vqe(
     energy = job.result()[0].data.evs[0]
     kernel_args['evals'] += 1
 
-    # In this ideal VQE, sigma=target_precision is also the apparent uncertainty
+    # In this ideal VQE, sigma=precision is also the apparent uncertainty
     printout = 'Run theta ='
     for p in params[0]:
         printout += '  %+5.4f' % p

@@ -28,8 +28,8 @@ def test_Cacheable(tmp_path):
 
     # Test init with valid TxtData
     cache = Cacheable(
-        value=TxtData('value.dat'),
-        value2=TxtData('value2.dat'),
+        value=TxtData('value.out'),
+        value2=TxtData('value2.out'),
     )
     assert len(cache._cache) == 2
     # Loading nonexistent should return dict with None values
@@ -43,8 +43,8 @@ def test_Cacheable(tmp_path):
     cache.save(tmp_path / 'save', value=value, value2=value2)
 
     cache2 = Cacheable(
-        newvalue=TxtData('value.dat'),
-        newvalue2=TxtData('value2.dat'),
+        newvalue=TxtData('value.out'),
+        newvalue2=TxtData('value2.out'),
     )
     result = cache2.load(tmp_path / 'save')
     assert match_to_tol(result['newvalue'], value)

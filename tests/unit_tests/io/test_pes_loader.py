@@ -17,7 +17,7 @@ def test_PesLoader():
     # Test default settings
     pl = PesLoader()
     assert pl.scale == 1.0
-    assert pl.suffix == 'energy.dat'
+    assert pl.suffix == 'value.out'
 
     # Try out alternative values
     pl = PesLoader(suffix='e.dat', scale=2.0, arg='test')
@@ -29,8 +29,8 @@ def test_PesLoader():
     with raises(NotEvaluatedException):
         pl.load(path)
     # end with
-    # The file is found by the default name energy.dat
-    pl.suffix = 'energy.dat'
+    # The file is found by the default name value.out
+    pl.suffix = 'value.out'
     # But loading fails with the extra argument to np.loadtxt
     with raises(TypeError):
         pl.load(path)
@@ -39,7 +39,7 @@ def test_PesLoader():
     pl.args = {}
     res = pl.load(path)
     assert isinstance(res, PesResult)
-    # See tests/unit_tests/assets/energy.dat: scaling by 1/2.0 is applied
+    # See tests/unit_tests/assets/value.out: scaling by 1/2.0 is applied
     E_ref, err_ref = 7.5, 0.05
     assert res.value == E_ref
     assert res.error == err_ref
