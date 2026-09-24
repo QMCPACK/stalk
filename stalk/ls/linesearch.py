@@ -35,6 +35,9 @@ class LineSearch(LineSearchBase):
         M=7,
         R=None,
         W=None,
+        # try to load after init
+        path: str | None = None,
+        check_offsets=False,
         **ls_args
         # fraction=0.025, sgn=1, sigma=0
         # fit_kind='pf3', fit_func=None, fit_args={}, N=200, Gs=None
@@ -60,11 +63,8 @@ class LineSearch(LineSearchBase):
         # end if
         self.Lambda = Lambda
         self.d = d
-        # Default parent init
-        LineSearchBase.__init__(
-            self,
-            **ls_args
-        )
+        # Default parent init to get the settings right
+        LineSearchBase.__init__(self, **ls_args)
         if offsets is None:
             offsets = self.figure_out_offsets(M=M, W=W, R=R)
         # end if
@@ -74,6 +74,8 @@ class LineSearch(LineSearchBase):
             self.errors = errors
             self.search()
         # end if
+        # Try to load from disk
+        self.try_load_result(path, check_offsets=check_offsets)
     # end def
 
     @property

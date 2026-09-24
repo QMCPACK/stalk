@@ -5,10 +5,14 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
 import warnings
-from numpy import linspace, isscalar
+from numpy import linspace, isscalar, array
 from matplotlib import pyplot as plt
+
+from stalk.io.cacheable import Cacheable
 from stalk.fit.fitting_result import FittingResult
+from stalk.io.txt_data import TxtData
 from stalk.ls.linesearch_grid import LineSearchGrid
 from stalk.ls.ls_settings import LsSettings
 from stalk.params.parameter_set import ParameterSet
@@ -16,10 +20,10 @@ from stalk.pes.pes_function import PesFunction
 from stalk.util.util import FF, FU
 
 
-class LineSearchBase(LineSearchGrid[ParameterSet]):
-    _settings: LsSettings
+class LineSearchBase(Cacheable, LineSearchGrid[ParameterSet]):
+    _settings: LsSettings = None
     _sigma = 0.0  # Target errorbar
-    fit_res: FittingResult
+    _fit_res: FittingResult = None
 
     def __init__(
         self,
@@ -35,7 +39,14 @@ class LineSearchBase(LineSearchGrid[ParameterSet]):
         N=200,
         store=True,
         noisy=True,
+        # try to load after init
+        path: str | None = None,
+        check_offsets=False,
     ):
+        Cacheable.__init__(
+            self,
+            data=TxtData('ls.out'),
+        )
         LineSearchGrid.__init__(self, offsets)
         self.sigma = sigma
         self._settings = LsSettings(
@@ -54,6 +65,21 @@ class LineSearchBase(LineSearchGrid[ParameterSet]):
             # end if
             self.search(store=store, noisy=noisy)
         # end if
+        # Try to load from disk
+        self.try_load_result(path, check_offsets=check_offsets)
+    # end def
+
+    @property
+    def fit_res(self):
+        return self._fit_res
+    # end def
+
+    @fit_res.setter
+    def fit_res(self, res: FittingResult):
+        if res is not None and not isinstance(res, FittingResult):
+            raise TypeError("fit_res must be a FittingResult instance or None.")
+        # end if
+        self._fit_res = res
     # end def
 
     @property
@@ -173,6 +199,45 @@ class LineSearchBase(LineSearchGrid[ParameterSet]):
             self.search(store=True, noisy=True)
         else:
             warnings.warn("Cannot finalize without valid data.")
+        # end if
+    # end def
+
+    def save_result(self, path: str | Path, overwrite: bool = True) -> None:
+        if path is None:
+            return
+        # end if
+        path = Path(path)
+        data = array([self.offsets, self.values, self.errors]).T
+        self.save(path=path, data=data, overwrite=overwrite)
+        if self.fit_res is not None:
+            # Save fitting result if available
+            self.fit_res.save_result(path, overwrite=overwrite)
+        # end if
+    # end def
+
+    def try_load_result(self, path: str | Path | None, check_offsets: bool = False) -> None:
+        if path is None:
+            return
+        # end if
+        path = Path(path)
+        data = self.load(path, 'data')
+        if data is not None:
+            if not check_offsets or len(self) == len(data[0]) and all(self.offsets == data[0]):
+                self.grid = data[:, 0]
+                self.values = data[:, 1]
+                self.errors = data[:, 2]
+                print(f'Loaded line-search data from {path}.')
+                fit_res = self.settings.fit_func._result_class()
+                fit_res.load_result(path)
+                if fit_res.analyzed:
+                    self.fit_res = fit_res
+                    print(f'Loaded fitting result from {path}.')
+                # end if
+            else:
+                msg = 'Offsets of the loaded line-search do not match the current offsets. '
+                msg += f'Loaded offsets: {data[0]}, current offsets: {self.offsets}'
+                raise ValueError(msg)
+            # end if
         # end if
     # end def
 

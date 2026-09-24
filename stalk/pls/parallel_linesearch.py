@@ -10,7 +10,6 @@ from numpy import ndarray, array
 from textwrap import indent
 from typing import Generic, TypeVar, Type
 
-from stalk.io.ls_data import LineSearchData
 from stalk.io.stalk_path import StalkPath
 from stalk.pes.pes_function import NotEvaluatedException, PesFunction
 from stalk.pes.structure_collection import StructureCollection
@@ -201,8 +200,6 @@ class ParallelLineSearch(StalkPath, StructureCollection[ParameterSet], Generic[T
             if not self.hessian.enabled[d]:
                 continue
             # end if
-            # Try to load from disk
-            ls_load = LineSearchData(label=f'ls{d}').load(path=self.path)
             if Rs[d] is not None:
                 grid_args = {'R': Rs[d]}
             elif Ws[d] is not None:
@@ -221,18 +218,11 @@ class ParallelLineSearch(StalkPath, StructureCollection[ParameterSet], Generic[T
                 sigma=sigmas[d],
                 M=Ms[d],
                 d=d,
+                # Try to load from disk if available
+                path=self.path / f'ls{d}',
                 **grid_args,
                 **ls_args
             )
-            if ls_load is not None and len(ls) == len(ls_load):
-                if not all(ls.offsets == ls_load.offsets):
-                    raise ValueError('Offsets of the loaded line-search do not match the current offsets')
-                # end if
-                print(f'{self.path}/ls{d}: Line-search data loaded from disk.')
-                ls.values = ls_load.values
-                ls.errors = ls_load.errors
-                ls.fit_res = ls_load.fit_res
-            # end if
             ls_list.append(ls)
         # end for
         self._ls_list = ls_list
@@ -447,7 +437,7 @@ class ParallelLineSearch(StalkPath, StructureCollection[ParameterSet], Generic[T
         # end if
         # Write to disk
         for ls in self.ls_list:
-            LineSearchData(label=f'ls{ls.d}').save(ls, path=self.path, overwrite=overwrite)
+            ls.save_result(path=self.path / f'ls{ls.d}', overwrite=overwrite)
         # end if
         pls_next = self.copy(
             path=next_path,
