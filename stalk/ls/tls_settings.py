@@ -266,4 +266,12 @@ class TlsSettings(LsSettings):
         return result
     # end def
 
+    def __str__(self):
+        result = LsSettings.__str__(self)
+        result += f' bias_order: {self.bias_order}'
+        result += f' bias_mix: {self.bias_mix}'
+        result += f' M: {self.M}'
+        return result
+    # end def
+
 # end class

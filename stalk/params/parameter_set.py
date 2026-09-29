@@ -276,14 +276,11 @@ class ParameterSet(LineSearchPoint, StalkPath, Cacheable):
         if path is None:
             return False
         # end if
-        result = self.load(path=path, default=None)
-        if result is not None:
-            if 'params' in result:
-                self.params = result['params']
-            # end if
-            if 'sigma' in result:
-                self.sigma = result['sigma']
-            # end if
+        params = self.load(path=path, key='params', default=None)
+        if params is not None:
+            self.params = params
+            sigma = self.load(path=path, key='sigma', default=0.0)
+            self.sigma = sigma
             return True
         # end if
         return False

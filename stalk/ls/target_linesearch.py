@@ -474,21 +474,34 @@ class TargetLineSearch(TargetLineSearchBase, LineSearch):
         # end if
     # end def
 
-    def try_load_optimization(self, path: str | Path | None):
+    def try_load_optimization(self, path: str | Path | None) -> bool:
         """Try to load optimization results from disk. Returns True if successful."""
         if path is None:
             return
         # end if
-        self.Gs = self.load(path, 'Gs')
-        self.W_opt = self.load(path, 'W_opt')
-        self.sigma_opt = self.load(path, 'sigma_opt')
-        self.epsilon = self.load(path, 'epsilon')
         # Try to load error surface
         es_load = ErrorSurface()
-        if es_load.try_load_result(path):
+        result = es_load.try_load_result(path)
+        # Try to load other optimization results. Gs, W_opt and sigma_opt are mandatory
+        Gs = self.load(path, 'Gs')
+        W_opt = self.load(path, 'W_opt')
+        sigma_opt = self.load(path, 'sigma_opt')
+        result &= Gs is not None
+        result &= W_opt is not None
+        result &= sigma_opt is not None
+        # Epsilon is optional
+        epsilon = self.load(path, 'epsilon')
+        if result:
             self._error_surface = es_load
+            self.Gs = Gs
+            self.W_opt = W_opt
+            self.sigma_opt = sigma_opt
+            self.epsilon = epsilon
+            print(f'Loaded optimization from {path}')
+        else:
+            print(f'Could not load load optimization from {path}')
         # end if
-        print(f'Loaded optimization from {path}')
+        return result
     # end def
 
     # Compute fitting bias and error using consistent parameters

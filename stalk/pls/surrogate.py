@@ -8,6 +8,8 @@ __author__ = "Juha Tiihonen"
 __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
+from pathlib import Path
+
 from numpy import argmin, array, isscalar, mean, linspace, nan
 
 from stalk.io.stalk_logger import StalkLogger
@@ -194,7 +196,6 @@ class Surrogate(ParallelLineSearch[TargetLineSearch]):
         path=None,
         structure=None,
         hessian=None,
-        targets=None,
         interpolate_kind='cubic',
         logger=None,
         **pls_args
@@ -210,19 +211,12 @@ class Surrogate(ParallelLineSearch[TargetLineSearch]):
             **pls_args
         )
         self.logger = logger
-        if targets is not None:
-            self.x_targets = targets
-        # end if
-        # Try to load optimized data from disk
-        for tls in self.ls_list:
-            # Try to load optimization results from disk
-            tls.try_load_optimization(self.path / f'ls{tls.d}')
-        # end for
     # end def
 
     def optimize(
         self,
-        reoptimize=True,
+        reoptimize=False,
+        path: str | Path | None = None,
         windows=None,
         sigmas=None,
         epsilon_p=None,
@@ -231,21 +225,20 @@ class Surrogate(ParallelLineSearch[TargetLineSearch]):
         noise_frac=0.1,
         resolution=0.01,
         starting_mix=0.5,
-        overwrite=False,
+        overwrite: bool = False,
         logger=1,
         **ls_args
         # M=7, fit_kind=None, fit_func=None, fit_args={}, Gs=None, fraction=0.025
         # bias_mix=0.0, bias_order=1, noise_frac=0.05,
         # W_resolution=0.05, S_resolution=0.05, max_rounds=10
         # W_num=3, W_max=None, sigma_num=3, sigma_max=None
-    ):
+    ) -> None:
         self.logger = logger
-        if self.optimized and not reoptimize:
-            print('Already optimized, use reoptimize = True to force reoptimization.')
-            # Reconstruct epsilon/error data
-            self.epsilon_p = epsilon_p
-            self._finalize_optimization(overwrite=False)
-            return
+        if self.try_load_optimization(path):
+            if not reoptimize:
+                print('Already optimized, use reoptimize = True to force reoptimization.')
+                return
+            # end if
         # end if
         if self.logger.filename is not None:
             print(f'Optimizing. Writing optimizer output to {logger.filename}')
@@ -286,7 +279,10 @@ class Surrogate(ParallelLineSearch[TargetLineSearch]):
             self.logger.log_and_raise('Optimizer constraint not identified')
         # end if
         # Finalize and store the result, write to disk if requested
-        self._finalize_optimization(overwrite=overwrite)
+        self._finalize_optimization()
+        if path is not None:
+            self.save_optimization(path, overwrite=overwrite)
+        # end if
     # end def
 
     def optimize_windows_sigmas(
@@ -559,12 +555,12 @@ class Surrogate(ParallelLineSearch[TargetLineSearch]):
     # end def
 
     # Finalize optimization by computing error estimates
-    def _finalize_optimization(self, overwrite=False) -> None:
+    def _finalize_optimization(self) -> None:
         # The errors are calculated strictly based on settings stored in line-searches
         errors = self._resample_errors()
         self.error_d, self.error_p = errors
 
-        self.logger.log('  Optimization complete:', level=1)
+        self.logger.log('  Optimization completed:', level=1)
         self._print_optimization('d', self.D_list, self.epsilon_d, self.error_d)
         if self.epsilon_p is not None:
             self._print_optimization(
@@ -574,11 +570,31 @@ class Surrogate(ParallelLineSearch[TargetLineSearch]):
                 self.error_p
             )
         # end if
-        for tls in self.ls_list:
-            # Write optimization results to disk
-            tls.save_optimization(self.path / f'ls{tls.d}', overwrite=overwrite)
+    # end def
+
+    def try_load_optimization(self, path: str | Path | None) -> bool:
+        if path is None:
+            return False
         # end if
-        print('Optimization successful!')
+        path = Path(path)
+        result = True
+        for tls in self.ls_list:
+            result &= tls.try_load_optimization(path / f'ls{tls.d}')
+        # end for
+        if result:
+            print(f'Loaded optimization from {path}')
+        # end if
+        return result
+    # end def
+
+    def save_optimization(self, path: str | Path, overwrite=False):
+        path = Path(path)
+        if not path.exists():
+            path.mkdir(parents=True)
+        # end if
+        for tls in self.ls_list:
+            tls.save_optimization(path / f'ls{tls.d}', overwrite=overwrite)
+        # end for
     # end def
 
     def _print_optimization(self, label, i_list, epsilon, error):

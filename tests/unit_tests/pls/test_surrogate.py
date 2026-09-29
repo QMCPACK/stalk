@@ -5,6 +5,7 @@ __email__ = "tiihonen@iki.fi"
 __license__ = "BSD-3-Clause"
 
 from numpy import array, flipud
+from pytest import raises
 from stalk.fit.polynomial_fit import PolynomialFit
 from stalk.pes.pes_function import PesFunction
 from stalk.pls.surrogate import Surrogate
@@ -175,5 +176,64 @@ def test_Surrogate(tmp_path):
     assert srg.temperature is None
     statcost_ref3 = 7 * sum(array(sigmas_ref3)**-2)
     assert match_to_tol(srg.statistical_cost, statcost_ref3)
+
+# end def
+
+
+# test Surrogate class for I/O
+def test_Surrogate_io(tmp_path):
+
+    # test empty init
+    structure = get_structure_H2O()
+    hessian = get_hessian_H2O()
+    # Load from disk
+    srg = Surrogate(
+        path='tests/unit_tests/assets/surrogate_load/minimal',
+        fit_kind='pf3',
+        structure=structure,
+        hessian=hessian,
+    )
+    assert srg.setup
+    assert not srg.evaluated
+    assert not srg.optimized
+    # See tests/unit_tests/assets/surrogate_load/minimal for the reference values
+    with raises(AssertionError):
+        # Cannot reoptimize unless evaluated
+        srg.optimize(path='tests/unit_tests/assets/surrogate_load/minimal', reoptimize=True)
+    # end with
+    srg.optimize(path='tests/unit_tests/assets/surrogate_load/minimal', reoptimize=False)
+    W_ref = [0.1, 0.3]
+    sigma_ref = [0.03, 0.04]
+    assert srg.optimized
+    assert match_to_tol(srg.W_opt, W_ref)
+    assert match_to_tol(srg.sigma_opt, sigma_ref)
+
+    # Test saving
+    srg_save = Surrogate(
+        fit_kind='pf3',
+        structure=structure,
+        hessian=hessian,
+    )
+    pes = PesFunction(pes_H2O)
+    srg_save.evaluate(pes)
+    srg_save.optimize(
+        fit_kind='pf3',
+        path=tmp_path / 'srg_save',
+        windows=[0.11, 0.12],
+        sigmas=[0.013, 0.014],
+        M=5,
+        N=10,
+    )
+    srg_load = Surrogate(
+        fit_kind='pf3',
+        structure=structure,
+        hessian=hessian,
+    )
+    srg_load.evaluate(pes)
+    srg_load.try_load_optimization(tmp_path / 'srg_save')
+    assert srg_load.optimized
+    assert match_to_tol(srg_load.W_opt, [0.11, 0.12])
+    assert match_to_tol(srg_load.sigma_opt, [0.013, 0.014])
+
 
 # end def

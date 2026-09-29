@@ -157,9 +157,14 @@ class TransitionPathway(StalkPath):
         # end for
     # end def
 
-    def optimize_surrogates(self, **optimize_args):
+    def optimize_surrogates(self, path=None, **optimize_args):
         for _, image in enumerate(self.images):
-            image.optimize_surrogate(**optimize_args)
+            if path is not None:
+                optimize_args['path'] = image.path / path
+            # end if
+            image.optimize_surrogate(
+                **optimize_args
+            )
         # end for
     # end def
 

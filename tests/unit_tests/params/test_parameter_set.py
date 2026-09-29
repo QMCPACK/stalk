@@ -11,7 +11,7 @@ from stalk.util.util import match_to_tol
 
 
 # Test ParameterSet class
-def test_ParameterSet():
+def test_ParameterSet(tmp_path):
     from stalk import ParameterSet
     from stalk.params import Parameter
 
@@ -122,6 +122,23 @@ def test_ParameterSet():
 
     # test (placeholder) consistency check
     assert s.check_consistency()
+
+    # Test saving and loading
+    s_load = ParameterSet(label=s.label)
+    assert not s_load.try_load_input(tmp_path)
+    s.save_input(tmp_path)
+    assert s_load.try_load_input(tmp_path)
+    assert s_load.label == s.label
+    assert match_to_tol(s_load.params, s.params)
+    # Set sigma and new params, label, then overwrite
+    s.label = 'new_label'
+    s.params = [1., 2.]
+    s.sigma = 0.2
+    s.save_input(tmp_path, overwrite=True)
+    s_load.label = s.label
+    assert s_load.try_load_input(tmp_path)
+    assert match_to_tol(s_load.params, s.params)
+    assert match_to_tol(s_load.sigma, s.sigma)
 
     # TODO: test minimize
 

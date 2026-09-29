@@ -219,7 +219,7 @@ class ParallelLineSearch(StalkPath, StructureCollection[ParameterSet], Generic[T
                 M=Ms[d],
                 d=d,
                 # Try to load from disk if available
-                path=self.path / f'ls{d}',
+                path=self / f'ls{d}',
                 **grid_args,
                 **ls_args
             )
@@ -244,6 +244,10 @@ class ParallelLineSearch(StalkPath, StructureCollection[ParameterSet], Generic[T
             raise AssertionError("Must have shifted structures first!")
         # end if
         structures = self.collect_enabled()
+        if not isinstance(pes, PesFunction):
+            # Try to convert to PesFunction
+            pes = PesFunction(pes)
+        # end if
         pes(
             structures,
             path=self.path,
