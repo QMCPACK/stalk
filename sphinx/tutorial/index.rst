@@ -11,3 +11,4 @@ It contains the following sections:
    :caption: Contents
 
    orientation.rst
+   fileio.rst

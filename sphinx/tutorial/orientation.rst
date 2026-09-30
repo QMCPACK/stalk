@@ -1,3 +1,5 @@
+.. _orientation:
+
 STALK: The orientation
 ======================
 
@@ -17,7 +19,7 @@ Consider a simple 1-dimensional PES, a parabola:
 .. code-block:: python
 
     # NB: this is not quite a STALK PES, but close enough to illustrate the idea.
-    def pes(params: list[float]) -> float:
+    def pes(params: list[float]):
         c = [1.0, 2.0, 3.0]
         E = c[0] * params[0]**2 + c[1] * params[0] + c[2]
         return E
@@ -41,7 +43,7 @@ consistent set of basic STALK objects could look as follows:
         return E
     # end def
     # Define properly wrapped-up PES function
-    pes = PesFunction(pes_func_fixed_c)
+    pes_fixed = PesFunction(pes_func_fixed_c)
     # An instance of a set of parameters
     p = ParameterSet([1.0])
     Ef = pes(p)  # Ef = 6.0
@@ -52,7 +54,7 @@ convenience. Thus, the above definition could be generalized to any 1D parabola 
 .. code-block:: python
 
     # A generic PES function with kwargs coefficients
-    def pes_func(params: ParameterSet, c: list = [1.0, 2.0, 3.0]) -> float:
+    def pes_func(params: ParameterSet, c: list = [1.0, 2.0, 3.0]):
         E = c[0] * params[0]**2 + c[1] * params[0] + c[2]
         return E
     # end def
@@ -65,13 +67,13 @@ evaluate differently:
 
 .. code-block:: python
 
-    p = ParameterSet([1.0])
-    pes1(p)  # p.value = 6.0
-    pes2(p)  # p.value = -1.0
+    pes1(ParameterSet([1.0]))  # p.value = 6.0
+    pes2(ParameterSet([1.0]))  # p.value = -1.0
 
-Consequently, they should also have different solutions. This is a fundamental idea in STALK
-and in surrogate acceleration, where one (cheap) PES is used to inform the solving of
-another, which is typically noisy, more expensive but also more important to solve.
+Consequently, they should also have different solutions for the minimum. This is a
+fundamental idea in STALK and in surrogate acceleration, where one (cheap) PES is used to
+inform the solving of another, whose solution may be slightly different but other properties
+are coarsely similar and can be exploited.
 
 PES optimization
 ----------------
@@ -167,7 +169,7 @@ Let us try it out with a simple example in STALK:
 
     # Let us associate our parameter set with finite noise.
     sigma = 0.1
-    p = ParameterSet([1.0])
+    p = ParameterSet([1.0], sigma=sigma)
     n = 1000
     # We use the original PES, as any STALK PES can be made noisy upon request.
     pes = PesFunction(pes_func, c=[1.0, 2.0, 3.0])
@@ -177,7 +179,8 @@ Let us try it out with a simple example in STALK:
     # on derived properties like the optimization.
     energies = []
     for _ in range(n):
-        pes(p, sigma=sigma, add_sigma=True)
+        # reset_value: Override caching by forcing reset between evaluations
+        pes(p, add_sigma=True, reset_value=True)
         energies.append(p.value)
     # end for
     # Calculate the apparent standard deviation of the noisy PES evaluations
@@ -185,7 +188,7 @@ Let us try it out with a simple example in STALK:
     # Calculate the aggregate mean of the noisy PES evaluations
     E_mean = np.mean(energies)
     # Calculate the exact PES for reference
-    E_exact = pes(p, add_sigma=False)
+    E_exact = pes(p, add_sigma=False, reset_value=True).value
     # The histogram should resemble a normal distribution with standard deviation sigma.
     plt.hist(energies, bins=20)
     plt.axvline(E_exact, color='r', linestyle='dashed', linewidth=1, label='Exact PES value')
@@ -278,7 +281,7 @@ The latter way is how STALK operates, and it is easy to try out with the followi
     # 'pf3' for 3rd order polynomial fit
     lsb = LineSearchBase(points, fit_kind='pf3')
     lsb.values = values
-    res1 = lsb.search()  # res1.x0 = -1, res1.y0 = 2
+    lsb.search()  # lsb.x0 = -1, lsb.y0 = 2
 
 The part of extracting the values from the PES looks a bit hacky, because the
 :func:`stalk.ls.LineSearchBase` class only treats points and values, not the parametric

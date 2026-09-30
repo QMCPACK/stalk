@@ -34,22 +34,33 @@ if __name__ == "__main__":
     # Define sets of parameters to evaluate
     pf = ParameterSet([1.0])
     Ef = pes_fixed(pf)
-    print(f'Energy of the PES with fixed coeff. p = {pf.params}: E = {Ef.value}')
+    print('Energy of the PES with fixed coefficients.')
+    print(f'  E({pf.params}) = {Ef.value}')
+    input('Press Enter to continue...\n')
 
-    p = ParameterSet([1.0])
-    E1 = pes1(p)
-    E2 = pes2(p)
-    print(f'Energy of the PES1 at p = {p.params}: E1 = {E1.value}')
-    print(f'Energy of the PES2 at p = {p.params}: E2 = {E2.value}')
+    # Create a new set of parameters and evaluate the first parameterized PES
+    p1 = ParameterSet([1.0])
+    E1 = pes1(p1)
+    print(f'Energy of the PES1 with coefficients c = {pes1.args['c']}:')
+    print(f'  E1({p1.params}) = {E1.value}')
+    input('Press Enter to continue...\n')
 
-    # Relaxing
+    # Relax the first PES using a classical algorithm
     print('Relaxing PES1 using BFGS algorithm...')
-    pes1.relax(p, method='BFGS', tol=1e-6)
-    print('Relaxed parameters for pes1: ', p.params)
-    print('Relaxed energy for pes1: ', p.value)
-    p2 = p.copy()
+    pes1.relax(p1, method='BFGS', tol=1e-6)
+    print(f'Relaxed parameters: p1* = {p1.params}')
+    print(f'Relaxed energy: E1(p1*) = {p1.value}')
+    input('Press Enter to continue...\n')
+
+    # Create a new set of parameters and evaluate the second PES
+    p2 = ParameterSet([1.0])
+    E2 = pes2(p2)
+    print(f'Energy of the PES2 with coefficients c = {pes2.args['c']}:')
+    print(f'  E2({p2.params}) = {E2.value}')
+    input('Press Enter to continue...\n')
+    # Relax the second PES using a classical algorithm
     print('Relaxing PES2 using BFGS algorithm...')
     pes2.relax(p2, method='BFGS', tol=1e-6)
-    print('Relaxed parameters for pes2: ', p2.params)
-    print('Relaxed energy for pes2: ', p2.value)
+    print(f'Relaxed parameters: p2* = {p2.params}')
+    print(f'Relaxed energy: E2(p2*) = {p2.value}')
 # end if

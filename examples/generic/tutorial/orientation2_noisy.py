@@ -17,8 +17,11 @@ pes = PesFunction(pes_func, c=[1.0, 2.0, 3.0])
 n = 1000
 
 energies = []
+# Collect a number of noisy PES evaluations
 for _ in range(n):
-    pes(p, add_sigma=True)
+    # add_sigma: Add artificial 'sigma' noise to the otherwise deterministic PES evaluation
+    # reset_value: Override caching by forcing reset between evaluations
+    pes(p, add_sigma=True, reset_value=True)
     energies.append(p.value)
 # end for
 # Calculate the apparent standard deviation of the noisy PES evaluations
@@ -26,7 +29,7 @@ sigma_out = np.std(energies)
 # Calculate the aggregate mean of the noisy PES evaluations
 E_mean = np.mean(energies)
 # Calculate the exact PES for reference
-E_exact = pes(p, add_sigma=False).value
+E_exact = pes(p, add_sigma=False, reset_value=True).value
 
 plt.hist(energies, bins=20)
 plt.axvline(E_exact, color='r', linestyle='dashed', linewidth=1, label='Exact PES value')
