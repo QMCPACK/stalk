@@ -440,8 +440,10 @@ class ParallelLineSearch(StalkPath, StructureCollection[ParameterSet], Generic[T
             raise NotEvaluatedException("Cannot propagate, as not all line-searches were successfully evaluated.")
         # end if
         # Write to disk
-        for ls in self.ls_list:
-            ls.save_result(path=self.path / f'ls{ls.d}', overwrite=overwrite)
+        if self.path is not None:
+            for ls in self.ls_list:
+                ls.save_result(path=self.path / f'ls{ls.d}', overwrite=overwrite)
+            # end if
         # end if
         pls_next = self.copy(
             path=next_path,
