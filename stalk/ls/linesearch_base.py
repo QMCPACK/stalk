@@ -190,6 +190,12 @@ class LineSearchBase(Cacheable, LineSearchGrid[ParameterSet]):
         return res
     # end def
 
+    # Override parent method
+    def reset(self) -> None:
+        super().reset()
+        self.reset_search()
+    # end def
+
     def reset_search(self, fit_res: FittingResult = None) -> None:
         self.fit_res = fit_res
     # end def

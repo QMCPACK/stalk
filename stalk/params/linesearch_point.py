@@ -95,7 +95,7 @@ class LineSearchPoint():
     @property
     def valid(self):
         '''The value is valid, when it is enabled and has a finite value'''
-        return self.enabled and self.value and not isnan(self.value)
+        return self.enabled and self.value is not None and not isnan(self.value)
     # end def
 
     @property

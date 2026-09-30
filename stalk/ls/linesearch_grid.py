@@ -185,6 +185,13 @@ class LineSearchGrid[T](StructureCollection[T]):
         # end if
     # end def
 
+    def reset(self) -> None:
+        '''Reset all points to unevaluated state'''
+        for point in self._grid:
+            point.reset_value()
+        # end for
+    # end def
+
     def plot(
         self,
         ax=None,
