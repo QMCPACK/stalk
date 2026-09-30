@@ -22,7 +22,10 @@ for xc_srg, surrogate in surrogates.items():
         if xc_srg == xc_ls:
             structure.shift_params([0.1, -0.1])
         # end if
-        surrogates[xc_srg].optimize(epsilon_p=len(structure) * [epsilon_p])
+        surrogate.optimize(
+            path=surrogate.path / f'opt_{epsilon_p}',
+            epsilon_p=len(structure) * [epsilon_p],
+        )
         lsi = LineSearchIteration(
             surrogate=surrogate,
             structure=structure,

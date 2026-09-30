@@ -21,11 +21,11 @@ surrogate.evaluate(pes=pes_pwscf, interactive=interactive)
 
 epsilon_p = [0.01]
 surrogate.optimize(
+    path='surrogate/epsilon_0.01',
     epsilon_p=epsilon_p,
     fit_kind='pf3',
     M=7,
     N=500,
-    reoptimize=False,
 )
 
 if interactive:

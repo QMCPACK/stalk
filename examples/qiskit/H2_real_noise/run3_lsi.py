@@ -26,7 +26,10 @@ def run_stalk_lsi(
     niter: int = 5,
     backend_kind='generic',
 ):
-    surrogate.optimize(temperature=temperature, reoptimize=True)
+    surrogate.optimize(
+        path=f'{directory}surrogate/T{temperature}/',
+        temperature=temperature,
+    )
     path = f'{directory}STALK/{backend_kind}/T{temperature}/lsi{n}'
     pes = PesFunction(func=pes_backend, kernel_args={}, backend=backend_kind)
     lsi = LineSearchIteration(

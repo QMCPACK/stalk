@@ -10,6 +10,7 @@ tpw.generate_surrogates(
     window_frac=0.25
 )
 tpw.optimize_surrogates(
+    path='surrogate',
     M=7,
     fit_kind='pf3',
     temperature=0.0002,

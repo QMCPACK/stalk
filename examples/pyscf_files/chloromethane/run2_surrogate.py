@@ -20,11 +20,11 @@ surrogate.evaluate(pes=pes_xyz)
 
 epsilon_p = [0.02, 0.02, 0.02]
 surrogate.optimize(
+    path='surrogate/epsilon_0.02',
     epsilon_p=epsilon_p,
     fit_kind='pf3',
     M=7,
     N=400,
-    reoptimize=False,
 )
 
 if __name__ == "__main__":

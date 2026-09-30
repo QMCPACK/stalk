@@ -7,7 +7,7 @@ from run1_hessian import hessian
 
 
 surrogate = Surrogate(
-    path='surrogate/',
+    path='surrogate',
     fit_kind='pf3',
     structure=hessian.structure,
     hessian=hessian,
@@ -18,11 +18,11 @@ surrogate.evaluate(pes=pes)
 
 epsilon_p = [0.02, 0.02]
 surrogate.optimize(
+    path='surrogate',
     epsilon_p=epsilon_p,
     fit_kind='pf3',
     M=7,
     N=400,
-    reoptimize=False,
     logger=3,
 )
 print(surrogate)

@@ -18,11 +18,11 @@ surrogate.evaluate(pes_pbe)
 
 epsilon_p = 10 * [0.01]
 surrogate.optimize(
+    path='surrogate/epsilon_0.01',
     epsilon_p=epsilon_p,
     fit_kind='pf3',
     M=7,
     N=400,
-    reoptimize=False,
 )
 
 if __name__ == '__main__':

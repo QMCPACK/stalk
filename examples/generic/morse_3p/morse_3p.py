@@ -82,7 +82,6 @@ surrogate.optimize(
     noise_frac=0.05,
     M=7,
     N=500,
-    reoptimize=False,
     logger=StalkLogger(3, 'optimizer.log')
 )
 

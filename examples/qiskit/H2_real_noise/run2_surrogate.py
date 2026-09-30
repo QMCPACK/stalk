@@ -27,13 +27,12 @@ surrogate.evaluate(vqe_pes, interactive=interactive)
 #   epsilon_p < |bias| + uncertainty
 # using minimal statistical cost (maximum tolerated noise)
 surrogate.optimize(
+    path=f'{directory}surrogate/T0.001/',
     temperature=0.001,
     fit_kind='pf2',  # fitting 3rd order polynomial
     M=5,  # 5 points along each line-search
     N=200,  # correlated error resampling population
     bias_order=1,  # treat "bias-induced" bias
-    reoptimize=False,
-    overwrite=True,
 )
 
 if interactive:

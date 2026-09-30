@@ -9,7 +9,7 @@ from run1_hessian import hessians
 
 
 # Treat a collection surrogates based on alternative XC functionals
-surrogates = {}
+surrogates: dict[str, Surrogate] = {}
 epsilon_p = np.array([0.01, 0.01])
 
 for xc, pes in pes_dict.items():
@@ -26,11 +26,11 @@ for xc, pes in pes_dict.items():
 
     # Optimize to tolerances
     surrogate.optimize(
+        path=surrogate.path / 'opt_0.01',
         epsilon_p=epsilon_p,
         fit_kind='pf3',
         M=7,
         N=400,
-        reoptimize=False,
         logger=3,
     )
     print(f'Surrogate model ({xc})')
