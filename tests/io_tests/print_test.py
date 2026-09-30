@@ -75,8 +75,8 @@ def print_linesearch():
     x0 = [2.0, 3.0]
     structure = ParameterSet(x0)
     hessian = ParameterHessian(
-        [[0.5, 0.2], [0.2, 0.5]],
         structure=structure,
+        hessian=[[0.5, 0.2], [0.2, 0.5]],
     )
     ls = LineSearch(
         hessian=hessian,
@@ -90,12 +90,13 @@ def print_linesearch():
 
     pes = PesFunction(pes_2d, {'x0': x0})
     ls.evaluate(pes=pes, add_sigma=False)
-    print("Printing line-search after evaluated without sigma:")
+    print("Printing line-search after evaluation without sigma:")
     print(ls)
     input("Proceed? ")
 
+    ls.reset()
     ls.evaluate(pes=pes, add_sigma=True)
-    print("Printing line-search after evaluated with sigma:")
+    print("Printing line-search after evaluation with sigma:")
     print(ls)
     input("Proceed? ")
 # end def

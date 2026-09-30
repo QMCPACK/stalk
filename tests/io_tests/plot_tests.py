@@ -33,12 +33,10 @@ def plot_linesearchgrid():
     ls.values = offsets**2
     print("Plotting line-search grid offsets and data (no error):")
     ls.plot()
-    plt.show()
 
     ls.errors = offsets * 0.2
     print("Plotting line-search grid offsets, data and errors:")
     ls.plot()
-    plt.show()
 # end def
 
 
@@ -58,7 +56,6 @@ def plot_linesearchbase():
     )
     print("Plotting line-search base offsets and data (no error):")
     ls.plot()
-    plt.show()
 
     ls = LineSearchBase(
         offsets=offsets,
@@ -68,7 +65,6 @@ def plot_linesearchbase():
     )
     print("Plotting line-search base offsets, data and errors (pf2):")
     ls.plot()
-    plt.show()
 # end def
 
 
@@ -77,8 +73,8 @@ def plot_linesearch():
     x0 = [2.0, 3.0]
     structure = ParameterSet(x0)
     hessian = ParameterHessian(
-        [[0.5, 0.2], [0.2, 0.5]],
         structure=structure,
+        hessian=[[0.5, 0.2], [0.2, 0.5]],
     )
     ls = LineSearch(
         hessian=hessian,
@@ -92,14 +88,13 @@ def plot_linesearch():
 
     pes = PesFunction(pes_2d, {'x0': x0})
     ls.evaluate(pes=pes, add_sigma=False)
-    print("Printing line-search after evaluated without sigma:")
+    print("Plotting line-search after evaluated without sigma:")
     ls.plot()
-    plt.show()
 
+    ls.reset()
     ls.evaluate(pes=pes, add_sigma=True)
-    print("Printing line-search after evaluated with sigma:")
+    print("Plotting line-search after evaluated with sigma:")
     ls.plot()
-    plt.show()
 # end def
 
 
@@ -107,4 +102,5 @@ if __name__ == '__main__':
     plot_linesearchgrid()
     plot_linesearchbase()
     plot_linesearch()
+    plt.show()
 # end if
