@@ -1,3 +1,36 @@
+## v0.3.0 - 30 Sep 2026
+- Extensive remodeling of the class layout
+- Full refactorization of the file I/O
+    - Remove 'dill' dependency in favor of minimal ASCII serialization
+    - Implement I/O caching features for all central classes, like ParameterSet, ParameterHessian, etc
+    - Consistent, simplified syntax to treat I/O using 'path' keyword
+    - Use pathlib.Path for all file paths
+    - Streamline, tweak code and examples
+- Full refactorization of the PesFunction
+    - Use FunctionCaller class for treating all callable operations with arguments
+    - Derived classes (e.g. FilesFunction, NexusPes) only override simple hooks
+    - Add syntactic sugar by making PesFunction callable
+    - Streamline class layout
+    - Updated treatment of warnings, exceptions
+- Comphrehensive renaming and reorganization of package files
+- Revise std I/O and add logger features
+- Add TransitionPathWay features, including example
+- Update Nexus integration to support new packaging
+- Update Nexus features, e.g.
+    - Bundling of jobs
+    - Dependent jobs
+    - Robustness updates to specific loaders
+- Enhance Parameter-derived classes, printout
+    - Add BondAngle, PhaseAngle
+    - Update examples in this regard
+- Add EffectiveVarianceMap and analysis of apparent error to characterize 'black-box' statistical properties
+- Add new fitting classes: MorseFit, SplineFit
+- Add qiskit VQE examples
+- Revised documentation and added first tutorials + examples
+- Revise usability functions, like plotting, printing
+- Addition of type hints, numerous fixes to typing checks
+- Numerous minor improvements, tweaks and bug fixes
+
 ## v0.2.1 - 28 May 2025
 - Error surface optimization: Performance update and minor bug fixes
 - Plotting and printing updates for line-searches
