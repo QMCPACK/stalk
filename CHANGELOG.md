@@ -1,5 +1,6 @@
 ## v0.3.0 - 30 Sep 2026
 - Extensive remodeling of the class layout
+    - **This is a breaking change**: old workflows in v0.2 basis will not work without modifications. The backward compatibility will be enhanced in the future, as the pickle serialization is removed.
 - Full refactorization of the file I/O
     - Remove 'dill' dependency in favor of minimal ASCII serialization
     - Implement I/O caching features for all central classes, like ParameterSet, ParameterHessian, etc
@@ -63,6 +64,13 @@ of numerical properties
 - Revised printing and plotting features and their inheritance
 - Additional examples and PySCF support
 - Documentation updates
+
+## Rebranding – 19 Dec 2024
+
+- The repository was renamed 'surrogate_hessian_relax'->'stalk' on 19 Dec 2024, and
+the code usage has changed substantially upon python packaging. To complete projects in the
+old code base, keep using [v0.1](https://github.com/QMCPACK/stalk/releases/tag/v0.1) or
+reach out for help in migration.
 
 ## v0.1 - 11 Nov 2024 and earlier
 
