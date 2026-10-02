@@ -46,6 +46,7 @@ class ParameterSet(LineSearchPoint, StalkPath, Cacheable):
             value=TxtData('value.out'),
             error=TxtData('error.out'),
             sigma=TxtData('sigma.in'),
+            samples=TxtData('samples.in'),
             params=TxtData('params.in'),
             params_out=TxtData('params.out')
         )
@@ -248,6 +249,14 @@ class ParameterSet(LineSearchPoint, StalkPath, Cacheable):
                 sigma=self.sigma
             )
         # end if
+        # Save samples if meaningful
+        if self.samples is not None and self.samples > 0:
+            self.save(
+                path=path,
+                overwrite=overwrite,
+                samples=self.samples
+            )
+        # end if
     # end def
 
     def save_value(self, path: str | Path = None, overwrite=False):
@@ -281,6 +290,7 @@ class ParameterSet(LineSearchPoint, StalkPath, Cacheable):
             self.params = params
             sigma = self.load(path=path, key='sigma', default=0.0)
             self.sigma = sigma
+            self.samples = self.load(path=path, key='samples')
             return True
         # end if
         return False
@@ -321,6 +331,12 @@ class ParameterSet(LineSearchPoint, StalkPath, Cacheable):
             for param in self.params_list:
                 string += '\n    ' + str(param)
             # end for
+        # end if
+        if self.sigma is not None and self.sigma > 0.0:
+            string += f'\n  sigma: {self.sigma}'
+        # end if
+        if self.samples is not None and self.samples > 0:
+            string += f'\n  samples: {self.samples}'
         # end if
         if self.value is not None:
             string += f'\n  value: {self.value}'

@@ -21,6 +21,7 @@ def test_ParameterSet(tmp_path):
     assert len(s) == 0
     assert s.params is None
     assert s.params_err is None
+    assert s.samples is None
     assert s.value is None
     assert s.error == 0.0
     assert s.label == 'p' + str(hash(s))[:8]
@@ -130,15 +131,17 @@ def test_ParameterSet(tmp_path):
     assert s_load.try_load_input(tmp_path)
     assert s_load.label == s.label
     assert match_to_tol(s_load.params, s.params)
-    # Set sigma and new params, label, then overwrite
+    # Set sigma and new params, label, samples, then overwrite
     s.label = 'new_label'
     s.params = [1., 2.]
     s.sigma = 0.2
+    s.samples = 50
     s.save_input(tmp_path, overwrite=True)
     s_load.label = s.label
     assert s_load.try_load_input(tmp_path)
     assert match_to_tol(s_load.params, s.params)
     assert match_to_tol(s_load.sigma, s.sigma)
+    assert s_load.samples == s.samples
 
     # TODO: test minimize
 
